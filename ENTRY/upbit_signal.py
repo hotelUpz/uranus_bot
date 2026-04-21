@@ -1,5 +1,5 @@
 # ============================================================
-# FILE: ENTRY/upbit.py
+# FILE: ENTRY/upbit_signal.py
 # ============================================================
 
 from __future__ import annotations
