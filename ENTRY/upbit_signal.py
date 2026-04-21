@@ -13,15 +13,12 @@ import os
 import time
 from datetime import datetime, timezone, timedelta
 
+from c_log import UnifiedLogger
+
 # ==========================================
 # 1. НАСТРОЙКИ ЛОГИРОВАНИЯ
 # ==========================================
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%H:%M:%S'
-)
-logger = logging.getLogger("UpbitParser")
+logger = UnifiedLogger("upbit_signal")
 
 # ==========================================
 # 2. УМНЫЙ МЕНЕДЖЕР ПРОКСИ (ЗАЩИТА ОТ 429)
@@ -52,7 +49,10 @@ class SmartProxyManager:
 # 3. ОСНОВНОЙ КЛАСС МОНИТОРИНГА
 # ==========================================
 class UpbitLiveMonitor:
-    def __init__(self, poll_interval_sec: float, proxies: list[str], cache_file: str = "live_signals.json"):
+    def __init__(self, poll_interval_sec: float, proxies: list[str],
+                 on_signal=None,           # <-- новый параметр
+                 cache_file: str = "live_signals.json"):
+        self._on_signal = on_signal
         self.poll_interval = poll_interval_sec
         self.api_url = "https://api-manager.upbit.com/api/v1/announcements"
         self.cache_file = cache_file
@@ -177,11 +177,14 @@ class UpbitLiveMonitor:
         self.signals_log.append(signal_data)
         self._save_cache()
 
-        if not is_startup:
-            logger.warning("\n" + "="*60)
-            logger.warning(f"🚀 СИГНАЛ ПАМПА: ВЫШЕЛ АНОНС ЛИСТИНГА [{symbol}] 🚀")
-            logger.warning(f"Метка времени: {announce_str}")
-            logger.warning("="*60 + "\n")
+        if not is_startup and self._on_signal:
+            await self._on_signal(symbol)   # <-- бросаем наружу
+            logger.debug(
+                f"\n{'='*60}\n"
+                f"🚀 СИГНАЛ ПАМПА: ВЫШЕЛ АНОНС ЛИСТИНГА [{symbol}] 🚀\n"
+                f"Метка времени: {announce_str}\n"
+                f"{'='*60}\n"
+            )
 
     async def run(self):
         """Главный бесконечный цикл."""

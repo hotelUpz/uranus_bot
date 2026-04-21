@@ -42,7 +42,8 @@
     },
     "upbit": {
         "poll_interval_sec": 8.0,
-        "proxies": []
+        "proxies": [],
+        "default_side": "long"
     },
     "entry": {
         "signal_timeout_sec": 0.01,

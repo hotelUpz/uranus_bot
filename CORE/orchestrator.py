@@ -33,13 +33,14 @@ from EXIT.scenarios.breakeven import PositionTTLClose
 from EXIT.extrime_close import ExtrimeClose
 from ENTRY.funding_manager import FundingManager
 from ANALYTICS.tracker import PerformanceTracker, format_duration
+from ENTRY.pattern_math import EntrySignal
 
 from c_log import UnifiedLogger
 from utils import get_config_summary
 
 if TYPE_CHECKING:
     from API.PHEMEX.stakan import DepthTop
-    from ENTRY.pattern_math import EntrySignal
+    
 
 logger = UnifiedLogger("bot")
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -92,6 +93,18 @@ class TradingBot:
             self.phemex_funding_api,
             self.binance_funding_api
         )
+
+        upbit_cfg = self.cfg.get("upbit", {})
+        upbit_enabled = self.cfg.get("entry", {}).get("pattern", {}).get("upbit_signal", False)
+        if upbit_enabled:
+            from ENTRY.upbit_signal import UpbitLiveMonitor
+            self._upbit_monitor = UpbitLiveMonitor(
+                poll_interval_sec=upbit_cfg.get("poll_interval_sec", 8.0),
+                proxies=upbit_cfg.get("proxies", []),
+                on_signal=self._on_upbit_signal,
+            )
+        else:
+            self._upbit_monitor = None
 
         self.signal_engine = SignalEngine(self.cfg["entry"], self.funding_manager)
 
@@ -243,6 +256,60 @@ class TradingBot:
             
         return True
     
+    # Новый метод в TradingBot:
+    async def _on_upbit_signal(self, symbol: str) -> None:
+        """Сигнал с Upbit: новый листинг. Всегда входим LONG."""
+        side = self.cfg.get("upbit", {}).get("default_side", "long").upper()  # хардкод LONG, но из конфига
+        phemex_symbol = f"u{symbol}USDT"   # формат Phemex для perpetual
+        
+        if phemex_symbol in self.black_list:
+            logger.info(f"[Upbit] {phemex_symbol} в блэклисте, пропускаем.")
+            return
+        if phemex_symbol not in self.symbol_specs:
+            logger.warning(f"[Upbit] {phemex_symbol} не найден в symbol_specs Phemex, пропускаем.")
+            return
+        if not await self.quarantine_util(phemex_symbol):
+            return
+
+        pos_key = f"{phemex_symbol}_{side}"
+        logger.warning(f"🚀 [Upbit Signal] {phemex_symbol} → {side}")
+
+        async with self._get_lock(pos_key):
+            if pos_key in self.state.active_positions:
+                return
+            self.state.active_positions[pos_key] = ActivePosition(
+                symbol=phemex_symbol, side=side, pending_qty=0.0,
+                in_pending=True, in_position=False,
+                init_ask1=0.0, init_bid1=0.0, mid_price=0.0,
+            )
+
+        # EntrySignal нужен для executor — собираем минимальный из текущего стакана
+        snap = self._latest_market_data.get(phemex_symbol)
+        if not snap:
+            logger.warning(f"[Upbit] Нет данных стакана для {phemex_symbol}, вход невозможен.")
+            async with self._get_lock(pos_key):
+                self.state.active_positions.pop(pos_key, None)
+            return
+
+        signal = EntrySignal(
+            symbol=phemex_symbol,
+            side=side,
+            price=snap.asks[0][0] if side == "LONG" else snap.bids[0][0],
+            init_ask1=snap.asks[0][0],
+            init_bid1=snap.bids[0][0],
+            mid_price=(snap.asks[0][0] + snap.bids[0][0]) / 2,
+        )
+
+        success = await self.executor.execute_entry(phemex_symbol, pos_key, signal)
+        if success:
+            await self.state.save()
+        else:
+            self.apply_entry_quarantine(phemex_symbol)
+            async with self._get_lock(pos_key):
+                p = self.state.active_positions.get(pos_key)
+                if p and not p.in_position:
+                    p.marked_for_death_ts = time.time()
+        
     # --- СЕТЕВЫЕ ОПЕРАЦИИ (ВНЕ ЛОКА) ---
     async def _payloader(self, action_payload: List[Tuple], symbol: str) -> None:
         
@@ -521,6 +588,8 @@ class TradingBot:
         self._price_updater_task = asyncio.create_task(self.price_manager.loop())
         await self._await_task(getattr(self, '_funding_task', None))
         self._funding_task = asyncio.create_task(self.funding_manager.run())
+        if self._upbit_monitor:
+            self._upbit_task = asyncio.create_task(self._upbit_monitor.run())
         await asyncio.sleep(1)
 
         self._private_ws_task = asyncio.create_task(
@@ -561,6 +630,7 @@ class TradingBot:
         await self._await_task(getattr(self, '_private_ws_task', None))
         await self._await_task(getattr(self, '_stream_task', None))
         await self._await_task(getattr(self, '_game_loop_task', None))
+        await self._await_task(getattr(self, '_upbit_task', None))
         self._latest_market_data.clear()
         self._processing.clear()
         self._signal_timeouts.clear()

@@ -13,7 +13,7 @@ from c_log import UnifiedLogger
 
 if TYPE_CHECKING:
     from CORE.orchestrator import TradingBot
-    from API.PHEMEX.ticker import PhemexTickerAPI
+    from API.PHEMEX.ticker import PhemexTickerAPI, TickerData
     from API.BINANCE.ticker import BinanceTickerAPI
     from ENTRY.pattern_math import EntrySignal
 
@@ -65,41 +65,34 @@ class BlackListManager:
 
 
 class PriceCacheManager:
-    """Асинхронный кэш цен тикеров Binance/Phemex, обновляемый в фоне."""
-    def __init__(self, binance_api: 'BinanceTickerAPI', phemex_api: 'PhemexTickerAPI', upd_sec: float = 3.0):
+    def __init__(self, binance_api: "BinanceTickerAPI", phemex_api: 'PhemexTickerAPI', upd_sec: float = 3.0):
         self.binance_api = binance_api
         self.phemex_api = phemex_api
         self.upd_sec = upd_sec
         self.binance_prices: Dict[str, float] = {}
         self.phemex_prices: Dict[str, float] = {}
+        self.phemex_volumes: Dict[str, float] = {}   # <-- новое
         self._is_running = False
-
-    async def warmup(self):
-        await self._fetch()
 
     async def _fetch(self):
         try:
-            b_prices, p_prices = await asyncio.gather(
+            b_prices, p_tickers = await asyncio.gather(
                 self.binance_api.get_all_prices(),
-                self.phemex_api.get_all_prices()
+                self.phemex_api.get_all_tickers()   # <-- было get_all_prices
             )
             self.binance_prices = b_prices
-            self.phemex_prices = p_prices
+            self.phemex_prices = {sym: t.price for sym, t in p_tickers.items()}
+            self.phemex_volumes = {sym: t.volume_24h_usd for sym, t in p_tickers.items()}
         except Exception as e:
             logger.debug(f"Ошибка фонового обновления цен тикеров: {e}")
-
-    async def loop(self):
-        self._is_running = True
-        while self._is_running:
-            await self._fetch()
-            await asyncio.sleep(self.upd_sec)
-
-    def stop(self):
-        self._is_running = False
 
     def get_prices(self, symbol: str) -> Tuple[float, float]:
         return self.binance_prices.get(symbol, 0.0), self.phemex_prices.get(symbol, 0.0)
 
+    def get_volume(self, symbol: str) -> float:
+        """Объём 24ч в USD по символу Phemex."""
+        return self.phemex_volumes.get(symbol, 0.0)
+    
 
 class ConfigManager:
     def __init__(self, cfg_path: Path | str, tb: "TradingBot"):
@@ -151,13 +144,11 @@ class ConfigManager:
             from EXIT.scenarios.base import BaseScenario
             from EXIT.scenarios.negative import NegativeScenario
             from EXIT.scenarios.breakeven import PositionTTLClose
-            from EXIT.interference import Interference
             from EXIT.extrime_close import ExtrimeClose
             
             self.tb.scen_base = BaseScenario(scen_cfg.get("base", {}))
             self.tb.scen_neg = NegativeScenario(scen_cfg.get("negative", {}))
             self.tb.scen_ttl = PositionTTLClose(scen_cfg.get("breakeven_ttl_close", {}), self.tb.active_positions_locker)
-            self.tb.scen_interf = Interference(exit_cfg.get("interference", {}))
             self.tb.scen_extrime = ExtrimeClose(exit_cfg.get("extrime_close", {}))
 
             self.tb.base_order_timeout_sec = scen_cfg.get("base", {}).get("order_timeout_sec", 0.1)   
@@ -178,7 +169,6 @@ class Reporters:
         return (
             f"<b>#{symbol}</b> | {side_str}\n"
             f"Вход: <b>{signal.price}</b>\n"
-            f"Rate: {signal.rate or 0}x | Spr2: {signal.spr2_pct or 0}% | Spr3: {signal.spr3_pct or 0}%\n\n"
             f"Binance: {b_price} | Phemex: {p_price}"
         )
 
