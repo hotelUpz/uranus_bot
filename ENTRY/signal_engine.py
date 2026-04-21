@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from API.PHEMEX.funding import PhemexFunding
     from API.BINANCE.funding import BinanceFunding
     from ENTRY.pattern_math import EntrySignal
-    from API.PHEMEX.stakan import DepthTop
+
     from ENTRY.funding_filters import FundingFilter1, FundingFilter2
     from ENTRY.funding_manager import FundingManager
 
@@ -38,7 +38,7 @@ class SignalEngine:
         self._pattern_first_seen: Dict[str, float] = {}
         self._spread_first_seen: Dict[str, float] = {}
 
-    def analyze(self, depth: DepthTop, b_price: float, p_price: float) -> Optional[EntrySignal]:
+    def analyze(self, depth: Any, b_price: float, p_price: float) -> Optional[EntrySignal]:
         symbol: str = depth.symbol
         
         # Семантический опрос валидатора фандинга

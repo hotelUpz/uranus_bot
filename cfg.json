@@ -20,8 +20,7 @@
         "max_lines": 1500,
         "timezone": "Europe/Kyiv"
     },
-    "black_list": [
-    ],
+    "black_list": [],
     "quota_asset": "USDT",
     "risk": {
         "leverage": {
@@ -31,7 +30,7 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 10.0,
+        "notional_limit": 100.0,
         "hedge_mode": false,
         "quarantine": {
             "min_quarantine_threshold_usdt": -0.2,
@@ -83,20 +82,70 @@
         "max_place_order_retries": 1,
         "min_order_life_sec": 0.05,
         "scenarios": {
-            "base": {
+            "grid_tp": {
                 "enable": true,
-                "order_timeout_sec": 0.5,
-                "stabilization_ttl": 0,
-                "target_rate": 0.7,
-                "shift_demotion": 0.2,
-                "min_target_rate": 0.3,
-                "shift_ttl": 20
+                "map": [
+                    {
+                        "min_vol": 0,
+                        "max_vol": 500,
+                        "levels": [
+                            5,
+                            12,
+                            25,
+                            50,
+                            80
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
+                    },
+                    {
+                        "min_vol": 500,
+                        "max_vol": 1000,
+                        "levels": [
+                            4,
+                            8,
+                            15,
+                            25,
+                            40
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
+                    },
+                    {
+                        "min_vol": 1000,
+                        "max_vol": null,
+                        "levels": [
+                            3,
+                            10,
+                            20,
+                            35,
+                            55
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
+                    }
+                ]
             },
             "negative": {
                 "enable": true,
                 "stabilization_ttl": 600,
                 "negative_spread_pct": 0,
-                "negative_ttl": 20
+                "negative_ttl": 10
             },
             "breakeven_ttl_close": {
                 "enable": false,

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from EXIT.utils import check_is_negative
+
 from c_log import UnifiedLogger
 
 if TYPE_CHECKING:
     from CORE.models_fsm import ActivePosition
-    from API.PHEMEX.stakan import DepthTop
 
 
 logger = UnifiedLogger("negative")
@@ -20,7 +19,7 @@ class NegativeScenario:
         self.negative_spread_pct = cfg["negative_spread_pct"]
         self.negative_ttl = cfg["negative_ttl"]
 
-    def scen_neg_analyze(self, depth: DepthTop, pos: ActivePosition, now: float) -> str | None:
+    def scen_neg_analyze(self, current_price: float, pos: ActivePosition, now: float) -> str | None:
         if not self.enable:
             return None
 
@@ -29,7 +28,12 @@ class NegativeScenario:
             pos.last_negative_check_ts = now
             return None
 
-        is_negative = check_is_negative(pos, depth, self.negative_spread_pct)
+        # Check if in negative using current_price
+        if pos.side == "LONG":
+            # in LONG, we are in negative if current_price < entry_price * (1 - negative_spread_pct)
+            is_negative = current_price < pos.entry_price * (1 - self.negative_spread_pct / 100)
+        else:
+            is_negative = current_price > pos.entry_price * (1 + self.negative_spread_pct / 100)
 
         if is_negative:
             # Мы в просадке! Якорь перестал обновляться.
@@ -37,7 +41,7 @@ class NegativeScenario:
             if (now - pos.last_negative_check_ts) >= self.negative_ttl:
                 return "NEGATIVE_TIMEOUT"
         else:
-            # Мы в плюсе (или спред нулевой). Подтягиваем якорь к текущему моменту.
+            # Мы в плюсе. Подтягиваем якорь к текущему моменту.
             pos.last_negative_check_ts = now
 
         return None

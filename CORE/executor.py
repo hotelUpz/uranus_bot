@@ -160,6 +160,58 @@ class OrderExecutor:
             logger.error(f"[{pos_key}] Глобальная ошибка execute_entry: {e}")
             return False
         
+    async def execute_tp_grid(self, symbol: str, pos_key: str, grid_orders: list) -> bool:
+        """
+        Отправляет сетку тейк-профитов на биржу батчем или параллельно.
+        """
+        async with self.tb._get_lock(pos_key):
+            pos = self.tb.state.active_positions.get(pos_key)
+            if not pos or not getattr(pos, 'in_position', False):
+                return False
+            phemex_pos_side = "Long" if pos.side == "LONG" else "Short"
+            side = "Sell" if pos.side == "LONG" else "Buy"
+
+        tasks = []
+        for order in grid_orders:
+            price = order["price"]
+            qty = order["qty"]
+            tasks.append(self.client.place_limit_order(symbol, side, qty, price, phemex_pos_side))
+            
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        success_count = 0
+        async with self.tb._get_lock(pos_key):
+            pos = self.tb.state.active_positions.get(pos_key)
+            if not pos:
+                return False
+                
+            for idx, resp in enumerate(results):
+                order_info = grid_orders[idx]
+                if isinstance(resp, Exception):
+                    logger.error(f"[{pos_key}] Ошибка выставления TP #{order_info['idx']}: {resp}")
+                    continue
+                
+                if resp.get("code") == 0:
+                    order_id = resp.get("data", {}).get("orderID")
+                    if order_id:
+                        pos.tp_orders[order_id] = {
+                            "idx": order_info["idx"],
+                            "price": order_info["price"],
+                            "qty": order_info["qty"],
+                            "status": "NEW"
+                        }
+                        success_count += 1
+                else:
+                    logger.warning(f"[{pos_key}] Отказ API при выставлении TP #{order_info['idx']}: {resp}")
+            
+            if success_count > 0:
+                pos.tp_grid_initiated = True
+                logger.info(f"[{pos_key}] 🕸 Сетка TP успешно выставлена: {success_count}/{len(grid_orders)} ордеров.")
+                return True
+            else:
+                logger.error(f"[{pos_key}] ❌ Не удалось выставить ни одного ордера сетки TP.")
+                return False
+
     async def execute_exit(self, symbol: str, pos_key: str, order_price: float, timeout_sec: float) -> bool:
         """
         1. Безопасно отменяет предыдущий лимитный ордер закрытия (если он завис из-за обрыва сети).

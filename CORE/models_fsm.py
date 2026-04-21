@@ -32,6 +32,10 @@ class ActivePosition:
     exit_in_flight: bool = False         # <-- НОВЫЙ ФЛАГ: Сетевой запрос выхода в процессе
     interf_in_flight: bool = False       # Оставляем как отдельный асинхронный лок для скупки помех     
     
+    tp_grid_initiated: bool = False
+    tp_orders: dict = field(default_factory=dict)
+    tp_progress: int = 0
+    
     entry_price: float = 0.0             
     pending_price: float = 0.0           
     avg_price: float = 0.0                
@@ -130,6 +134,14 @@ class WsInterpreter:
                     if pos.entry_price == 0.0:
                         pos.opened_at = time.time()
                         pos.entry_price = fill_price
+
+                order_id = o.get("orderID")
+                if order_id and order_id in pos.tp_orders and (ord_status == "FILLED" or "FILL" in exec_status):
+                    if pos.tp_orders[order_id].get("status") != "FILLED":
+                        pos.tp_orders[order_id]["status"] = "FILLED"
+                        pos.tp_progress += 1
+                        idx = pos.tp_orders[order_id].get("idx", "?")
+                        logger.info(f"[{pos_key}] 🎯 Исполнен тейк-профит #{idx} по цене {fill_price}")
 
     async def _handle_position_update(self, p: Dict[str, Any]):
         symbol = p.get("symbol")

@@ -141,17 +141,16 @@ class ConfigManager:
             exit_cfg = self.tb.cfg.get("exit", {})
             scen_cfg = exit_cfg.get("scenarios", {})
             
-            from EXIT.scenarios.base import BaseScenario
+            from EXIT.scenarios.grid_tp import GridTPFactory
             from EXIT.scenarios.negative import NegativeScenario
             from EXIT.scenarios.breakeven import PositionTTLClose
             from EXIT.extrime_close import ExtrimeClose
             
-            self.tb.scen_base = BaseScenario(scen_cfg.get("base", {}))
+            self.tb.grid_tp_factory = GridTPFactory(scen_cfg.get("grid_tp", {}))
             self.tb.scen_neg = NegativeScenario(scen_cfg.get("negative", {}))
             self.tb.scen_ttl = PositionTTLClose(scen_cfg.get("breakeven_ttl_close", {}), self.tb.active_positions_locker)
             self.tb.scen_extrime = ExtrimeClose(exit_cfg.get("extrime_close", {}))
 
-            self.tb.base_order_timeout_sec = scen_cfg.get("base", {}).get("order_timeout_sec", 0.1)   
             self.tb.breakeven_order_timeout_sec = scen_cfg.get("breakeven_ttl_close", {}).get("order_timeout_sec", 0.1)     
             self.tb.interference_order_timeout_sec = exit_cfg.get("interference", {}).get("order_timeout_sec", 0.1)        
             self.tb.extrime_order_timeout_sec = exit_cfg.get("extrime_close", {}).get("order_timeout_sec", 0.1)
