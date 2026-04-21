@@ -1,0 +1,113 @@
+{
+    "app": {
+        "name": "Rucheiok Bot",
+        "max_active_positions": 1
+    },
+    "credentials": {
+        "api_key": "",
+        "api_secret": ""
+    },
+    "tg": {
+        "enable": true,
+        "token": "",
+        "chat_id": ""
+    },
+    "log": {
+        "debug": true,
+        "info": true,
+        "warning": true,
+        "error": true,
+        "max_lines": 1500,
+        "timezone": "Europe/Kyiv"
+    },
+    "black_list": [
+    ],
+    "quota_asset": "USDT",
+    "risk": {
+        "leverage": {
+            "set_previous": false,
+            "used_by_cache": false,
+            "val": 22,
+            "delay_sec": 0.3,
+            "margin_mode": 2
+        },
+        "notional_limit": 10.0,
+        "hedge_mode": false,
+        "quarantine": {
+            "min_quarantine_threshold_usdt": -0.2,
+            "force_quarantine_threshold_usdt": -4.0,
+            "max_consecutive_fails": 1,
+            "quarantine_hours": "inf"
+        }
+    },
+    "entry": {
+        "signal_timeout_sec": 0.01,
+        "max_place_order_retries": 1,
+        "quarantine": {
+            "quarantine_hours": 1
+        },
+        "pattern": {
+            "upbit_signal": true,
+            "phemex": {
+                "enable": false,
+                "depth": 5,
+                "ask1_bid1_max_spread": 1.0,
+                "ttl": 10.0
+            },
+            "binance": {
+                "enable": false,
+                "min_price_spread_rate": 0.8,
+                "update_prices_sec": 1.1,
+                "spread_ttl_sec": 2
+            },
+            "funding_pattern1": {
+                "enable": false,
+                "check_interval_sec": 60,
+                "skip_before_counter_sec": 1800,
+                "threshold_pct": 1.0
+            },
+            "funding_pattern2": {
+                "enable": false,
+                "check_interval_sec": 60,
+                "skip_before_counter_sec": 1800,
+                "diff_threshold_pct": 0.05
+            }
+        }
+    },
+    "exit": {
+        "max_place_order_retries": 1,
+        "min_order_life_sec": 0.05,
+        "scenarios": {
+            "base": {
+                "enable": true,
+                "order_timeout_sec": 0.5,
+                "stabilization_ttl": 0,
+                "target_rate": 0.7,
+                "shift_demotion": 0.2,
+                "min_target_rate": 0.3,
+                "shift_ttl": 20
+            },
+            "negative": {
+                "enable": true,
+                "stabilization_ttl": 1.5,
+                "negative_spread_pct": 0,
+                "negative_ttl": 600
+            },
+            "breakeven_ttl_close": {
+                "enable": false,
+                "order_timeout_sec": 0.5,
+                "position_ttl": 3600,
+                "breakeven_wait_sec": 2,
+                "to_entry_orientation": 0.0
+            }
+        },
+        "extrime_close": {
+            "enable": true,
+            "order_timeout_sec": 0.5,
+            "retry_ttl": 3,
+            "retry_num": "inf",
+            "bid_to_ask_orientation": 0.0,
+            "increase_fraction": 5.0
+        }
+    }
+}
