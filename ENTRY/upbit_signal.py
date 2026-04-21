@@ -230,26 +230,26 @@ class UpbitLiveMonitor:
                 sleep_time = max(0.0, self.poll_interval - elapsed)
                 await asyncio.sleep(sleep_time)
 
-# ==========================================
-# 4. ЗАПУСК
-# ==========================================
-if __name__ == "__main__":
-    # Список твоих IPv4 прокси. 
-    # Формат: 'http://login:pass@ip:port' или 'socks5://login:pass@ip:port'
-    # Чтобы протестировать без прокси (с локального IP), оставь список пустым: MY_PROXIES = []
-    MY_PROXIES = [
-        # "http://user1:pass1@192.168.1.1:8000",
-        # "http://user2:pass2@192.168.1.2:8000",
-    ]
+# # ==========================================
+# # 4. ЗАПУСК
+# # ==========================================
+# if __name__ == "__main__":
+#     # Список твоих IPv4 прокси. 
+#     # Формат: 'http://login:pass@ip:port' или 'socks5://login:pass@ip:port'
+#     # Чтобы протестировать без прокси (с локального IP), оставь список пустым: MY_PROXIES = []
+#     MY_PROXIES = [
+#         # "http://user1:pass1@192.168.1.1:8000",
+#         # "http://user2:pass2@192.168.1.2:8000",
+#     ]
     
-    # ИНТЕРВАЛ В СЕКУНДАХ. 
-    # Если прокси пустой (работаем с локального IP) - ставь не меньше 11.0
-    # Если есть 20+ прокси - ставь 0.5
-    TARGET_POLL_INTERVAL = 8.0 if not MY_PROXIES else 1.0
+#     # ИНТЕРВАЛ В СЕКУНДАХ. 
+#     # Если прокси пустой (работаем с локального IP) - ставь не меньше 11.0
+#     # Если есть 20+ прокси - ставь 0.5
+#     TARGET_POLL_INTERVAL = 8.0 if not MY_PROXIES else 1.0
     
-    monitor = UpbitLiveMonitor(poll_interval_sec=TARGET_POLL_INTERVAL, proxies=MY_PROXIES) 
+#     monitor = UpbitLiveMonitor(poll_interval_sec=TARGET_POLL_INTERVAL, proxies=MY_PROXIES) 
     
-    try:
-        asyncio.run(monitor.run())
-    except KeyboardInterrupt:
-        logger.info("Выход. Парсер остановлен.")
+#     try:
+#         asyncio.run(monitor.run())
+#     except KeyboardInterrupt:
+#         logger.info("Выход. Парсер остановлен.")
