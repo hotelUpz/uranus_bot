@@ -40,6 +40,10 @@
             "quarantine_hours": "inf"
         }
     },
+    "upbit": {
+        "poll_interval_sec": 8.0,
+        "proxies": []
+    },
     "entry": {
         "signal_timeout_sec": 0.01,
         "max_place_order_retries": 1,

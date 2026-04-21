@@ -1,5 +1,5 @@
 # ============================================================
-# FILE: ENTRY/pattern_math.py
+# FILE: ENTRY/upbit.py
 # ============================================================
 
 from __future__ import annotations
