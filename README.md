@@ -1,1 +1,1 @@
-# Uranus 1.0
+# Uranus Bot 1.0

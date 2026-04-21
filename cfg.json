@@ -94,9 +94,9 @@
             },
             "negative": {
                 "enable": true,
-                "stabilization_ttl": 1.5,
+                "stabilization_ttl": 600,
                 "negative_spread_pct": 0,
-                "negative_ttl": 600
+                "negative_ttl": 20
             },
             "breakeven_ttl_close": {
                 "enable": false,
