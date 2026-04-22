@@ -20,7 +20,11 @@
         "max_lines": 1500,
         "timezone": "Europe/Kyiv"
     },
-    "black_list": [],
+    "black_list": [
+        "BTCUSDT",
+        "SOLUSDT",
+        "ETHUSDT"
+    ],
     "quota_asset": "USDT",
     "risk": {
         "leverage": {
@@ -41,7 +45,7 @@
             "SOL"
         ],
         "poll_interval_sec": 1.0,
-        "_proxy_hint": "null = локальный IP без прокси (валидный слот). Кол-во слотов = ceil(cooldown_sec / poll_interval_sec). Пример: poll=1, cooldown=8 → нужно 8 слотов [null, proxy1..proxy7].",
+        "_proxy_hint": "null = \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 IP \u0431\u0435\u0437 \u043f\u0440\u043e\u043a\u0441\u0438 (\u0432\u0430\u043b\u0438\u0434\u043d\u044b\u0439 \u0441\u043b\u043e\u0442). \u041a\u043e\u043b-\u0432\u043e \u0441\u043b\u043e\u0442\u043e\u0432 = ceil(cooldown_sec / poll_interval_sec). \u041f\u0440\u0438\u043c\u0435\u0440: poll=1, cooldown=8 \u2192 \u043d\u0443\u0436\u043d\u043e 8 \u0441\u043b\u043e\u0442\u043e\u0432 [null, proxy1..proxy7].",
         "cooldown_sec": 2.0,
         "proxies": [
             null
@@ -81,7 +85,7 @@
                 "enable": true,
                 "map": [
                     {
-                        "comment": "< $500K — малоизвестный листинг, резкий памп, гасится быстро",
+                        "comment": "< $500K \u2014 \u043c\u0430\u043b\u043e\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u043b\u0438\u0441\u0442\u0438\u043d\u0433, \u0440\u0435\u0437\u043a\u0438\u0439 \u043f\u0430\u043c\u043f, \u0433\u0430\u0441\u0438\u0442\u0441\u044f \u0431\u044b\u0441\u0442\u0440\u043e",
                         "min_vol": 0,
                         "max_vol": 500,
                         "levels": [
@@ -100,7 +104,7 @@
                         ]
                     },
                     {
-                        "comment": "$500K–$2M — среднеизвестная монета, умеренный памп",
+                        "comment": "$500K\u2013$2M \u2014 \u0441\u0440\u0435\u0434\u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u0430\u044f \u043c\u043e\u043d\u0435\u0442\u0430, \u0443\u043c\u0435\u0440\u0435\u043d\u043d\u044b\u0439 \u043f\u0430\u043c\u043f",
                         "min_vol": 500,
                         "max_vol": 2000,
                         "levels": [
@@ -119,7 +123,7 @@
                         ]
                     },
                     {
-                        "comment": "> $2M — ликвидная монета, памп растянут",
+                        "comment": "> $2M \u2014 \u043b\u0438\u043a\u0432\u0438\u0434\u043d\u0430\u044f \u043c\u043e\u043d\u0435\u0442\u0430, \u043f\u0430\u043c\u043f \u0440\u0430\u0441\u0442\u044f\u043d\u0443\u0442",
                         "min_vol": 2000,
                         "max_vol": null,
                         "levels": [

@@ -197,7 +197,7 @@ class TradingBot:
             self.active_positions_locker[pos_key] = asyncio.Lock()
         return self.active_positions_locker[pos_key]
 
-    def _check_risk_limits(self, symbol: str) -> bool:
+    def _can_open_position(self, symbol: str, side: str = "LONG") -> bool:
         working_symbols = set()
         has_long, has_short = False, False
         
@@ -245,6 +245,8 @@ class TradingBot:
 
         pos_key = f"{phemex_symbol}_{side}"
         logger.warning(f"🚀 [Upbit Signal] {phemex_symbol} → {side}")
+        # Сразу в бан, чтобы не было повторных входов по этому же сигналу (перма-бан в cfg.json)
+        self.set_blacklist(list(set(self.black_list + [phemex_symbol])))
 
         # Запрашиваем цены из кэша (снапшот)
         bids, asks = self.st_stream.get_depth(phemex_symbol) if self.st_stream else ([], [])
@@ -268,12 +270,14 @@ class TradingBot:
                     mid_price=signal.mid_price, # Используем актуальную цену из сигнала
                 )
 
+        # 3. ВХОД (ВСЕГДА РЕАЛЬНЫЙ)
         success = await self.executor.execute_entry(phemex_symbol, pos_key, signal)
+
         if success:
             await self.state.save()
         else:
             logger.warning(f"[{phemex_symbol}] Ошибка входа! Монета заносится в черный список.")
-            self.set_blacklist(self.black_list + [phemex_symbol])
+            self.set_blacklist(list(set(self.black_list + [phemex_symbol])))
             async with self._get_lock(pos_key):
                 p = self.state.active_positions.get(pos_key)
                 if p and not p.in_position:

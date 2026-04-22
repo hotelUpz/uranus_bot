@@ -14,3 +14,109 @@
 2026-04-22 20:45:05 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
 2026-04-22 20:45:06 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
 2026-04-22 20:45:06 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:55:07 | INFO | api | 🌐 Stakan WS подключен: на 37 монет.
+2026-04-22 20:55:10 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-04-22 20:55:11 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-04-22 20:55:11 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 37 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:55 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 20:57:56 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-04-22 20:57:57 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-04-22 20:57:57 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
+2026-04-22 20:57:59 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:57:59 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:00 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:00 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:00 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:00 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:01 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:01 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:02 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:02 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:03 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:03 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:04 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:04 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:05 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:06 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:06 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:07 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:08 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:08 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:09 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:09 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:09 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:09 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:10 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:10 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:11 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:11 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:12 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:12 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:13 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:13 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:13 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:13 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:14 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:14 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:14 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:14 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:14 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:15 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:15 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:15 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:16 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:16 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:16 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:16 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:17 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:17 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:17 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:17 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:17 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:18 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:18 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:18 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:19 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-22 20:58:19 | ERROR | api | API Request Failed (POST /g-orders): Server disconnected
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 37 монет.
+2026-04-22 21:22:48 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:22:50 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-04-22 21:22:50 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-04-22 21:22:50 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
+2026-04-22 21:22:51 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [20004]: TE_ERR_INCONSISTENT_POS_MODE
+2026-04-22 21:22:53 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [20004]: TE_ERR_INCONSISTENT_POS_MODE

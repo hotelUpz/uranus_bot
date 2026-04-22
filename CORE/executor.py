@@ -121,7 +121,7 @@ class OrderExecutor:
                 return False
 
             side = "Buy" if signal.side == "LONG" else "Sell"
-            phemex_pos_side = "Long" if signal.side == "LONG" else "Short"
+            phemex_pos_side = "Merged" if not self.tb.hedge_mode else ("Long" if signal.side == "LONG" else "Short")
 
             async with self.tb._get_lock(pos_key):
                 pos = self.tb.state.active_positions.get(pos_key)
@@ -166,23 +166,34 @@ class OrderExecutor:
             pos = self.tb.state.active_positions.get(pos_key)
             if not pos or not getattr(pos, 'in_position', False):
                 return False
-            phemex_pos_side = "Long" if pos.side == "LONG" else "Short"
+            phemex_pos_side = "Merged" if not self.tb.hedge_mode else ("Long" if pos.side == "LONG" else "Short")
             side = "Sell" if pos.side == "LONG" else "Buy"
 
         # Защита от дублей при краше бота во время инициализации сетки
         await self.cancel_all_orders(symbol)
-
+        
         results = []
         for idx, order in enumerate(grid_orders):
-            slip = 0.1 + 0.1 * idx   # 0.1s, 0.2s, 0.3s, ...
-            await asyncio.sleep(slip)
-            try:
-                resp = await self.client.place_limit_order(
-                    symbol, side, order["qty"], order["price"], phemex_pos_side, reduce_only=True
-                )
-                results.append((idx, resp, None))
-            except Exception as e:
-                results.append((idx, None, e))
+            # Слип между ордерами
+            await asyncio.sleep(0.1 + 0.1 * idx)
+            
+            # Попытки для каждого ордера сетки (важно при TE_REDUCE_ONLY_ABORT)
+            for tp_attempt in range(3):
+                try:
+                    resp = await self.client.place_limit_order(
+                        symbol, side, order["qty"], order["price"], phemex_pos_side, reduce_only=True
+                    )
+                    results.append((idx, resp, None))
+                    break # Успех
+                except Exception as e:
+                    err_msg = str(e).lower()
+                    if "11011" in err_msg or "reduce_only" in err_msg:
+                        if tp_attempt < 2:
+                            logger.debug(f"[{pos_key}] TP #{idx+1} [11011] retry {tp_attempt+1}...")
+                            await asyncio.sleep(1.0)
+                            continue
+                    results.append((idx, None, e))
+                    break
 
         success_count = 0
         async with self.tb._get_lock(pos_key):
@@ -236,7 +247,7 @@ class OrderExecutor:
                 pos_side_raw = pos.side
                 old_order_id = pos.close_order_id # <-- Читаем ID старого ордера
 
-            phemex_pos_side = "Long" if pos_side_raw == "LONG" else "Short"
+            phemex_pos_side = "Merged" if not self.tb.hedge_mode else ("Long" if pos_side_raw == "LONG" else "Short")
             
             # 2. УБИВАЕМ СТАРЫЙ ОРДЕР fire-and-forget (разблокируем маржу для нового ордера)
             if old_order_id:
@@ -319,7 +330,7 @@ class OrderExecutor:
             pos_side_raw = pos.side
             pos.tp_orders.clear() # Очищаем стейт лимитных ордеров
             
-        phemex_pos_side = "Long" if pos_side_raw == "LONG" else "Short"
+        phemex_pos_side = "Merged" if not self.tb.hedge_mode else ("Long" if pos_side_raw == "LONG" else "Short")
         side = "Sell" if pos_side_raw == "LONG" else "Buy"
         
         # 2. Швыряем маркет
