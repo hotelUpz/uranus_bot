@@ -112,7 +112,6 @@ class AdminTgBot:
                     f"<b>Статус:</b> {state_text}\n"
                     f"<b>Позиций:</b> {pos_count} / {self.tb.max_active_positions}\n"
                     f"<b>Монет с лоссами:</b> {len(self.tb.state.consecutive_fails)}\n"
-                    f"<b>Монет в карантине:</b> {len(self.tb.state.quarantine_until)}\n"
                 )
                 
                 if pos_count > 0:

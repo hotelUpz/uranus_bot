@@ -19,7 +19,6 @@ class BotState:
         self.filepath = filepath
         self.active_positions: Dict[str, ActivePosition] = {}
         self.consecutive_fails: Dict[str, int] = {}
-        self.quarantine_until: Dict[str, float] = {}
         
         self.pending_entry_orders: Dict[str, str] = {}
         self.pending_interference_orders: Dict[str, str] = {}
@@ -42,7 +41,6 @@ class BotState:
                     if pos.symbol not in self.black_list
                 },
                 "fails": dict(self.consecutive_fails),
-                "quarantine": {x: str(y) for x, y in dict(self.quarantine_until).items() if x and y},
                 "analytics": getattr(self, 'analytics', {})  # <--- ВОТ ЭТА СТРОКА ДОЛЖНА БЫТЬ ЗДЕСЬ
             }
             await asyncio.to_thread(self._sync_save, state_dict)
@@ -56,10 +54,6 @@ class BotState:
         for k, v in data.get("fails", {}).items():
             if k not in self.consecutive_fails:
                 self.consecutive_fails[k] = v
-                
-        for k, v in data.get("quarantine", {}).items():
-            if k not in self.quarantine_until:
-                self.quarantine_until[k] = v
         
         # Для аналитики используем update, чтобы сохранить дефолтные ключи Трекера
         self.analytics.update(data.get("analytics", {}))

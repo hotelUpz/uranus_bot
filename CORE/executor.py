@@ -213,6 +213,7 @@ class OrderExecutor:
                 logger.info(f"[{pos_key}] 🕸 Сетка TP успешно выставлена: {success_count}/{len(grid_orders)} ордеров.")
                 return True
             else:
+                pos.tp_grid_initiated = False
                 logger.error(f"[{pos_key}] ❌ Не удалось выставить ни одного ордера сетки TP.")
                 return False
 

@@ -22,8 +22,9 @@ class StopLossScenario:
     def __init__(self, cfg: dict) -> None:
         self._enabled: bool = bool(cfg.get("enable", False))
         self._pct: float = float(cfg.get("percent", 5.0)) / 100.0
+        self._ttl_sec: float = float(cfg.get("ttl_sec", 0.0))
 
-    def is_triggered(self, pos: "ActivePosition", current_price: float) -> bool:
+    def is_triggered(self, pos: "ActivePosition", current_price: float, now: float) -> bool:
         if not self._enabled or current_price <= 0:
             return False
 
@@ -31,12 +32,26 @@ class StopLossScenario:
             # Безубыток
             sl_price = pos.entry_price
             if pos.side == "LONG":
-                return current_price <= sl_price
+                condition_met = current_price <= sl_price
             else:
-                return current_price >= sl_price
+                condition_met = current_price >= sl_price
         else:
             # Фиксированный SL
             if pos.side == "LONG":
-                return current_price <= pos.entry_price * (1.0 - self._pct)
+                condition_met = current_price <= pos.entry_price * (1.0 - self._pct)
             else:
-                return current_price >= pos.entry_price * (1.0 + self._pct)
+                condition_met = current_price >= pos.entry_price * (1.0 + self._pct)
+
+        if condition_met:
+            if self._ttl_sec <= 0:
+                return True
+            
+            if getattr(pos, 'sl_trigger_time', 0.0) == 0.0:
+                pos.sl_trigger_time = now
+                
+            if now - pos.sl_trigger_time >= self._ttl_sec:
+                return True
+        else:
+            pos.sl_trigger_time = 0.0
+            
+        return False

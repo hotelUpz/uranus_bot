@@ -1,4 +1,7 @@
-# hotelupz/rucheiok/rucheiok-.../consts.py
+# ============================================================
+# FILE: consts.py
+# ROLE: Глобальные константы. Загрузка и раздача флагов из cfg.json.
+# ============================================================
 from __future__ import annotations
 import json
 from pathlib import Path

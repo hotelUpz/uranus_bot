@@ -1,3 +1,7 @@
+# ============================================================
+# FILE: c_log.py
+# ROLE: Унифицированный логгер. Методы: debug, info, warning, error, exception.
+# ============================================================
 from __future__ import annotations
 
 import inspect
@@ -46,10 +50,10 @@ class UnifiedLogger:
             base_logger.addHandler(file_handler)
 
             # # 2. Обработчик для вывода в консоль (заменяет print)
-            # if LOG_DEBUG: 
-            #     console_handler = logging.StreamHandler(sys.stdout)
-            #     console_handler.setFormatter(formatter)
-            #     base_logger.addHandler(console_handler)
+            if LOG_DEBUG: 
+                console_handler = logging.StreamHandler(sys.stdout)
+                console_handler.setFormatter(formatter)
+                base_logger.addHandler(console_handler)
 
         self._logger = logging.LoggerAdapter(base_logger, extra={"context": context or name})
 

@@ -132,9 +132,6 @@ class TradingBot:
         self.stop_loss_scen   = StopLossScenario(scen_cfg.get("stop_loss", {}))
         self.ttl_close_scen   = TtlCloseScenario(scen_cfg.get("ttl_market_close", {}))
 
-        self.min_quarantine_threshold_usdt = -abs(self.cfg["risk"]["quarantine"]["min_quarantine_threshold_usdt"])
-        self.force_quarantine_threshold_usdt = -abs(self.cfg["risk"]["quarantine"]["force_quarantine_threshold_usdt"])
-
     async def _await_task(self, task: asyncio.Task | None):
         if not task: return
         task.cancel()
@@ -149,47 +146,6 @@ class TradingBot:
             if hasattr(self.state, 'black_list'):
                 self.state.black_list = self.black_list
         return success, msg    
-
-    async def quarantine_util(self, symbol) -> bool:        
-        if symbol in self.state.quarantine_until:
-            q_val = self.state.quarantine_until[symbol]
-            try: limit_time = float(q_val)
-            except (ValueError, TypeError): limit_time = 0.0
-
-            if time.time() > limit_time:
-                del self.state.quarantine_until[symbol]
-                self.state.consecutive_fails[symbol] = 0
-                asyncio.create_task(self.state.save()) 
-                return True            
-            elif not any(k.startswith(f"{symbol}_") for k in self.state.active_positions): 
-                return False
-        return True
-        
-    def apply_entry_quarantine(self, symbol: str):
-        q_hours = self.cfg.get("entry", {}).get("quarantine", {}).get("quarantine_hours", 1)
-        if str(q_hours).lower() == "inf":
-            self.state.quarantine_until[symbol] = "inf"
-            logger.warning(f"[{symbol}] 🚫 Помещен в бессрочный карантин (вход не удался).")
-        elif float(q_hours) > 0:
-            self.state.quarantine_until[symbol] = time.time() + (float(q_hours) * 3600)
-            logger.warning(f"[{symbol}] 🚫 Помещен в карантин на {q_hours}ч (вход не удался).")
-        asyncio.create_task(self.state.save())
-
-    def apply_loss_quarantine(self, symbol: str, trade_pnl: float):
-        q_cfg = self.cfg.get("risk", {}).get("quarantine", {})
-        max_fails = q_cfg.get("max_consecutive_fails", 1)
-        q_hours = q_cfg.get("quarantine_hours", "inf")
-
-        self.state.consecutive_fails[symbol] = self.state.consecutive_fails.get(symbol, 0) + 1
-        quarantine_condition = (
-            (self.state.consecutive_fails[symbol] >= max_fails and
-            trade_pnl <= self.min_quarantine_threshold_usdt) or (trade_pnl <= self.force_quarantine_threshold_usdt)
-        )
-        if quarantine_condition:
-            if str(q_hours).lower() == "inf": self.state.quarantine_until[symbol] = "inf" 
-            else: self.state.quarantine_until[symbol] = time.time() + (float(q_hours) * 3600)
-            logger.warning(f"[{symbol}] 💀 Карантин ПОТЕРЬ: {self.state.consecutive_fails[symbol]} фейлов. Блокировка на {q_hours}ч.")
-        asyncio.create_task(self.state.save())
 
     async def _recover_state(self):
         try:
@@ -280,8 +236,6 @@ class TradingBot:
             if phemex_symbol not in self.symbol_specs:
                 logger.warning(f"[Upbit] {phemex_symbol} всё ещё нет на Phemex, отмена.")
                 return
-        if not await self.quarantine_util(phemex_symbol):
-            return
 
         pos_key = f"{phemex_symbol}_{side}"
         logger.warning(f"🚀 [Upbit Signal] {phemex_symbol} → {side}")
@@ -312,7 +266,8 @@ class TradingBot:
         if success:
             await self.state.save()
         else:
-            self.apply_entry_quarantine(phemex_symbol)
+            logger.warning(f"[{phemex_symbol}] Ошибка входа! Монета заносится в черный список.")
+            self.set_blacklist(self.black_list + [phemex_symbol])
             async with self._get_lock(pos_key):
                 p = self.state.active_positions.get(pos_key)
                 if p and not p.in_position:
@@ -367,26 +322,30 @@ class TradingBot:
                 if not pos.tp_grid_initiated:
                     volume_24h = self.price_manager.get_volume(pos.symbol)
                     spec = self.symbol_specs.get(pos.symbol)
-                    if spec:
-                        orders = self.grid_tp_factory.calculate_grid(
-                            symbol=pos.symbol,
-                            side=pos.side,
-                            entry_price=pos.entry_price,
-                            total_qty=pos.current_qty,
-                            tick_size=spec.tick_size,
-                            lot_size=spec.lot_size,
-                            volume_24h_usd=volume_24h
-                        )
-                        if orders:
-                            asyncio.create_task(self.executor.execute_tp_grid(pos.symbol, pos_key, orders))
-                        else:
-                            logger.error(f"[{pos_key}] Ошибка расчета Grid TP.")
+                    if not spec:
+                        logger.error(f"[{pos_key}] ❌ Ошибка Grid TP: Нет спецификаций (tick_size/lot_size) для {pos.symbol}!")
+                        continue
+                        
+                    orders = self.grid_tp_factory.calculate_grid(
+                        symbol=pos.symbol,
+                        side=pos.side,
+                        entry_price=pos.entry_price,
+                        total_qty=pos.current_qty,
+                        tick_size=spec.tick_size,
+                        lot_size=spec.lot_size,
+                        volume_24h_usd=volume_24h
+                    )
+                    if orders:
+                        pos.tp_grid_initiated = True # Предотвращаем спам тасок
+                        asyncio.create_task(self.executor.execute_tp_grid(pos.symbol, pos_key, orders))
+                    else:
+                        logger.error(f"[{pos_key}] ❌ Ошибка расчета Grid TP (возвращен пустой список ордеров).")
                     continue
 
                 if pos.exit_in_flight:
                     continue
 
-                is_stop_loss = self.stop_loss_scen.is_triggered(pos, current_price)
+                is_stop_loss = self.stop_loss_scen.is_triggered(pos, current_price, now)
                 is_ttl       = self.ttl_close_scen.is_triggered(pos, now)
 
                 if is_stop_loss or is_ttl:
@@ -467,9 +426,6 @@ class TradingBot:
 
                                 if is_win:
                                     self.state.consecutive_fails[pos.symbol] = 0
-                                    self.state.quarantine_until.pop(pos.symbol, None)
-                                else:
-                                    self.apply_loss_quarantine(pos.symbol, net_pnl)
 
                                 if self.tg:
                                     msg = Reporters.exit_success(pos_key, semantic, exit_pr)
@@ -522,9 +478,12 @@ class TradingBot:
         # Замыкаем кэш цен напрямую на price_manager
         phemex_cache = self.price_manager.phemex_prices
         
-        def on_stakan_depth(sym: str, depth: DepthTop):
-            if depth.bid1 > 0 and depth.ask1 > 0:
-                phemex_cache[sym] = (depth.bid1 + depth.ask1) / 2.0
+        async def on_stakan_depth(depth: DepthTop):
+            if depth.bids and depth.asks:
+                bid1 = depth.bids[0][0]
+                ask1 = depth.asks[0][0]
+                if bid1 > 0 and ask1 > 0:
+                    phemex_cache[depth.symbol] = (bid1 + ask1) / 2.0
                 
         self._stakan_task = asyncio.create_task(self.st_stream.run(on_stakan_depth))
 

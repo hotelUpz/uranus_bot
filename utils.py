@@ -42,14 +42,6 @@ def get_config_summary(cfg: dict) -> str:
     lines.append(f"Leverage: <b>{lev_val}x</b> | Margin Mode: <b>{margin_mod}</b>")
     lines.append(f"Margin Size: <b>{risk.get('margin_size', 'N/A')}</b> | Notional Limit: <b>{risk.get('notional_limit', 'N/A')} USDT</b>")
 
-    
-    q = risk.get("quarantine", {})
-    lines.append(f"Quarantine: <b>{q.get('max_consecutive_fails', 'N/A')}</b> fails for <b>{q.get('quarantine_hours', 'N/A')}h</b>")
-    
-    min_q = q.get('min_quarantine_threshold_usdt', 'N/A')
-    force_q = q.get('force_quarantine_threshold_usdt', 'N/A')
-    lines.append(f"Q. Thresholds: Min <b>{min_q} USDT</b> | Force <b>{force_q} USDT</b>")
-    
     log = cfg.get("log", {})
     tg = cfg.get("tg", {})
     lines.append("\n📡 <b>[SYSTEM]</b>")
@@ -61,7 +53,7 @@ def get_config_summary(cfg: dict) -> str:
     entry = entry_main.get("pattern", {})
     lines.append("\n📥 <b>[ENTRY GENERAL]</b>")
     lines.append(f"Sig Timeout: <b>{entry_main.get('signal_timeout_sec', 'N/A')}s</b>")
-    lines.append(f"Max Retries: <b>{entry_main.get('max_place_order_retries', 'N/A')}</b> | Entry Qrntn: <b>{entry_main.get('quarantine', {}).get('quarantine_hours', 'N/A')}h</b>")
+    lines.append(f"Max Retries: <b>{entry_main.get('max_place_order_retries', 'N/A')}</b>")
 
     ph = entry.get("phemex", {})
     lines.append("\n🎯 <b>[ENTRY PHEMEX]</b>")
@@ -99,14 +91,9 @@ def get_config_summary(cfg: dict) -> str:
         f"   Leverage:  {lev_cfg.get('val', 'N/A') if isinstance(lev_cfg, dict) else lev_cfg}x",
         f"   Notional:  {risk.get('notional_limit', 0)}$",
         "",
-        "🔹 [RISK & QUARANTINE]",
-        f"   Min Thr.:  {q.get('min_quarantine_threshold_usdt', '0')} $",
-        f"   Forc Thr.: {q.get('force_quarantine_threshold_usdt', '0')} $",
-        f"   Hours:     {q.get('quarantine_hours', 1)}h",
-        "",
         "🔹 [EXIT STRATEGY]",
         f"   Grid TP:   {'ON' if grid.get('enable') else 'OFF'}",
-        f"   Stop-Loss: {'ON' if sl.get('enable') else 'OFF'} ({sl.get('percent', 5.0)}%)",
+        f"   Stop-Loss: {'ON' if sl.get('enable') else 'OFF'} ({sl.get('percent', 5.0)}% | {sl.get('ttl_sec', 0.0)}s)",
         f"   TTL Close: {'ON' if ttl.get('enable') else 'OFF'} ({ttl.get('ttl_sec', 3600)}s)",
         "────────────────────────────────────────"
     ])

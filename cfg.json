@@ -30,17 +30,11 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 80.0,
-        "hedge_mode": false,
-        "quarantine": {
-            "min_quarantine_threshold_usdt": -0.2,
-            "force_quarantine_threshold_usdt": -4.0,
-            "max_consecutive_fails": 1,
-            "quarantine_hours": "inf"
-        }
+        "notional_limit": 100.0,
+        "hedge_mode": false
     },
     "upbit": {
-        "test_mode": false,
+        "test_mode": true,
         "symbols_to_mock": [
             "BTCUSDT",
             "ETHUSDT",
@@ -48,7 +42,7 @@
         ],
         "poll_interval_sec": 1.0,
         "_proxy_hint": "null = локальный IP без прокси (валидный слот). Кол-во слотов = ceil(cooldown_sec / poll_interval_sec). Пример: poll=1, cooldown=8 → нужно 8 слотов [null, proxy1..proxy7].",
-        "cooldown_sec": 8.0,
+        "cooldown_sec": 2.0,
         "proxies": [
             null
         ],
@@ -57,9 +51,6 @@
     "entry": {
         "signal_timeout_sec": 0.01,
         "max_place_order_retries": 1,
-        "quarantine": {
-            "quarantine_hours": 1
-        },
         "pattern": {
             "upbit_signal": true,
             "binance": {
@@ -150,11 +141,12 @@
             },
             "stop_loss": {
                 "enable": false,
-                "percent": 5.0
+                "percent": 5.0,
+                "ttl_sec": 0.0
             },
             "ttl_market_close": {
                 "enable": true,
-                "ttl_sec": 7200
+                "ttl_sec": 60
             }
         }
     }
