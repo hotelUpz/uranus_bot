@@ -21,9 +21,9 @@
         "timezone": "Europe/Kyiv"
     },
     "black_list": [
+        "ETHUSDT",
         "BTCUSDT",
-        "SOLUSDT",
-        "ETHUSDT"
+        "SOLUSDT"
     ],
     "quota_asset": "USDT",
     "risk": {

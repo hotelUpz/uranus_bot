@@ -1,332 +1,7 @@
-2026-04-22 20:44:56 | WARNING | bot | 🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).
-2026-04-22 20:45:01 | INFO | bot | ▶️ Инициализация систем...
-2026-04-22 20:45:01 | INFO | bot | ⚙️ БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
-🎛 <b>[APP & RISK]</b>
-Name: <b>Rucheiok Bot</b> | Quota: <b>USDT</b>
-Max Positions: <b>1</b> | Hedge Mode: <b>False</b>
-Leverage: <b>22x</b> | Margin Mode: <b>2</b>
-Margin Size: <b>N/A</b> | Notional Limit: <b>100.0 USDT</b>
-
-📡 <b>[SYSTEM]</b>
-TG Enabled: <b>True</b>
-Logs: D:True I:True W:True E:True
-
-📥 <b>[ENTRY GENERAL]</b>
-Sig Timeout: <b>0.01s</b>
-Max Retries: <b>1</b>
-
-🎯 <b>[ENTRY PHEMEX]</b>
-Enable: <b>N/A</b> | Depth: <b>N/A</b> | TTL: <b>N/As</b>
-Row1 Notional: <b>N/A - N/A USDT</b>
-ROC Win: <b>N/A</b> (SMA: <b>N/A</b>) | Max 1 ROC: <b>N/A%</b>
-Sprd 2 row: &gt;= <b>N/A%</b> | 3 row: &gt;= <b>N/A%</b>
-Hdr/Btm Rate: <b>N/A</b> | Max Bid/Ask Dist: <b>N/A</b>
-
-🔶 <b>[ENTRY BINANCE & FUNDING]</b>
-Binance: <b>False</b> | Sprd: &gt;= <b>0.8%</b>
-Binance Upd: <b>1.1s</b> | Sprd TTL: <b>2s</b>
-Fund1(Phemex): <b>False</b> | Thresh: &gt;= <b>1.0%</b>
-Fund2(Diff): <b>False</b> | Diff: &gt;= <b>0.05%</b>
-────────────────────────────────────────
-🔹 [GLOBAL]
-   Asset:     USDT
-   Leverage:  22x
-   Notional:  100.0$
-
-🔹 [EXIT STRATEGY]
-   Grid TP:   ON
-   Stop-Loss: OFF (5.0% | 0.0s)
-   TTL Close: ON (60s)
-────────────────────────────────────────
-2026-04-22 20:45:02 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 20:45:02 | INFO | bot | 🔄 Рестарт стрима стаканов на 517 символов...
-2026-04-22 20:45:02 | INFO | bot | 💰 Стартовый баланс успешно загружен из стейта: 9.43 USDT
-2026-04-22 20:45:02 | INFO | bot | 🔄 Прогрев кэша цен и фандинга...
-2026-04-22 20:45:05 | WARNING | bot | 🚀 [Upbit Signal] ETHUSDT → LONG
-2026-04-22 20:45:05 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 20:45:06 | INFO | bot | 🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
-2026-04-22 20:45:07 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 20:45:38 | INFO | bot | ⏹ Остановка процессов...
-2026-04-22 20:45:38 | DEBUG | bot | Task shutdown note: 'PhemexStakanStream' object has no attribute 'get_depth'
-2026-04-22 20:45:38 | INFO | bot | 💾 Финальное сохранение стейта на диск...
-2026-04-22 20:55:01 | WARNING | bot | 🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).
-2026-04-22 20:55:06 | INFO | bot | ▶️ Инициализация систем...
-2026-04-22 20:55:06 | INFO | bot | ⚙️ БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
-🎛 <b>[APP & RISK]</b>
-Name: <b>Rucheiok Bot</b> | Quota: <b>USDT</b>
-Max Positions: <b>1</b> | Hedge Mode: <b>False</b>
-Leverage: <b>22x</b> | Margin Mode: <b>2</b>
-Margin Size: <b>N/A</b> | Notional Limit: <b>100.0 USDT</b>
-
-📡 <b>[SYSTEM]</b>
-TG Enabled: <b>True</b>
-Logs: D:True I:True W:True E:True
-
-📥 <b>[ENTRY GENERAL]</b>
-Sig Timeout: <b>0.01s</b>
-Max Retries: <b>1</b>
-
-🎯 <b>[ENTRY PHEMEX]</b>
-Enable: <b>N/A</b> | Depth: <b>N/A</b> | TTL: <b>N/As</b>
-Row1 Notional: <b>N/A - N/A USDT</b>
-ROC Win: <b>N/A</b> (SMA: <b>N/A</b>) | Max 1 ROC: <b>N/A%</b>
-Sprd 2 row: &gt;= <b>N/A%</b> | 3 row: &gt;= <b>N/A%</b>
-Hdr/Btm Rate: <b>N/A</b> | Max Bid/Ask Dist: <b>N/A</b>
-
-🔶 <b>[ENTRY BINANCE & FUNDING]</b>
-Binance: <b>False</b> | Sprd: &gt;= <b>0.8%</b>
-Binance Upd: <b>1.1s</b> | Sprd TTL: <b>2s</b>
-Fund1(Phemex): <b>False</b> | Thresh: &gt;= <b>1.0%</b>
-Fund2(Diff): <b>False</b> | Diff: &gt;= <b>0.05%</b>
-────────────────────────────────────────
-🔹 [GLOBAL]
-   Asset:     USDT
-   Leverage:  22x
-   Notional:  100.0$
-
-🔹 [EXIT STRATEGY]
-   Grid TP:   ON
-   Stop-Loss: OFF (5.0% | 0.0s)
-   TTL Close: ON (60s)
-────────────────────────────────────────
-2026-04-22 20:55:07 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 20:55:07 | INFO | bot | 🔄 Рестарт стрима стаканов на 517 символов...
-2026-04-22 20:55:07 | INFO | bot | 💰 Стартовый баланс успешно загружен из стейта: 9.43 USDT
-2026-04-22 20:55:07 | INFO | bot | 🔄 Прогрев кэша цен и фандинга...
-2026-04-22 20:55:10 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 20:55:10 | INFO | bot | ⏳ Ожидание готовности систем (Timeout: 10.0s)...
-2026-04-22 20:55:10 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 20:55:11 | INFO | bot | ✅ Системы готовы за 1.0с. Данные получены.
-2026-04-22 20:55:11 | INFO | bot | 🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
-2026-04-22 20:55:12 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:55:12 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 20:56:15 | INFO | bot | ⏹ Остановка процессов...
-2026-04-22 20:56:15 | DEBUG | bot | Task shutdown note: 'TradingBot' object has no attribute '_can_open_position'
-2026-04-22 20:56:15 | INFO | bot | 💾 Финальное сохранение стейта на диск...
-2026-04-22 20:57:47 | WARNING | bot | 🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).
-2026-04-22 20:57:53 | INFO | bot | ▶️ Инициализация систем...
-2026-04-22 20:57:53 | INFO | bot | ⚙️ БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
-🎛 <b>[APP & RISK]</b>
-Name: <b>Rucheiok Bot</b> | Quota: <b>USDT</b>
-Max Positions: <b>1</b> | Hedge Mode: <b>False</b>
-Leverage: <b>22x</b> | Margin Mode: <b>2</b>
-Margin Size: <b>N/A</b> | Notional Limit: <b>100.0 USDT</b>
-
-📡 <b>[SYSTEM]</b>
-TG Enabled: <b>True</b>
-Logs: D:True I:True W:True E:True
-
-📥 <b>[ENTRY GENERAL]</b>
-Sig Timeout: <b>0.01s</b>
-Max Retries: <b>1</b>
-
-🎯 <b>[ENTRY PHEMEX]</b>
-Enable: <b>N/A</b> | Depth: <b>N/A</b> | TTL: <b>N/As</b>
-Row1 Notional: <b>N/A - N/A USDT</b>
-ROC Win: <b>N/A</b> (SMA: <b>N/A</b>) | Max 1 ROC: <b>N/A%</b>
-Sprd 2 row: &gt;= <b>N/A%</b> | 3 row: &gt;= <b>N/A%</b>
-Hdr/Btm Rate: <b>N/A</b> | Max Bid/Ask Dist: <b>N/A</b>
-
-🔶 <b>[ENTRY BINANCE & FUNDING]</b>
-Binance: <b>False</b> | Sprd: &gt;= <b>0.8%</b>
-Binance Upd: <b>1.1s</b> | Sprd TTL: <b>2s</b>
-Fund1(Phemex): <b>False</b> | Thresh: &gt;= <b>1.0%</b>
-Fund2(Diff): <b>False</b> | Diff: &gt;= <b>0.05%</b>
-────────────────────────────────────────
-🔹 [GLOBAL]
-   Asset:     USDT
-   Leverage:  22x
-   Notional:  100.0$
-
-🔹 [EXIT STRATEGY]
-   Grid TP:   ON
-   Stop-Loss: OFF (5.0% | 0.0s)
-   TTL Close: ON (60s)
-────────────────────────────────────────
-2026-04-22 20:57:55 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 20:57:55 | INFO | bot | 🔄 Рестарт стрима стаканов на 517 символов...
-2026-04-22 20:57:55 | INFO | bot | 💰 Стартовый баланс успешно загружен из стейта: 9.43 USDT
-2026-04-22 20:57:55 | INFO | bot | 🔄 Прогрев кэша цен и фандинга...
-2026-04-22 20:57:56 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 20:57:56 | INFO | bot | ⏳ Ожидание готовности систем (Timeout: 10.0s)...
-2026-04-22 20:57:56 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 20:57:57 | INFO | bot | 🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
-2026-04-22 20:57:57 | INFO | bot | ✅ Системы готовы за 1.0с. Данные получены.
-2026-04-22 20:57:58 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
-2026-04-22 20:57:58 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для SOLUSDT...
-2026-04-22 20:57:58 | INFO | bot | [SOLUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.3s
-2026-04-22 20:57:58 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 20:57:59 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:57:59 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для BTCUSDT...
-2026-04-22 20:58:00 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:00 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:00 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:00 | INFO | bot | [Upbit] Отклонен вход для BTCUSDT (лимит позиций).
-2026-04-22 20:58:00 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:00 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:00 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 1.4s
-2026-04-22 20:58:01 | WARNING | bot | 🚀 [Upbit Signal] ETHUSDT → LONG
-2026-04-22 20:58:01 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для ETHUSDT...
-2026-04-22 20:58:02 | ERROR | bot | [ETHUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:02 | ERROR | bot | [ETHUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:02 | INFO | bot | [ETHUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.5s
-2026-04-22 20:58:02 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:02 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для BTCUSDT...
-2026-04-22 20:58:03 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:03 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:03 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
-2026-04-22 20:58:03 | INFO | bot | [Upbit] Отклонен вход для SOLUSDT (лимит позиций).
-2026-04-22 20:58:03 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:03 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:04 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:04 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:04 | WARNING | bot | 🚀 [Upbit Signal] ETHUSDT → LONG
-2026-04-22 20:58:04 | INFO | bot | [Upbit] Отклонен вход для ETHUSDT (лимит позиций).
-2026-04-22 20:58:04 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:04 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:05 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 2.4s
-2026-04-22 20:58:05 | WARNING | bot | 🚀 [Upbit Signal] ETHUSDT → LONG
-2026-04-22 20:58:05 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для ETHUSDT...
-2026-04-22 20:58:06 | ERROR | bot | [ETHUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:06 | ERROR | bot | [ETHUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:06 | INFO | bot | [ETHUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.9s
-2026-04-22 20:58:06 | WARNING | bot | 🚀 [Upbit Signal] ETHUSDT → LONG
-2026-04-22 20:58:06 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для ETHUSDT...
-2026-04-22 20:58:06 | ERROR | bot | [ETHUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:06 | ERROR | bot | [ETHUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:06 | INFO | bot | [ETHUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.1s
-2026-04-22 20:58:07 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
-2026-04-22 20:58:07 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для SOLUSDT...
-2026-04-22 20:58:08 | INFO | bot | [SOLUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.8s
-2026-04-22 20:58:08 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:08 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для BTCUSDT...
-2026-04-22 20:58:09 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:09 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:09 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:09 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:09 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:09 | INFO | bot | [Upbit] Отклонен вход для BTCUSDT (лимит позиций).
-2026-04-22 20:58:09 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 1.0s
-2026-04-22 20:58:10 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:10 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для BTCUSDT...
-2026-04-22 20:58:11 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:11 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:11 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.9s
-2026-04-22 20:58:11 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
-2026-04-22 20:58:11 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для SOLUSDT...
-2026-04-22 20:58:12 | INFO | bot | [SOLUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.7s
-2026-04-22 20:58:12 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
-2026-04-22 20:58:12 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для SOLUSDT...
-2026-04-22 20:58:13 | INFO | bot | [SOLUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.5s
-2026-04-22 20:58:13 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:13 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для BTCUSDT...
-2026-04-22 20:58:14 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:14 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:14 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.7s
-2026-04-22 20:58:14 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
-2026-04-22 20:58:14 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для SOLUSDT...
-2026-04-22 20:58:14 | INFO | bot | [SOLUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.2s
-2026-04-22 20:58:15 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
-2026-04-22 20:58:15 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для SOLUSDT...
-2026-04-22 20:58:16 | INFO | bot | [SOLUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.8s
-2026-04-22 20:58:16 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:16 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для BTCUSDT...
-2026-04-22 20:58:17 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:17 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:17 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.5s
-2026-04-22 20:58:17 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:17 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для BTCUSDT...
-2026-04-22 20:58:17 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:17 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:17 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 0.0s
-2026-04-22 20:58:18 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 20:58:18 | INFO | bot | 🧪 [MOCK ENTRY] Симулируем вход для BTCUSDT...
-2026-04-22 20:58:19 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
-2026-04-22 20:58:19 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 20:58:19 | INFO | bot | ⏹ Остановка процессов...
-2026-04-22 20:58:19 | INFO | bot | 💾 Финальное сохранение стейта на диск...
-2026-04-22 20:58:19 | ERROR | bot | [BTCUSDT_LONG] Ошибка выставления TP #5: Private API request failed: Server disconnected
-2026-04-22 20:58:19 | ERROR | bot | [BTCUSDT_LONG] ❌ Не удалось выставить ни одного ордера сетки TP.
-2026-04-22 21:22:44 | WARNING | bot | 🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).
-2026-04-22 21:22:45 | INFO | bot | ▶️ Инициализация систем...
-2026-04-22 21:22:45 | INFO | bot | ⚙️ БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
-🎛 <b>[APP & RISK]</b>
-Name: <b>Rucheiok Bot</b> | Quota: <b>USDT</b>
-Max Positions: <b>1</b> | Hedge Mode: <b>False</b>
-Leverage: <b>22x</b> | Margin Mode: <b>2</b>
-Margin Size: <b>N/A</b> | Notional Limit: <b>100.0 USDT</b>
-
-📡 <b>[SYSTEM]</b>
-TG Enabled: <b>True</b>
-Logs: D:True I:True W:True E:True
-
-📥 <b>[ENTRY GENERAL]</b>
-Sig Timeout: <b>0.01s</b>
-Max Retries: <b>1</b>
-
-🎯 <b>[ENTRY PHEMEX]</b>
-Enable: <b>N/A</b> | Depth: <b>N/A</b> | TTL: <b>N/As</b>
-Row1 Notional: <b>N/A - N/A USDT</b>
-ROC Win: <b>N/A</b> (SMA: <b>N/A</b>) | Max 1 ROC: <b>N/A%</b>
-Sprd 2 row: &gt;= <b>N/A%</b> | 3 row: &gt;= <b>N/A%</b>
-Hdr/Btm Rate: <b>N/A</b> | Max Bid/Ask Dist: <b>N/A</b>
-
-🔶 <b>[ENTRY BINANCE & FUNDING]</b>
-Binance: <b>False</b> | Sprd: &gt;= <b>0.8%</b>
-Binance Upd: <b>1.1s</b> | Sprd TTL: <b>2s</b>
-Fund1(Phemex): <b>False</b> | Thresh: &gt;= <b>1.0%</b>
-Fund2(Diff): <b>False</b> | Diff: &gt;= <b>0.05%</b>
-────────────────────────────────────────
-🔹 [GLOBAL]
-   Asset:     USDT
-   Leverage:  22x
-   Notional:  100.0$
-
-🔹 [EXIT STRATEGY]
-   Grid TP:   ON
-   Stop-Loss: OFF (5.0% | 0.0s)
-   TTL Close: ON (60s)
-────────────────────────────────────────
-2026-04-22 21:22:47 | INFO | bot | ✅ Стейт синхронизирован. В памяти 1 активных позиций.
-2026-04-22 21:22:47 | INFO | bot | 🔄 Рестарт стрима стаканов на 517 символов...
-2026-04-22 21:22:47 | INFO | bot | 💰 Стартовый баланс успешно загружен из стейта: 9.43 USDT
-2026-04-22 21:22:47 | INFO | bot | 🔄 Прогрев кэша цен и фандинга...
-2026-04-22 21:22:49 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 21:22:49 | INFO | bot | ⏳ Ожидание готовности систем (Timeout: 10.0s)...
-2026-04-22 21:22:49 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 21:22:49 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: 0.0000$ | Время: 24.5m
-2026-04-22 21:22:50 | INFO | bot | ✅ Системы готовы за 1.0с. Данные получены.
-2026-04-22 21:22:50 | INFO | bot | 🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
-2026-04-22 21:22:51 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
-2026-04-22 21:22:51 | ERROR | bot | [BTCUSDT_LONG] Исключение execute_entry (попытка 1): Private API request failed: Phemex Error [20004]: TE_ERR_INCONSISTENT_POS_MODE
-2026-04-22 21:22:51 | WARNING | bot | [BTCUSDT] Ошибка входа! Монета заносится в черный список.
-2026-04-22 21:22:52 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 21:22:53 | WARNING | bot | 🚀 [Upbit Signal] ETHUSDT → LONG
-2026-04-22 21:22:53 | ERROR | bot | [ETHUSDT_LONG] Исключение execute_entry (попытка 1): Private API request failed: Phemex Error [20004]: TE_ERR_INCONSISTENT_POS_MODE
-2026-04-22 21:22:53 | WARNING | bot | [ETHUSDT] Ошибка входа! Монета заносится в черный список.
-2026-04-22 21:22:54 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
-2026-04-22 21:22:54 | INFO | bot | [Upbit] Отклонен вход для SOLUSDT (лимит позиций).
-2026-04-22 21:22:55 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
-2026-04-22 21:22:56 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:22:57 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:22:58 | DEBUG | bot | [ETHUSDT_LONG] 🗑 Удаление фантомной позиции (no WS fill).
-2026-04-22 21:22:58 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
-2026-04-22 21:22:59 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:00 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:01 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:02 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:03 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:04 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:05 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:06 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:07 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:08 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:09 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:23:09 | INFO | bot | ⏹ Остановка процессов...
-2026-04-22 21:23:10 | INFO | bot | 💾 Финальное сохранение стейта на диск...
-2026-04-22 21:43:20 | WARNING | bot | 🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).
-2026-04-22 21:43:24 | INFO | bot | ▶️ Инициализация систем...
-2026-04-22 21:43:24 | INFO | bot | ⚙️ БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+2026-04-22 21:43:48 | INFO | bot | 💾 Финальное сохранение стейта на диск...
+2026-04-22 21:46:15 | WARNING | bot | 🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).
+2026-04-22 21:46:19 | INFO | bot | ▶️ Инициализация систем...
+2026-04-22 21:46:19 | INFO | bot | ⚙️ БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
 🎛 <b>[APP & RISK]</b>
 Name: <b>Rucheiok Bot</b> | Quota: <b>USDT</b>
 Max Positions: <b>1</b> | Hedge Mode: <b>N/A</b>
@@ -364,33 +39,123 @@ Fund2(Diff): <b>False</b> | Diff: &gt;= <b>0.05%</b>
    Stop-Loss: OFF (5.0% | 0.0s)
    TTL Close: ON (60s)
 ────────────────────────────────────────
-2026-04-22 21:43:26 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 21:43:26 | INFO | bot | 🔄 Рестарт стрима стаканов на 514 символов...
-2026-04-22 21:43:26 | INFO | bot | 💰 Стартовый баланс успешно загружен из стейта: 9.43 USDT
-2026-04-22 21:43:26 | INFO | bot | 🔄 Прогрев кэша цен и фандинга...
-2026-04-22 21:43:28 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 21:43:28 | INFO | bot | ⏳ Ожидание готовности систем (Timeout: 10.0s)...
-2026-04-22 21:43:28 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
-2026-04-22 21:43:29 | INFO | bot | 🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
-2026-04-22 21:43:29 | INFO | bot | ✅ Системы готовы за 1.0с. Данные получены.
-2026-04-22 21:43:30 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-22 21:43:30 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:31 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:32 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:33 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:34 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:35 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:36 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:37 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:38 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:39 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:40 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:41 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:42 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:43 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:44 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:45 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:46 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:47 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
-2026-04-22 21:43:48 | INFO | bot | ⏹ Остановка процессов...
-2026-04-22 21:43:48 | INFO | bot | 💾 Финальное сохранение стейта на диск...
+2026-04-22 21:46:20 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-22 21:46:20 | INFO | bot | 🔄 Рестарт стрима стаканов на 517 символов...
+2026-04-22 21:46:20 | INFO | bot | 💰 Стартовый баланс успешно загружен из стейта: 9.43 USDT
+2026-04-22 21:46:20 | INFO | bot | 🔄 Прогрев кэша цен и фандинга...
+2026-04-22 21:46:23 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
+2026-04-22 21:46:23 | INFO | bot | ⏳ Ожидание готовности систем (Timeout: 10.0s)...
+2026-04-22 21:46:23 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
+2026-04-22 21:46:24 | INFO | bot | ✅ Системы готовы за 1.0с. Данные получены.
+2026-04-22 21:46:24 | INFO | bot | 🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-04-22 21:46:25 | WARNING | bot | 🚀 [Upbit Signal] BTCUSDT → LONG
+2026-04-22 21:46:25 | INFO | bot | [BTCUSDT_LONG] ✅ Вход ПО МАРКЕТУ выполнен. Объем: 0.001 (≈ 100.0 $)
+2026-04-22 21:46:26 | INFO | bot | [BTCUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: -0.0948$ | Время: 0.5s
+2026-04-22 21:46:26 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-22 21:46:26 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:27 | WARNING | bot | 🚀 [Upbit Signal] ETHUSDT → LONG
+2026-04-22 21:46:28 | INFO | bot | [ETHUSDT_LONG] ✅ Вход ПО МАРКЕТУ выполнен. Объем: 0.04 (≈ 100.0 $)
+2026-04-22 21:46:28 | INFO | bot | [ETHUSDT_LONG] 🕸 Сетка TP успешно выставлена: 1/1 ордеров.
+2026-04-22 21:46:29 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:30 | WARNING | bot | 🚀 [Upbit Signal] SOLUSDT → LONG
+2026-04-22 21:46:30 | INFO | bot | [Upbit] Отклонен вход для SOLUSDT (лимит позиций).
+2026-04-22 21:46:31 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:32 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:33 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:34 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:35 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:36 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:37 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:38 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:39 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:40 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:41 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:42 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:43 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:44 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:45 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:46 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:47 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:48 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:49 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:50 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:51 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:52 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:53 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:54 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:55 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:56 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:57 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:58 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:46:59 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:00 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:01 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:02 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:03 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:04 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:05 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:06 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:07 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:08 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:09 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:10 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:11 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:12 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:13 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:14 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:15 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:16 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:17 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:18 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:19 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:20 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:21 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:22 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:23 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:24 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:25 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:26 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:27 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:28 | DEBUG | bot | [ETHUSDT_LONG] Сработал TTL Market Close. Цена: 2398.7
+2026-04-22 21:47:28 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:28 | INFO | bot | [ETHUSDT_LONG] 🏁 Выход выполнен ПО МАРКЕТУ. Объем: 0.04
+2026-04-22 21:47:28 | INFO | bot | [ETHUSDT_LONG] 🛑 Позиция закрыта. 🩸 PnL: -0.1156$ | Время: 1.0m
+2026-04-22 21:47:29 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:30 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:31 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:32 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:33 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:34 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:35 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:36 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:37 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:38 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:39 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:40 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:41 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:42 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:43 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:44 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:45 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:46 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:47 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:48 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:49 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:50 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:51 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:52 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:53 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:54 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:55 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:56 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:57 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:58 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:47:59 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:48:00 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:48:01 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:48:02 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:48:03 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:48:04 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:48:05 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:48:06 | INFO | bot | ⏹ Остановка процессов...
+2026-04-22 21:48:06 | INFO | bot | 💾 Финальное сохранение стейта на диск...

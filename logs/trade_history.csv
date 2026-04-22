@@ -1,1 +1,3 @@
 timestamp,symbol,side,entry_price,exit_price,qty,entry_usd,exit_usd,net_pnl,is_win,duration
+1776883586.3052807,BTCUSDT,LONG,78962.9,78962.9,0.001,78.96,78.96,-0.0948,False,0.5s
+1776883648.683821,ETHUSDT,LONG,2399.1,2399.09,0.04,95.96,95.96,-0.1156,False,1.0m
