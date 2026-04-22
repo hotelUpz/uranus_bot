@@ -191,6 +191,74 @@ class TradingBot:
         except Exception as e:
             logger.error(f"❌ Ошибка Recovery: {e}")
 
+    async def _validate_notional_limit(self) -> bool:
+        """
+        Математическая проверка: сможет ли notional_limit покрыть минимальный шаг
+        сетки тейк-профитов с учетом шага лота на бирже для всех монет.
+        """
+        # Если сетка выключена, валидация не требуется
+        if not self.cfg.get("exit", {}).get("scenarios", {}).get("grid_tp", {}).get("enable"):
+            return True
+            
+        grid_map = self.cfg.get("exit", {}).get("scenarios", {}).get("grid_tp", {}).get("map", [])
+        if not grid_map:
+            return True
+            
+        # 1. Ищем самый мелкий процент объема среди всех уровней всех бакетов
+        min_pct = 100.0
+        for bucket in grid_map:
+            vols = bucket.get("volumes", [])
+            if vols:
+                min_pct = min(min_pct, min(vols))
+                
+        if min_pct <= 0 or min_pct > 100:
+            logger.error("❌ Критическая ошибка конфига: Некорректные проценты объемов в сетке TP!")
+            return False
+            
+        buffer_mult = 1.10  # 10% буфер запаса на проскальзывания цены
+        notional = float(self.cfg["risk"]["notional_limit"])
+        failed_symbols = []
+        
+        # 2. Проверяем каждую монету
+        for symbol, spec in self.symbol_specs.items():
+            _, current_price = self.price_manager.get_prices(symbol)
+            if current_price <= 0:
+                continue
+                
+            # Минимальная цена лота в долларах
+            min_usd_lot = spec.lot_size * current_price
+            
+            # Какой долларовый объем приходится на самый мелкий ордер сетки?
+            smallest_chunk_usd = notional * (min_pct / 100.0)
+            
+            # Если наш кусок сетки меньше биржевого лимита + буфер
+            if smallest_chunk_usd < min_usd_lot * buffer_mult:
+                failed_symbols.append((symbol, min_usd_lot))
+                
+        # 3. Реакция на провал валидации
+        if failed_symbols:
+            # Сортируем по "тяжести" нарушения
+            failed_symbols.sort(key=lambda x: x[1], reverse=True)
+            worst_sym, worst_lot_usd = failed_symbols[0]
+            
+            # Считаем, сколько реально нужно денег на notional_limit
+            required_notional = (worst_lot_usd * buffer_mult) / (min_pct / 100.0)
+            
+            msg = (f"⛔️ ОШИБКА РИСК-МЕНЕДЖМЕНТА: Значение notional_limit ({notional}$) слишком мало!\n"
+                   f"Из-за шага лота для монеты {worst_sym} минимальная сделка стоит ~{worst_lot_usd:.2f}$.\n"
+                   f"Самый мелкий ордер сетки TP — это {min_pct}% от объема ({smallest_chunk_usd:.2f}$).\n"
+                   f"Биржа отвергнет выставление тейк-профитов!\n"
+                   f"💡 Решение: Увеличьте notional_limit минимум до {required_notional:.2f}$ "
+                   f"или уберите монету {worst_sym} в black_list.")
+            
+            logger.error(msg)
+            if self.tg:
+                await self.tg.send_message(msg)
+            return False
+            
+        logger.info(f"✅ Финансовая валидация пройдена. Мин. кусок сетки TP: {min_pct}%")
+        return True
+
     def _get_lock(self, pos_key: str) -> asyncio.Lock:
         if pos_key not in self.active_positions_locker:
             self.active_positions_locker[pos_key] = asyncio.Lock()
@@ -559,6 +627,16 @@ class TradingBot:
 
         logger.info("🔄 Прогрев кэша цен и фандинга...")
         await self.price_manager.warmup()
+
+        # ==========================================
+        # ПРЕ-ФЛАЙТ ВАЛИДАЦИЯ ЛИМИТОВ
+        # ==========================================
+        if not await self._validate_notional_limit():
+            logger.error("🛑 Бот остановлен из-за ошибки в расчете лимитов риска.")
+            await self.aclose()
+            sys.exit(1)
+        # ==========================================
+
         self._price_updater_task = asyncio.create_task(self.price_manager.loop())
         await self._await_task(getattr(self, '_funding_task', None))
         self._funding_task = asyncio.create_task(self.funding_manager.run())
@@ -603,8 +681,11 @@ class TradingBot:
     async def stop(self):
         if not getattr(self, '_is_running', False): return
         self._is_running = False
-        if getattr(self, 'stakan_stream', None):
-            self.stakan_stream.stop()
+        
+        # 👇 ИСПРАВЛЕНО: обращаемся к правильному атрибуту
+        if getattr(self, 'st_stream', None):
+            self.st_stream.stop()
+            
         logger.info("⏹ Остановка процессов...")
         if self.tg: await self.tg.send_message("⏹ Остановка процессов...")
         self.price_manager.stop()

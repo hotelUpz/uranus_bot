@@ -23,6 +23,9 @@ load_dotenv()
 logger = UnifiedLogger(name="bot")
 TZ = pytz.timezone(TIME_ZONE)
 
+WAIT_ENTRY_TIMEOUT_SEC = 2.0
+WAIT_ENTRY_MIN_WAIT_SEC = 0.05
+
 def round_step(value: float, step: float) -> float:
     if not step or step <= 0:
         return value
@@ -48,6 +51,34 @@ class OrderExecutor:
         # Блок риска: если Notional или Margin не заданы, падает сразу
         risk = self.cfg["risk"]
         self.notional_limit = float(risk["notional_limit"])
+
+    async def _smart_wait(self, pos_key: str, initial_qty: float, timeout_sec: float, min_wait_sec: float) -> None:
+        """
+        Безопасная утилита умного поллинга. 
+        Ждет минимальное время, а затем каждые 10мс проверяет изменение объема позиции.
+        Если объем изменился (или позиция закрылась) — досрочно вырывается из петли.
+        """
+        start_ts = time.time()
+        
+        # 1. Обязательный минимальный таймаут (чтобы ордер успел встать в стакан)
+        if min_wait_sec > 0:
+            await asyncio.sleep(min_wait_sec)
+            
+        # 2. Петля поллинга с шагом 10 мс
+        poll_step = 0.01 
+        while time.time() - start_ts < timeout_sec:
+            async with self.tb._get_lock(pos_key):
+                pos = self.tb.state.active_positions.get(pos_key)
+                
+                # Если позиции уже нет (успела закрыться) — выходим
+                if not pos:
+                    break
+                
+                # Если текущий объем перестал быть равен стартовому (налили частично или полностью) — выходим
+                if getattr(pos, 'current_qty', 0.0) != initial_qty:
+                    break
+                    
+            await asyncio.sleep(poll_step)
 
     async def cancel_all_orders(self, symbol: str) -> bool:
         try:
@@ -75,8 +106,7 @@ class OrderExecutor:
 
     async def execute_entry(self, symbol: str, pos_key: str, signal: EntrySignal) -> bool:
         """
-        ВХОД ПО МАРКЕТУ.
-        Никаких лимиток и ожиданий налития. Только рыночное исполнение.
+        ВХОД ПО МАРКЕТУ с ожиданием реального налива через WS.
         """
         try:
             spec = self.tb.symbol_specs.get(symbol)
@@ -84,10 +114,8 @@ class OrderExecutor:
                 logger.error(f"[{pos_key}] ❌ Ошибка входа: Нет спецификаций для {symbol}!")
                 return False
 
-            # 1. Расчет Qty (используем цену сигнала как ориентир для объема)
             ref_price = signal.price
             if not ref_price or ref_price <= 0:
-                logger.error(f"[{pos_key}] ❌ Ошибка входа: Некорректная цена в сигнале ({ref_price})")
                 return False
 
             qty = round_step(self.notional_limit / ref_price, spec.lot_size)
@@ -95,8 +123,6 @@ class OrderExecutor:
                 logger.warning(f"[{pos_key}] Qty {qty} меньше минимального лота {spec.lot_size}. Пропуск.")
                 return False
 
-            # 2. Подготовка параметров под Hedge Mode
-            # Всегда Long/Short, никакой пидарасни с "Merged"
             phemex_pos_side = "Long" if signal.side == "LONG" else "Short"
             side = "Buy" if signal.side == "LONG" else "Sell"
 
@@ -105,26 +131,35 @@ class OrderExecutor:
                 if pos:
                     pos.pending_qty = qty
 
-            # 3. Отправка рыночного ордера
             for attempt in range(max(1, self.max_entry_retries)):
                 try:
-                    # Используем метод place_market_order из сетевого адаптера
                     resp = await self.client.place_market_order(symbol, side, qty, phemex_pos_side)
                     
                     if resp.get("code") == 0:
-                        logger.info(f"[{pos_key}] ✅ Вход ПО МАРКЕТУ выполнен. Объем: {qty} (≈ {self.notional_limit} $)")
+                        # ⚠️ Ждем физического налива позиции по вебсокету
+                        await self._smart_wait(pos_key, 0.0, WAIT_ENTRY_TIMEOUT_SEC, WAIT_ENTRY_MIN_WAIT_SEC)
                         
-                        # Отправка отчета в TG, если включен
-                        if self.tb.tg:
-                            msg = Reporters.entry_signal(symbol, signal, signal.b_price, signal.p_price)
-                            asyncio.create_task(self.tb.tg.send_message(msg))
-                        return True
+                        # ⚠️ Проверяем результат
+                        async with self.tb._get_lock(pos_key):
+                            pos = self.tb.state.active_positions.get(pos_key)
+                            if pos and (pos.current_qty > 0 or getattr(pos, "in_position", False)):
+                                entry_usd_vol = pos.current_qty * ref_price
+                                logger.info(f"[{pos_key}] ✅ Вход ПО МАРКЕТУ выполнен. Объем: {pos.current_qty} (≈ {entry_usd_vol:.2f} $)")
+                                
+                                if self.tb.tg:
+                                    msg = Reporters.entry_signal(symbol, signal, signal.b_price, signal.p_price)
+                                    asyncio.create_task(self.tb.tg.send_message(msg))
+                                return True
+                                
+                        # Если дошли сюда, значит маркет ушел успешно, но биржа не отдала стейт (или позиция не открылась)
+                        logger.warning(f"[{pos_key}] ❌ Маркет ордер принят, но налива по WS не последовало за {WAIT_ENTRY_TIMEOUT_SEC}с.")
+                        return False
                     else:
                         logger.warning(f"[{pos_key}] ❌ Отказ API при входе (попытка {attempt+1}): {resp}")
                 except Exception as e:
                     logger.error(f"[{pos_key}] Исключение при выполнении маркет-входа: {e}")
                 
-                await asyncio.sleep(0.3) # Маленькая пауза перед ретраем
+                await asyncio.sleep(0.3) 
 
             return False
 
