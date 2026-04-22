@@ -183,5 +183,12 @@ class Reporters:
         return f"🚨 <b>ОТКАЗ API</b>\n#{symbol}\nЭкстрим ордера отклоняются: {reason}"
 
     @staticmethod
-    def exit_success(pos_key: str, semantic: str, price: float) -> str:
-        return f"✅ <b>{semantic}</b>\n#{pos_key}\nЦена закрытия: <b>{price}</b>"
+    def exit_success(pos_key: str, semantic: str, price: float, pnl: float = 0.0, emoji: str = "💵") -> str:
+        # Форматируем PnL с плюсом для прибыли
+        pnl_str = f"+{pnl:.4f}" if pnl > 0 else f"{pnl:.4f}"
+        return (
+            f"{emoji} <b>{semantic}</b>\n"
+            f"#{pos_key}\n"
+            f"Цена закрытия: <b>{price}</b>\n"
+            f"PnL: <b>{pnl_str}$</b>"
+        )

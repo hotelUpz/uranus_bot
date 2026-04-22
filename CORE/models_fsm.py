@@ -33,6 +33,7 @@ class ActivePosition:
     tp_grid_initiated: bool = False
     tp_orders: dict = field(default_factory=dict)
     tp_progress: int = 0
+    last_notified_tp_progress: int = 0  # <-- ДОБАВЛЕНО: Для предотвращения спама в ТГ о тейках
     
     entry_price: float = 0.0             
     pending_price: float = 0.0           

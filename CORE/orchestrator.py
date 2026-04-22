@@ -136,6 +136,8 @@ class TradingBot:
         self.stop_loss_scen   = StopLossScenario(scen_cfg.get("stop_loss", {}))
         self.ttl_close_scen   = TtlCloseScenario(scen_cfg.get("ttl_market_close", {}))
 
+        self._is_validate_notional_limit = self.cfg["risk"]["_is_validate_notional_limit"]
+
     async def _await_task(self, task: asyncio.Task | None):
         if not task: return
         task.cancel()
@@ -265,7 +267,6 @@ class TradingBot:
 
     def _can_open_position(self, symbol: str, side: str = "LONG") -> bool:
         working_symbols = set()
-        has_long, has_short = False, False
         
         for pos_key, pos in self.state.active_positions.items():
             if pos.in_position or pos.in_pending:
@@ -498,11 +499,19 @@ class TradingBot:
                                     self.state.consecutive_fails[pos.symbol] = 0
 
                                 if self.tg:
-                                    msg = Reporters.exit_success(pos_key, semantic, exit_pr)
+                                    # Передаем net_pnl и emoji в обновленный репортер
+                                    msg = Reporters.exit_success(pos_key, semantic, exit_pr, net_pnl, emoji)
                                     msg += f"\n⏳ Время в сделке: {format_duration(duration_sec)}"
                                     asyncio.create_task(self.tg.send_message(msg))
                                     
                                 logger.info(f"[{pos_key}] 🛑 Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
+
+                                # if self.tg:
+                                #     msg = Reporters.exit_success(pos_key, semantic, exit_pr)
+                                #     msg += f"\n⏳ Время в сделке: {format_duration(duration_sec)}"
+                                #     asyncio.create_task(self.tg.send_message(msg))
+                                    
+                                # logger.info(f"[{pos_key}] 🛑 Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
 
                             # Снимаем все возможные ордера-призраки (лимитки тейк-профитов) перед удалением позиции
                             asyncio.create_task(self.executor.cancel_all_orders(pos.symbol))
@@ -630,12 +639,13 @@ class TradingBot:
         # ==========================================
         # ПРЕ-ФЛАЙТ ВАЛИДАЦИЯ ЛИМИТОВ
         # ==========================================
-        if not await self._validate_notional_limit():
-            logger.error("🛑 Бот остановлен из-за ошибки в расчете лимитов риска.")
-            # Мягко гасим всё, что успели запустить выше, но не убиваем ТГ-бота
-            await self.stop() 
-            return
-        # ==========================================
+        if self._is_validate_notional_limit:
+            if not await self._validate_notional_limit():
+                logger.error("🛑 Бот остановлен из-за ошибки в расчете лимитов риска.")
+                # Мягко гасим всё, что успели запустить выше, но не убиваем ТГ-бота
+                await self.stop() 
+                return
+            # ==========================================
 
         self._price_updater_task = asyncio.create_task(self.price_manager.loop())
         await self._await_task(getattr(self, '_funding_task', None))

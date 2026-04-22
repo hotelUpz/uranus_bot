@@ -29,7 +29,7 @@ WAIT_FOR_GLOBAL_RETRY_SEC = 20
 BANG_SLEEP_SEC           = 30    # Штрафной слип при 429
 N_STABLE_BEFORE_SPEEDUP  = 10    # Сколько успешных запросов нужно, чтобы ускориться
 COOLDOWN_STEP_SEC        = 1.0   # Шаг снижения кулдауна
-MIN_COOLDOWN_SEC         = 1.0   # Нижняя граница кулдауна (рискованно идти ниже)
+MIN_COOLDOWN_SEC         = 2.0   # Нижняя граница кулдауна (рискованно идти ниже)
 
 _COOLDOWN   = object()   # Sentinel: все слоты на перезарядке
 _EMPTY_POOL = object()   # Sentinel: нет прокси в пуле
@@ -256,7 +256,7 @@ class UpbitLiveMonitor:
                 status = response.status_code
                 
                 if status == 200:
-                    logger.info(f"[{proxy or 'Localhost'}] Успех: HTTP 200 | Прошло с пред. запроса: {time_since_last:.3f}с")
+                    # logger.info(f"[{proxy or 'Localhost'}] Успех: HTTP 200 | Прошло с пред. запроса: {time_since_last:.3f}с")
                     data = response.json()
                     return data.get("data", {}).get("notices", [])
                     
