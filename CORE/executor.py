@@ -106,12 +106,14 @@ class OrderExecutor:
 
     async def execute_entry(self, symbol: str, pos_key: str, signal: EntrySignal) -> bool:
         """
-        ВХОД ПО МАРКЕТУ с ожиданием реального налива через WS.
+        ВХОД ПО МАРКЕТУ с ожиданием реального налива через WS и строгими алертами.
         """
         try:
             spec = self.tb.symbol_specs.get(symbol)
             if not spec:
-                logger.error(f"[{pos_key}] ❌ Ошибка входа: Нет спецификаций для {symbol}!")
+                err_msg = f"🚨 <b>[{pos_key}]</b> Ошибка входа: Нет спецификаций для монеты!"
+                logger.error(err_msg)
+                if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                 return False
 
             ref_price = signal.price
@@ -136,10 +138,9 @@ class OrderExecutor:
                     resp = await self.client.place_market_order(symbol, side, qty, phemex_pos_side)
                     
                     if resp.get("code") == 0:
-                        # ⚠️ Ждем физического налива позиции по вебсокету
+                        # Ждем физического налива позиции по вебсокету
                         await self._smart_wait(pos_key, 0.0, WAIT_ENTRY_TIMEOUT_SEC, WAIT_ENTRY_MIN_WAIT_SEC)
                         
-                        # ⚠️ Проверяем результат
                         async with self.tb._get_lock(pos_key):
                             pos = self.tb.state.active_positions.get(pos_key)
                             if pos and (pos.current_qty > 0 or getattr(pos, "in_position", False)):
@@ -151,16 +152,28 @@ class OrderExecutor:
                                     asyncio.create_task(self.tb.tg.send_message(msg))
                                 return True
                                 
-                        # Если дошли сюда, значит маркет ушел успешно, но биржа не отдала стейт (или позиция не открылась)
-                        logger.warning(f"[{pos_key}] ❌ Маркет ордер принят, но налива по WS не последовало за {WAIT_ENTRY_TIMEOUT_SEC}с.")
+                        err_msg = f"🚨 <b>[{pos_key}]</b> Маркет ордер принят, но налива по WS не последовало за {WAIT_ENTRY_TIMEOUT_SEC}с!"
+                        logger.warning(err_msg)
+                        if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                         return False
                     else:
-                        logger.warning(f"[{pos_key}] ❌ Отказ API при входе (попытка {attempt+1}): {resp}")
+                        # 👇 АЛЕРТ: Отказ биржи при входе
+                        err_msg = f"🚨 <b>[{pos_key}]</b> Отказ API при входе (попытка {attempt+1}): {resp}"
+                        logger.warning(err_msg)
+                        if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
+                        
                 except Exception as e:
-                    logger.error(f"[{pos_key}] Исключение при выполнении маркет-входа: {e}")
+                    # 👇 АЛЕРТ: Сетевая ошибка или краш
+                    err_msg = f"🚨 <b>[{pos_key}]</b> Исключение при выполнении маркет-входа: {e}"
+                    logger.error(err_msg)
+                    if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                 
                 await asyncio.sleep(0.3) 
 
+            # Если все попытки исчерпаны
+            err_msg = f"🚨 <b>[{pos_key}]</b> FATAL: Не удалось войти в позицию после {self.max_entry_retries} попыток."
+            logger.error(err_msg)
+            if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
             return False
 
         except Exception as e:
@@ -215,8 +228,12 @@ class OrderExecutor:
             for idx, resp, err in results:
                 order_info = grid_orders[idx]
                 if err:
-                    logger.error(f"[{pos_key}] Ошибка выставления TP #{order_info['idx']}: {err}")
+                    # 👇 АЛЕРТ: Исключение (чаще всего TE_REDUCE_ONLY_ABORT или таймаут)
+                    err_msg = f"🚨 <b>[{pos_key}]</b> Ошибка выставления TP #{order_info['idx']}: {err}"
+                    logger.error(err_msg)
+                    if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                     continue
+                    
                 if resp and resp.get("code") == 0:
                     order_id = resp.get("data", {}).get("orderID")
                     if order_id:
@@ -228,7 +245,10 @@ class OrderExecutor:
                         }
                         success_count += 1
                 else:
-                    logger.warning(f"[{pos_key}] Отказ API при выставлении TP #{order_info['idx']}: {resp}")
+                    # 👇 АЛЕРТ: Биржа вернула код ошибки
+                    err_msg = f"🚨 <b>[{pos_key}]</b> Отказ API при выставлении TP #{order_info['idx']}: {resp}"
+                    logger.warning(err_msg)
+                    if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
 
             if success_count > 0:
                 pos.tp_grid_initiated = True
@@ -236,7 +256,10 @@ class OrderExecutor:
                 return True
             else:
                 pos.tp_grid_initiated = False
-                logger.error(f"[{pos_key}] ❌ Не удалось выставить ни одного ордера сетки TP.")
+                # 👇 АЛЕРТ: Полный провал выставления сетки
+                err_msg = f"🚨 <b>[{pos_key}]</b> КРИТИЧЕСКАЯ ОШИБКА: Не удалось выставить ни одного ордера сетки TP!"
+                logger.error(err_msg)
+                if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                 return False
 
     async def execute_exit(self, symbol: str, pos_key: str, order_price: float = 0.0, timeout_sec: float = 0.0) -> bool:
@@ -282,16 +305,29 @@ class OrderExecutor:
                         logger.info(f"[{pos_key}] 🏁 Выход выполнен ПО МАРКЕТУ. Объем: {target_qty}")
                         return True
                     else:
-                        logger.warning(f"[{pos_key}] ❌ Ошибка выхода API: {resp}")
+                        # 👇 АЛЕРТ: Биржа не дает закрыть позицию!
+                        err_msg = f"🚨 <b>[{pos_key}]</b> Ошибка выхода API (попытка {attempt+1}): {resp}"
+                        logger.warning(err_msg)
+                        if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
+                        
                 except Exception as e:
-                    logger.error(f"[{pos_key}] Исключение execute_exit: {e}")
+                    # 👇 АЛЕРТ: Отвал сети в момент закрытия
+                    err_msg = f"🚨 <b>[{pos_key}]</b> Исключение при выходе по маркету: {e}"
+                    logger.error(err_msg)
+                    if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                 
                 await asyncio.sleep(0.5)
                 
+            # 👇 АЛЕРТ: Все попытки исчерпаны, позиция зависла
+            err_msg = f"🚨 <b>[{pos_key}]</b> FATAL ERROR: Не удалось закрыть позицию по маркету после {self.max_exit_retries} попыток! СРОЧНО ПРОВЕРЬТЕ ТЕРМИНАЛ!"
+            logger.error(err_msg)
+            if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
             return False
             
         except Exception as e:
-            logger.error(f"[{pos_key}] Глобальная ошибка execute_exit: {e}")
+            err_msg = f"🚨 <b>[{pos_key}]</b> Глобальная ошибка execute_exit: {e}"
+            logger.error(err_msg)
+            if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
             return False
 
     async def execute_market_exit(self, symbol: str, pos_key: str) -> bool:
