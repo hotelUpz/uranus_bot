@@ -324,3 +324,73 @@ Fund2(Diff): <b>False</b> | Diff: &gt;= <b>0.05%</b>
 2026-04-22 21:23:09 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
 2026-04-22 21:23:09 | INFO | bot | ⏹ Остановка процессов...
 2026-04-22 21:23:10 | INFO | bot | 💾 Финальное сохранение стейта на диск...
+2026-04-22 21:43:20 | WARNING | bot | 🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).
+2026-04-22 21:43:24 | INFO | bot | ▶️ Инициализация систем...
+2026-04-22 21:43:24 | INFO | bot | ⚙️ БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[APP & RISK]</b>
+Name: <b>Rucheiok Bot</b> | Quota: <b>USDT</b>
+Max Positions: <b>1</b> | Hedge Mode: <b>N/A</b>
+Leverage: <b>22x</b> | Margin Mode: <b>2</b>
+Margin Size: <b>N/A</b> | Notional Limit: <b>100.0 USDT</b>
+
+📡 <b>[SYSTEM]</b>
+TG Enabled: <b>True</b>
+Logs: D:True I:True W:True E:True
+
+📥 <b>[ENTRY GENERAL]</b>
+Sig Timeout: <b>0.01s</b>
+Max Retries: <b>1</b>
+
+🎯 <b>[ENTRY PHEMEX]</b>
+Enable: <b>N/A</b> | Depth: <b>N/A</b> | TTL: <b>N/As</b>
+Row1 Notional: <b>N/A - N/A USDT</b>
+ROC Win: <b>N/A</b> (SMA: <b>N/A</b>) | Max 1 ROC: <b>N/A%</b>
+Sprd 2 row: &gt;= <b>N/A%</b> | 3 row: &gt;= <b>N/A%</b>
+Hdr/Btm Rate: <b>N/A</b> | Max Bid/Ask Dist: <b>N/A</b>
+
+🔶 <b>[ENTRY BINANCE & FUNDING]</b>
+Binance: <b>False</b> | Sprd: &gt;= <b>0.8%</b>
+Binance Upd: <b>1.1s</b> | Sprd TTL: <b>2s</b>
+Fund1(Phemex): <b>False</b> | Thresh: &gt;= <b>1.0%</b>
+Fund2(Diff): <b>False</b> | Diff: &gt;= <b>0.05%</b>
+────────────────────────────────────────
+🔹 [GLOBAL]
+   Asset:     USDT
+   Leverage:  22x
+   Notional:  100.0$
+
+🔹 [EXIT STRATEGY]
+   Grid TP:   ON
+   Stop-Loss: OFF (5.0% | 0.0s)
+   TTL Close: ON (60s)
+────────────────────────────────────────
+2026-04-22 21:43:26 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-22 21:43:26 | INFO | bot | 🔄 Рестарт стрима стаканов на 514 символов...
+2026-04-22 21:43:26 | INFO | bot | 💰 Стартовый баланс успешно загружен из стейта: 9.43 USDT
+2026-04-22 21:43:26 | INFO | bot | 🔄 Прогрев кэша цен и фандинга...
+2026-04-22 21:43:28 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
+2026-04-22 21:43:28 | INFO | bot | ⏳ Ожидание готовности систем (Timeout: 10.0s)...
+2026-04-22 21:43:28 | INFO | bot | 🎮 Главная торговая живолупа (Game Loop) запущена.
+2026-04-22 21:43:29 | INFO | bot | 🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-04-22 21:43:29 | INFO | bot | ✅ Системы готовы за 1.0с. Данные получены.
+2026-04-22 21:43:30 | INFO | bot | ✅ Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-22 21:43:30 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:31 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:32 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:33 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:34 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:35 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:36 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:37 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:38 | INFO | bot | [Upbit] BTCUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:39 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:40 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:41 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:42 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:43 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:44 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:45 | INFO | bot | [Upbit] SOLUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:46 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:47 | INFO | bot | [Upbit] ETHUSDT в блэклисте, пропускаем.
+2026-04-22 21:43:48 | INFO | bot | ⏹ Остановка процессов...
+2026-04-22 21:43:48 | INFO | bot | 💾 Финальное сохранение стейта на диск...

@@ -120,3 +120,19 @@
 2026-04-22 21:22:50 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
 2026-04-22 21:22:51 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [20004]: TE_ERR_INCONSISTENT_POS_MODE
 2026-04-22 21:22:53 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [20004]: TE_ERR_INCONSISTENT_POS_MODE
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 34 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:27 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-22 21:43:28 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-04-22 21:43:29 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-04-22 21:43:29 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
