@@ -228,88 +228,54 @@ class OrderExecutor:
                 logger.error(f"[{pos_key}] ❌ Не удалось выставить ни одного ордера сетки TP.")
                 return False
 
-    async def execute_exit(self, symbol: str, pos_key: str, order_price: float, timeout_sec: float) -> bool:
+    async def execute_exit(self, symbol: str, pos_key: str, order_price: float = 0.0, timeout_sec: float = 0.0) -> bool:
         """
-        1. Безопасно отменяет предыдущий лимитный ордер закрытия (если он завис из-за обрыва сети).
-        2. Ставит новый ордер и ждет timeout_sec через умный поллинг.
-        3. Если позиция не закрылась полностью — отменяет остаток.
+        УНИВЕРСАЛЬНЫЙ ВЫХОД ПО МАРКЕТУ (Stop-Loss, TTL и т.д.).
+        1. Снимает все активные ордера (в т.ч. сетку TP), чтобы освободить маржу.
+        2. Бьет по стакану маркет-ордером на весь объем.
         """
         try:
             spec = self.tb.symbol_specs.get(symbol)
             if not spec: return False
 
-            # 1. Забираем параметры и проверяем наличие старого ордера
+            # 1. Отменяем ВСЕ лимитки (защита от гонок с TP)
+            await self.cancel_all_orders(symbol)
+
             async with self.tb._get_lock(pos_key):
                 pos = self.tb.state.active_positions.get(pos_key)
                 if not pos or not getattr(pos, 'in_position', False) or pos.current_qty <= 0: 
                     return False
                 qty = pos.current_qty
                 pos_side_raw = pos.side
-                old_order_id = pos.close_order_id # <-- Читаем ID старого ордера
+                
+                # Очищаем стейт лимиток и старых ордеров
+                pos.tp_orders.clear()
+                pos.close_order_id = ""
+                
+                # Сохраняем намерение цены выхода для статистики, если передано
+                if order_price > 0:
+                    pos.exit_price_hint = order_price
 
-            phemex_pos_side = "Long" if pos_side_raw == "LONG" else "Short"
-            
-            # 2. УБИВАЕМ СТАРЫЙ ОРДЕР fire-and-forget (разблокируем маржу для нового ордера)
-            if old_order_id:
-                asyncio.create_task(self.execute_cancel(symbol, phemex_pos_side, old_order_id))
-                # Очищаем память от старого ордера
-                async with self.tb._get_lock(pos_key):
-                    pos = self.tb.state.active_positions.get(pos_key)
-                    if pos: pos.close_order_id = ""
-
-            # 3. Подготовка к постановке нового ордера
-            price = round_step(order_price, spec.tick_size)
             target_qty = round_step(qty, spec.lot_size)
             if target_qty < spec.lot_size: return False
 
+            # Строгий Hedge Mode (никакого Merged)
+            phemex_pos_side = "Long" if pos_side_raw == "LONG" else "Short"
             side = "Sell" if pos_side_raw == "LONG" else "Buy"
 
-            # В методе execute_exit (перед отправкой ордера)
-            async with self.tb._get_lock(pos_key):
-                pos = self.tb.state.active_positions.get(pos_key)
-                if pos:
-                    pos.exit_price_hint = price  # <--- Сохраняем "намерение"
-
-            # 4. Основной цикл постановки
+            # 2. Швыряем МАРКЕТ
             for attempt in range(max(1, self.max_exit_retries)):
                 try:
-                    resp = await self.client.place_limit_order(symbol, side, target_qty, price, phemex_pos_side, reduce_only=True)
+                    resp = await self.client.place_market_order(symbol, side, target_qty, phemex_pos_side, reduce_only=True)
                     if resp.get("code") == 0:
-                        new_order_id = resp.get("data", {}).get("orderID")
-                        
-                        # Сохраняем новый ID в стейт на случай краша (чтобы на следующем тике Оркестратор его нашел и убил)
-                        if new_order_id:
-                            async with self.tb._get_lock(pos_key):
-                                pos = self.tb.state.active_positions.get(pos_key)
-                                if pos: pos.close_order_id = new_order_id
-                            
-                        # Умное ожидание вместо глупого слипа
-                        await self._smart_wait(pos_key, qty, timeout_sec, self.min_order_life_sec)
-                        
-                        # 5. Проверка исполнения после паузы
-                        if new_order_id: 
-                            curr_qty = 0.0
-                            async with self.tb._get_lock(pos_key):
-                                pos = self.tb.state.active_positions.get(pos_key)
-                                if pos: curr_qty = pos.current_qty
-                                
-                            if curr_qty > 0:
-                                # Позиция всё еще висит -> отменяем лимитку fire-and-forget
-                                asyncio.create_task(self.execute_cancel(symbol, phemex_pos_side, new_order_id))
-                                async with self.tb._get_lock(pos_key):
-                                    pos = self.tb.state.active_positions.get(pos_key)
-                                    if pos and pos.close_order_id == new_order_id:
-                                        pos.close_order_id = "" # Успешно отменили, сбрасываем ID
-                            else:
-                                # Позиция закрыта
-                                exit_usd_vol = target_qty * price # Считаем доллары
-                                logger.info(f"[{pos_key}] 🏁 Выход выполнен. Объем: {target_qty} (≈ {exit_usd_vol:.2f} $)")
-                                
+                        logger.info(f"[{pos_key}] 🏁 Выход выполнен ПО МАРКЕТУ. Объем: {target_qty}")
                         return True
                     else:
                         logger.warning(f"[{pos_key}] ❌ Ошибка выхода API: {resp}")
                 except Exception as e:
                     logger.error(f"[{pos_key}] Исключение execute_exit: {e}")
+                
+                await asyncio.sleep(0.5)
                 
             return False
             
@@ -318,31 +284,5 @@ class OrderExecutor:
             return False
 
     async def execute_market_exit(self, symbol: str, pos_key: str) -> bool:
-        """Закрывает позицию по маркету. Предварительно снимает все ордера."""
-        # 1. Снимаем все ордера, чтобы освободить маржу
-        await self.cancel_all_orders(symbol)
-        
-        async with self.tb._get_lock(pos_key):
-            pos = self.tb.state.active_positions.get(pos_key)
-            if not pos or not getattr(pos, 'in_position', False) or pos.current_qty <= 0: 
-                return False
-            qty = pos.current_qty
-            pos_side_raw = pos.side
-            pos.tp_orders.clear() # Очищаем стейт лимитных ордеров
-            
-        phemex_pos_side = "Long" if pos_side_raw == "LONG" else "Short"
-        side = "Sell" if pos_side_raw == "LONG" else "Buy"
-        
-        # 2. Швыряем маркет
-        for attempt in range(max(1, self.max_exit_retries)):
-            try:
-                resp = await self.client.place_market_order(symbol, side, qty, phemex_pos_side, reduce_only=True)
-                if resp.get("code") == 0:
-                    logger.info(f"[{pos_key}] ✅ Позиция экстренно закрыта по маркету!")
-                    return True
-                else:
-                    logger.warning(f"[{pos_key}] Ошибка market_exit: {resp}")
-            except Exception as e:
-                logger.error(f"[{pos_key}] Исключение market_exit: {e}")
-                
-        return False
+        """Алиас для обратной совместимости с оркестратором."""
+        return await self.execute_exit(symbol, pos_key)
