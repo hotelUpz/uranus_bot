@@ -9,6 +9,7 @@ import time
 import traceback
 from typing import Dict, Any, Set, TYPE_CHECKING, List, Tuple, Optional
 import os
+import sys
 import aiohttp
 from pathlib import Path
 
@@ -40,6 +41,11 @@ from utils import get_config_summary
 logger = UnifiedLogger("bot")
 BASE_DIR = Path(__file__).resolve().parent.parent
 CFG_PATH = BASE_DIR / "cfg.json"
+
+# Константы для проверки готовности систем
+READY_CHECK_INITIAL_SLEEP = 1.0
+READY_CHECK_TIMEOUT = 10.0
+READY_CHECK_INTERVAL = 0.5
 
 
 class TradingBot:
@@ -487,6 +493,36 @@ class TradingBot:
                 
         self._stakan_task = asyncio.create_task(self.st_stream.run(on_stakan_depth))
 
+    async def _wait_for_systems_ready(self) -> bool:
+        """Ожидает, пока все фоновые системы (цены, фандинг, стаканы) не получат первые данные."""
+        logger.info(f"⏳ Ожидание готовности систем (Timeout: {READY_CHECK_TIMEOUT}s)...")
+        start_time = time.time()
+        
+        await asyncio.sleep(READY_CHECK_INITIAL_SLEEP)
+        
+        while time.time() - start_time < READY_CHECK_TIMEOUT:
+            # 1. Проверяем кэш цен (наполняется из стакана)
+            # Мы проверяем именно last_msg_ts у st_stream, чтобы убедиться, что WS ожил
+            stakan_ready = False
+            if self.st_stream and self.st_stream.last_msg_ts > 0:
+                stakan_ready = True
+            
+            # 2. Проверяем кэш фандинга
+            funding_ready = True
+            if self.funding_manager.enable_phemex:
+                funding_ready = len(self.funding_manager.phemex_cache) > 0
+                
+            # 3. Проверяем кэш цен из REST (warmup уже прошел, но на всякий случай)
+            prices_ready = len(self.price_manager.phemex_prices) > 0
+                
+            if stakan_ready and funding_ready and prices_ready:
+                logger.info(f"✅ Системы готовы за {time.time() - start_time:.1f}с. Данные получены.")
+                return True
+            
+            await asyncio.sleep(READY_CHECK_INTERVAL)
+            
+        return False
+
     async def start(self):
         if getattr(self, '_is_running', False): return
         self._is_running = True
@@ -529,8 +565,7 @@ class TradingBot:
         self._price_updater_task = asyncio.create_task(self.price_manager.loop())
         await self._await_task(getattr(self, '_funding_task', None))
         self._funding_task = asyncio.create_task(self.funding_manager.run())
-        if self._upbit_monitor:
-            self._upbit_task = asyncio.create_task(self._upbit_monitor.run())
+        
         await asyncio.sleep(1)
 
         self._private_ws_task = asyncio.create_task(
@@ -541,6 +576,21 @@ class TradingBot:
         )
 
         self._game_loop_task = asyncio.create_task(self._main_trading_loop())
+        logger.info("🎮 Главная торговая живолупа (Game Loop) запущена.")
+
+        # --- ЖЕСТКАЯ ПРОВЕРКА ГОТОВНОСТИ ---
+        if not await self._wait_for_systems_ready():
+            msg = f"❌ КРИТИЧЕСКАЯ ОШИБКА: Системы не инициализированы (нет данных) за {READY_CHECK_TIMEOUT} сек!"
+            logger.error(msg)
+            if self.tg: await self.tg.send_message(f"🚨 {msg}\nБот остановлен.")
+            await self.aclose()
+            # Даем логам записаться и выходим
+            await asyncio.sleep(0.5)
+            sys.exit(1)
+
+        # Сигналы Upbit запускаем В ПОСЛЕДНЮЮ ОЧЕРЕДЬ, когда всё остальное уже шуршит
+        if self._upbit_monitor:
+            self._upbit_task = asyncio.create_task(self._upbit_monitor.run())
 
     async def aclose(self):
         await self.stop()

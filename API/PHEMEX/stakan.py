@@ -61,13 +61,24 @@ class PhemexStakanStream:
         self.reconnect_max_sec = float(reconnect_max_sec)
         self.throttle_ms = int(throttle_ms)
 
+        self._stop = asyncio.create_task(asyncio.sleep(0)) # dummy
         self._stop = asyncio.Event()
         self._tasks: List[asyncio.Task] = []
         self._last_emit_ms: Dict[str, int] = {}
         self._id_counter = 10
+        self.last_msg_ts = 0.0
 
         self._bids: Dict[str, Dict[float, float]] = {}
         self._asks: Dict[str, Dict[float, float]] = {}
+
+    def get_depth(self, symbol: str) -> Tuple[List[PriceLevel], List[PriceLevel]]:
+        """Возвращает текущий снимок стакана для символа."""
+        sym = symbol.upper().strip()
+        bids = self._bids.get(sym, {})
+        asks = self._asks.get(sym, {})
+        if not bids or not asks:
+            return ([], [])
+        return self._top_n(bids, asks)
 
     def stop(self) -> None:
         self._stop.set()
@@ -157,6 +168,7 @@ class PhemexStakanStream:
         ts_i = self._to_int(ts, int(time.time() * 1000))
         event_ms = ts_i // 1_000_000 if ts_i > 1_000_000_000_000 else ts_i
 
+        self.last_msg_ts = time.time()
         return DepthTop(symbol=sym_u, bids=top_b, asks=top_a, event_time_ms=int(event_ms))
 
     async def _run_chunk(self, symbols: List[str], on_depth: Callable[[DepthTop], Awaitable[None]]) -> None:
