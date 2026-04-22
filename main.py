@@ -102,7 +102,8 @@ async def _main():
 
             if not token or not chat_id:
                 logger.error("Telegram включен, но token/chat_id не заданы.")
-                sys.exit(1)
+                # sys.exit(1)
+                return
 
             tg_admin = AdminTgBot(token, chat_id, bot)
             tg_task = asyncio.create_task(polling_supervisor(tg_admin))

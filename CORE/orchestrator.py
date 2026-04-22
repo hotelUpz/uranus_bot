@@ -9,7 +9,6 @@ import time
 import traceback
 from typing import Dict, Any, Set, TYPE_CHECKING, List, Tuple, Optional
 import os
-import sys
 import aiohttp
 from pathlib import Path
 
@@ -633,8 +632,9 @@ class TradingBot:
         # ==========================================
         if not await self._validate_notional_limit():
             logger.error("🛑 Бот остановлен из-за ошибки в расчете лимитов риска.")
-            await self.aclose()
-            sys.exit(1)
+            # Мягко гасим всё, что успели запустить выше, но не убиваем ТГ-бота
+            await self.stop() 
+            return
         # ==========================================
 
         self._price_updater_task = asyncio.create_task(self.price_manager.loop())
@@ -658,10 +658,10 @@ class TradingBot:
             msg = f"❌ КРИТИЧЕСКАЯ ОШИБКА: Системы не инициализированы (нет данных) за {READY_CHECK_TIMEOUT} сек!"
             logger.error(msg)
             if self.tg: await self.tg.send_message(f"🚨 {msg}\nБот остановлен.")
-            await self.aclose()
-            # Даем логам записаться и выходим
-            await asyncio.sleep(0.5)
-            sys.exit(1)
+            
+            # Мягко гасим всё, что успели запустить, но не убиваем процесс
+            await self.stop()
+            return
 
         # Сигналы Upbit запускаем В ПОСЛЕДНЮЮ ОЧЕРЕДЬ, когда всё остальное уже шуршит
         if self._upbit_monitor:
