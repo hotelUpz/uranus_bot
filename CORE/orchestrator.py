@@ -217,7 +217,7 @@ class TradingBot:
     async def _on_upbit_signal(self, symbol: str) -> None:
         """Сигнал с Upbit: новый листинг. Всегда входим LONG."""
         side = self.cfg.get("upbit", {}).get("default_side", "long").upper()  # хардкод LONG, но из конфига
-        phemex_symbol = f"u{symbol}USDT"   # формат Phemex для perpetual
+        phemex_symbol = f"{symbol}USDT"   # формат Phemex для perpetual
         
         if phemex_symbol in self.black_list:
             logger.info(f"[Upbit] {phemex_symbol} в блэклисте, пропускаем.")

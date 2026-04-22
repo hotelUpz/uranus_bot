@@ -36,9 +36,9 @@
     "upbit": {
         "test_mode": true,
         "symbols_to_mock": [
-            "BTCUSDT",
-            "ETHUSDT",
-            "SOLUSDT"
+            "BTC",
+            "ETH",
+            "SOL"
         ],
         "poll_interval_sec": 1.0,
         "_proxy_hint": "null = локальный IP без прокси (валидный слот). Кол-во слотов = ceil(cooldown_sec / poll_interval_sec). Пример: poll=1, cooldown=8 → нужно 8 слотов [null, proxy1..proxy7].",
