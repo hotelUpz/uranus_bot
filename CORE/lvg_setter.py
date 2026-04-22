@@ -1,3 +1,7 @@
+# ============================================================
+# FILE: CORE/lvg_setter.py
+# ROLE: One-shot global leverage & margin-mode setter for all Phemex symbols
+# ============================================================
 from __future__ import annotations
 
 import asyncio

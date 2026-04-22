@@ -7,7 +7,7 @@ from __future__ import annotations
 import asyncio
 import time
 import traceback
-from typing import Dict, Any, Set, TYPE_CHECKING, List, Tuple
+from typing import Dict, Any, Set, TYPE_CHECKING, List, Tuple, Optional
 import os
 import aiohttp
 from pathlib import Path
@@ -21,15 +21,15 @@ from API.PHEMEX.funding import PhemexFunding
 from API.BINANCE.funding import BinanceFunding
 
 from ENTRY.signal_engine import SignalEngine
+from API.PHEMEX.stakan import PhemexStakanStream, DepthTop
 from CORE.restorator import BotState
 from CORE.executor import OrderExecutor
 from CORE.models_fsm import WsInterpreter, ActivePosition
 from CORE._utils import BlackListManager, PriceCacheManager, ConfigManager, Reporters
 
 from EXIT.scenarios.grid_tp import GridTPFactory
-from EXIT.scenarios.negative import NegativeScenario
-from EXIT.scenarios.breakeven import PositionTTLClose
-from EXIT.extrime_close import ExtrimeClose
+from EXIT.scenarios.stop_loss import StopLossScenario
+from EXIT.scenarios.ttl_close import TtlCloseScenario
 from ENTRY.funding_manager import FundingManager
 from ANALYTICS.tracker import PerformanceTracker, format_duration
 from ENTRY.pattern_math import EntrySignal
@@ -92,14 +92,26 @@ class TradingBot:
         upbit_cfg = self.cfg.get("upbit", {})
         upbit_enabled = self.cfg.get("entry", {}).get("pattern", {}).get("upbit_signal", False)
         if upbit_enabled:
-            from ENTRY.upbit_signal import UpbitLiveMonitor
-            self._upbit_monitor = UpbitLiveMonitor(
-                poll_interval_sec=upbit_cfg.get("poll_interval_sec", 8.0),
-                proxies=upbit_cfg.get("proxies", []),
-                on_signal=self._on_upbit_signal,
-            )
+            from ENTRY.upbit_signal import UpbitLiveMonitor, MockUpbitLiveMonitor
+            if upbit_cfg.get("test_mode", False):
+                logger.warning("🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).")
+                self._upbit_monitor = MockUpbitLiveMonitor(
+                    poll_interval_sec=upbit_cfg.get("poll_interval_sec", 8.0),
+                    on_signal=self._on_upbit_signal,
+                    symbols_to_mock=upbit_cfg.get("symbols_to_mock", ["BTCUSDT", "ETHUSDT", "SOLUSDT"]),
+                )
+            else:
+                self._upbit_monitor = UpbitLiveMonitor(
+                    poll_interval_sec=upbit_cfg.get("poll_interval_sec", 8.0),
+                    proxies=upbit_cfg.get("proxies", []),
+                    cooldown_sec=upbit_cfg.get("cooldown_sec", 8.0),
+                    on_signal=self._on_upbit_signal,
+                )
         else:
             self._upbit_monitor = None
+            
+        self.stakan_stream: Optional[PhemexStakanStream] = None
+        self._stakan_task: Optional[asyncio.Task] = None
 
         self.signal_engine = SignalEngine(self.cfg["entry"], self.funding_manager)
 
@@ -108,6 +120,7 @@ class TradingBot:
         self.cfg_manager = ConfigManager(CFG_PATH, self)
         
         self.active_positions_locker: Dict[str, asyncio.Lock] = {} 
+        self.global_entry_lock = asyncio.Lock()
 
         self.ws_handler = WsInterpreter(state=self.state, active_positions_locker=self.active_positions_locker) 
         self.executor = OrderExecutor(self)
@@ -115,14 +128,10 @@ class TradingBot:
         exit_cfg = self.cfg["exit"]
         scen_cfg = exit_cfg["scenarios"]
         
-        self.grid_tp_factory = GridTPFactory(scen_cfg.get("grid_tp", {}))
-        self.scen_neg = NegativeScenario(scen_cfg["negative"])
-        self.scen_ttl = PositionTTLClose(scen_cfg["breakeven_ttl_close"], self.active_positions_locker)
-        self.scen_extrime = ExtrimeClose(exit_cfg["extrime_close"])
+        self.grid_tp_factory  = GridTPFactory(scen_cfg.get("grid_tp", {}))
+        self.stop_loss_scen   = StopLossScenario(scen_cfg.get("stop_loss", {}))
+        self.ttl_close_scen   = TtlCloseScenario(scen_cfg.get("ttl_market_close", {}))
 
-        self.breakeven_order_timeout_sec = scen_cfg["breakeven_ttl_close"]["order_timeout_sec"]
-        self.interference_order_timeout_sec = exit_cfg["interference"]["order_timeout_sec"]
-        self.extrime_order_timeout_sec = exit_cfg["extrime_close"]["order_timeout_sec"]     
         self.min_quarantine_threshold_usdt = -abs(self.cfg["risk"]["quarantine"]["min_quarantine_threshold_usdt"])
         self.force_quarantine_threshold_usdt = -abs(self.cfg["risk"]["quarantine"]["force_quarantine_threshold_usdt"])
 
@@ -258,22 +267,48 @@ class TradingBot:
             logger.info(f"[Upbit] {phemex_symbol} в блэклисте, пропускаем.")
             return
         if phemex_symbol not in self.symbol_specs:
-            logger.warning(f"[Upbit] {phemex_symbol} не найден в symbol_specs Phemex, пропускаем.")
-            return
+            # Новая монета может появиться на Phemex уже после старта бота.
+            # Делаем быстрый ре-фетч спецификаций и перезапускаем стакан.
+            logger.info(f"[Upbit] {phemex_symbol} не в кэше symbol_specs, пробуем ре-фетч...")
+            try:
+                symbols_info = await self.phemex_sym_api.get_all(quote="USDT", only_active=True)
+                self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
+                # Перезапускаем стакан на обновлённом наборе символов
+                if getattr(self, 'stakan_stream', None):
+                    self.stakan_stream.stop()
+                    await self._await_task(getattr(self, '_stakan_task', None))
+                    symbols_to_stream = list(self.symbol_specs.keys())
+                    from API.PHEMEX.stakan import PhemexStakanStream
+                    self.stakan_stream = PhemexStakanStream(symbols_to_stream)
+                    mid_cache = self.price_manager.phemex_prices
+                    def on_stakan_depth(sym, depth):
+                        if depth.bid1 > 0 and depth.ask1 > 0:
+                            mid_cache[sym] = (depth.bid1 + depth.ask1) / 2.0
+                    self._stakan_task = asyncio.create_task(self.stakan_stream.run(on_stakan_depth))
+            except Exception as e:
+                logger.error(f"[Upbit] Ошибка ре-фетча symbol_specs: {e}")
+            if phemex_symbol not in self.symbol_specs:
+                logger.warning(f"[Upbit] {phemex_symbol} всё равно не на Phemex, пропускаем.")
+                return
         if not await self.quarantine_util(phemex_symbol):
             return
 
         pos_key = f"{phemex_symbol}_{side}"
         logger.warning(f"🚀 [Upbit Signal] {phemex_symbol} → {side}")
 
-        async with self._get_lock(pos_key):
-            if pos_key in self.state.active_positions:
+        async with self.global_entry_lock:
+            if not self._can_open_position(phemex_symbol, side):
+                logger.info(f"[Upbit] Отклонен вход для {phemex_symbol} (лимит позиций или хедж).")
                 return
-            self.state.active_positions[pos_key] = ActivePosition(
-                symbol=phemex_symbol, side=side, pending_qty=0.0,
-                in_pending=True, in_position=False,
-                init_ask1=0.0, init_bid1=0.0, mid_price=0.0,
-            )
+
+            async with self._get_lock(pos_key):
+                if pos_key in self.state.active_positions:
+                    return
+                self.state.active_positions[pos_key] = ActivePosition(
+                    symbol=phemex_symbol, side=side, pending_qty=0.0,
+                    in_pending=True, in_position=False,
+                    mid_price=0.0,
+                )
 
         # EntrySignal нужен для executor — берем текущую цену с Phemex
         _, p_price = self.price_manager.get_prices(phemex_symbol)
@@ -311,7 +346,10 @@ class TradingBot:
             
             try:
                 # Уходим в сеть (вне лока)
-                success = await self.executor.execute_exit(symbol, pos_key, price, timeout)
+                if cmd == "MARKET_EXIT":
+                    success = await self.executor.execute_market_exit(symbol, pos_key)
+                else:
+                    success = await self.executor.execute_exit(symbol, pos_key, price, timeout)
             finally:
                 # ГАРАНТИРОВАННО снимаем флаг полета после возврата управления
                 async with self._get_lock(pos_key):
@@ -319,10 +357,6 @@ class TradingBot:
                     if p:
                         p.exit_in_flight = False
                         p.last_exit_status = p.exit_status
-                        
-                        # 👇 Эгоистичный сброс: HUNTING сбрасывает ТОЛЬКО HUNTING
-                        if p.exit_status == "HUNTING":
-                            p.exit_status = "NORMAL"
 
         # Параллельный запуск всех экшенов. gather дождется всех, но флаги снимутся асинхронно!
         tasks = [process_action(act) for act in action_payload]
@@ -340,6 +374,8 @@ class TradingBot:
         _, p_price = self.price_manager.get_prices(symbol)
         current_price = p_price
         if current_price <= 0: return
+        
+        exit_cfg = self.cfg.get("exit", {}).get("scenarios", {})
 
         for pos_key in (long_key, short_key):
             async with self._get_lock(pos_key):
@@ -366,42 +402,17 @@ class TradingBot:
                             logger.error(f"[{pos_key}] Ошибка расчета Grid TP.")
                     continue
 
-                is_extrime = pos.exit_status == "EXTREME"
-                is_breakeven = pos.exit_status == "BREAKEVEN"
+                if pos.exit_in_flight:
+                    continue
 
-                ttl_res = None
-                if not is_extrime:
-                    ttl_res = await self.scen_ttl.scen_ttl_analyze(pos, now)
+                is_stop_loss = self.stop_loss_scen.is_triggered(pos, current_price)
+                is_ttl       = self.ttl_close_scen.is_triggered(pos, now)
 
-                # 1. ПРИОРИТЕТ 1: EXTREME
-                if is_extrime or ttl_res == "BREAKEVEN_EXTRIME" or \
-                   self.scen_neg.scen_neg_analyze(current_price, pos, now) == "NEGATIVE_TIMEOUT":
-                    
-                    pos.exit_status = "EXTREME"
-                    # Если сеть не занята выходом — бьем
-                    if not pos.exit_in_flight:
-                        ext_price = self.scen_extrime.scen_extrime_analyze(current_price, pos, now)
-                        if ext_price:
-                            pos.exit_in_flight = True
-                            pos.last_extrime_try_ts = now
-                            pos.extrime_retries_count += 1
-                            actions_to_execute.append(("EXTREME", ext_price, self.extrime_order_timeout_sec, pos_key))
-                    continue # ЖЕСТКИЙ СКИП
-
-                # 2. ПРИОРИТЕТ 2: BREAKEVEN
-                elif is_breakeven or ttl_res == "BREAKEVEN":
-                    
-                    pos.exit_status = "BREAKEVEN"
-                    if not getattr(pos, 'breakeven_start_ts', None):
-                        pos.breakeven_start_ts = now
-                        
-                    if not pos.exit_in_flight:
-                        be_price = self.scen_ttl.build_target_price(pos)
-                        if be_price:
-                            pos.exit_in_flight = True
-                            logger.debug(f"[{pos_key}] Попытка закрыть позицию в безубыток (BREAKEVEN)...")
-                            actions_to_execute.append(("BREAKEVEN", be_price, self.breakeven_order_timeout_sec, pos_key))
-                    continue # ЖЕСТКИЙ СКИП
+                if is_stop_loss or is_ttl:
+                    pos.exit_status = "STOP_LOSS" if is_stop_loss else "TTL_CLOSE"
+                    pos.exit_in_flight = True
+                    logger.debug(f"[{pos_key}] Сработал {'Stop-Loss' if is_stop_loss else 'TTL Market Close'}. Цена: {current_price}")
+                    actions_to_execute.append(("MARKET_EXIT", current_price, 5.0, pos_key))
 
         # --- СЕТЕВЫЕ ОПЕРАЦИИ (ВНЕ ЛОКА) ---
         if actions_to_execute:
@@ -439,10 +450,18 @@ class TradingBot:
                                 asyncio.create_task(self.state.save())
                                 continue
 
+                        if getattr(pos, 'last_notified_tp_progress', 0) < getattr(pos, 'tp_progress', 0):
+                            new_count = pos.tp_progress
+                            if self.tg:
+                                msg = f"🎯 <b>[{pos.symbol}]</b> Тейк-профит (уровень {new_count}) исполнен!\n💰 Зафиксирована часть прибыли."
+                                asyncio.create_task(self.tg.send_message(msg))
+                            pos.last_notified_tp_progress = new_count
+                            asyncio.create_task(self.state.save())
+
                         if getattr(pos, 'is_closed_by_exchange', False):
                             if pos.entry_price > 0.0:
                                 
-                                exit_pr = pos.realized_exit_price if pos.realized_exit_price > 0 else (pos.exit_price_hint or pos.avg_price)
+                                exit_pr = pos.exit_price_hint or pos.avg_price
                                 duration_sec = time.time() - pos.opened_at
                                 
                                 net_pnl, is_win = self.tracker.register_trade(
@@ -477,6 +496,9 @@ class TradingBot:
                                     asyncio.create_task(self.tg.send_message(msg))
                                     
                                 logger.info(f"[{pos_key}] 🛑 Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
+
+                            # Снимаем все возможные ордера-призраки (лимитки тейк-профитов) перед удалением позиции
+                            asyncio.create_task(self.executor.cancel_all_orders(pos.symbol))
 
                             self.state.active_positions.pop(pos_key, None)
                             self.active_positions_locker.pop(pos_key, None) 
@@ -518,6 +540,17 @@ class TradingBot:
         self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
 
         await self._recover_state()
+        
+        # --- БЫСТРЫЙ ПАРСИНГ ЦЕН ---
+        async def on_stakan_depth(d: DepthTop):
+            if d.bids and d.asks:
+                mid = (d.bids[0][0] + d.asks[0][0]) / 2
+                self.price_manager.phemex_prices[d.symbol] = mid
+                
+        symbols_to_stream = list(self.symbol_specs.keys())
+        if symbols_to_stream:
+            self.stakan_stream = PhemexStakanStream(symbols_to_stream, depth=1, chunk_size=40, throttle_ms=0)
+            self._stakan_task = asyncio.create_task(self.stakan_stream.run(on_stakan_depth))
 
         # ==========================================
         # ИНИЦИАЛИЗАЦИЯ ФИНАНСОВОГО АУДИТА
@@ -572,6 +605,8 @@ class TradingBot:
     async def stop(self):
         if not getattr(self, '_is_running', False): return
         self._is_running = False
+        if getattr(self, 'stakan_stream', None):
+            self.stakan_stream.stop()
         logger.info("⏹ Остановка процессов...")
         if self.tg: await self.tg.send_message("⏹ Остановка процессов...")
         self.price_manager.stop()
@@ -582,6 +617,7 @@ class TradingBot:
         await self._await_task(getattr(self, '_private_ws_task', None))
         await self._await_task(getattr(self, '_game_loop_task', None))
         await self._await_task(getattr(self, '_upbit_task', None))
+        await self._await_task(getattr(self, '_stakan_task', None))
         self._processing.clear()
         self._signal_timeouts.clear()
         await self.state.save()

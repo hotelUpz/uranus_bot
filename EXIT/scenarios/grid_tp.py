@@ -1,3 +1,7 @@
+# ============================================================
+# FILE: EXIT/scenarios/grid_tp.py
+# ROLE: Grid take-profit order factory (volume-based level map)
+# ============================================================
 from decimal import Decimal, ROUND_DOWN
 from typing import List, Dict, Any
 
@@ -11,14 +15,17 @@ class GridTPFactory:
         if total_qty <= 0:
             return []
 
-        # Find the correct bucket
+        # Thresholds in cfg.json are in thousands of USD (e.g. 500 = $500k).
+        # volume_24h_usd comes from Phemex in raw USD — normalise before lookup.
+        volume_k = volume_24h_usd / 1000.0
+
         selected_bucket = None
         for bucket in self.map:
             min_vol = bucket.get("min_vol", 0)
             max_vol = bucket.get("max_vol")
-            
-            if volume_24h_usd >= min_vol:
-                if max_vol is None or volume_24h_usd < max_vol:
+
+            if volume_k >= min_vol:
+                if max_vol is None or volume_k < max_vol:
                     selected_bucket = bucket
                     break
         
@@ -59,8 +66,9 @@ class GridTPFactory:
                 cur_qty = dec_total_qty - accumulated_qty
             else:
                 cur_qty = dec_total_qty * (Decimal(str(vol_pct)) / Decimal("100"))
-                # Round qty to lot_size
-                cur_qty = (cur_qty / dec_lot_size).quantize(Decimal("1"), rounding=ROUND_DOWN) * dec_lot_size
+                
+            # Round qty to lot_size STRICTLY
+            cur_qty = (cur_qty / dec_lot_size).quantize(Decimal("1"), rounding=ROUND_DOWN) * dec_lot_size
 
             if cur_qty > 0:
                 orders.append({

@@ -40,10 +40,7 @@ class OrderExecutor:
         self.client = tb.private_client
         self.cfg = tb.cfg
         
-        # Лобовой доступ к параметрам входа
-        entry_cfg = self.cfg["entry"]
-        self.entry_timeout = entry_cfg["entry_timeout_sec"]
-        self.max_entry_retries = entry_cfg["max_place_order_retries"]
+        self.max_entry_retries = self.cfg["entry"]["max_place_order_retries"]
         
         # Параметры выхода
         self.max_exit_retries = self.cfg["exit"]["max_place_order_retries"]
@@ -54,7 +51,6 @@ class OrderExecutor:
         # Блок риска: если Notional или Margin не заданы, падает сразу
         risk = self.cfg["risk"]
         self.notional_limit = float(risk["notional_limit"])
-        self.margin_over_size_pct = float(risk["margin_over_size_pct"])
 
     async def _smart_wait(self, pos_key: str, initial_qty: float, timeout_sec: float, min_wait_sec: float) -> None:
         """
@@ -162,7 +158,9 @@ class OrderExecutor:
         
     async def execute_tp_grid(self, symbol: str, pos_key: str, grid_orders: list) -> bool:
         """
-        Отправляет сетку тейк-профитов на биржу батчем или параллельно.
+        Расставляет сетку тейк-профитов последовательно с инкрементальной паузой
+        между ордерами во избежание рейт-лимитов API.
+        Слип между ордерами: 0.1s + 0.1s * idx (база 0.1, потом +0.1 с каждым ордером).
         """
         async with self.tb._get_lock(pos_key):
             pos = self.tb.state.active_positions.get(pos_key)
@@ -171,27 +169,33 @@ class OrderExecutor:
             phemex_pos_side = "Long" if pos.side == "LONG" else "Short"
             side = "Sell" if pos.side == "LONG" else "Buy"
 
-        tasks = []
-        for order in grid_orders:
-            price = order["price"]
-            qty = order["qty"]
-            tasks.append(self.client.place_limit_order(symbol, side, qty, price, phemex_pos_side))
-            
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+        # Защита от дублей при краше бота во время инициализации сетки
+        await self.cancel_all_orders(symbol)
+
+        results = []
+        for idx, order in enumerate(grid_orders):
+            slip = 0.1 + 0.1 * idx   # 0.1s, 0.2s, 0.3s, ...
+            await asyncio.sleep(slip)
+            try:
+                resp = await self.client.place_limit_order(
+                    symbol, side, order["qty"], order["price"], phemex_pos_side, reduce_only=True
+                )
+                results.append((idx, resp, None))
+            except Exception as e:
+                results.append((idx, None, e))
+
         success_count = 0
         async with self.tb._get_lock(pos_key):
             pos = self.tb.state.active_positions.get(pos_key)
             if not pos:
                 return False
-                
-            for idx, resp in enumerate(results):
+
+            for idx, resp, err in results:
                 order_info = grid_orders[idx]
-                if isinstance(resp, Exception):
-                    logger.error(f"[{pos_key}] Ошибка выставления TP #{order_info['idx']}: {resp}")
+                if err:
+                    logger.error(f"[{pos_key}] Ошибка выставления TP #{order_info['idx']}: {err}")
                     continue
-                
-                if resp.get("code") == 0:
+                if resp and resp.get("code") == 0:
                     order_id = resp.get("data", {}).get("orderID")
                     if order_id:
                         pos.tp_orders[order_id] = {
@@ -203,7 +207,7 @@ class OrderExecutor:
                         success_count += 1
                 else:
                     logger.warning(f"[{pos_key}] Отказ API при выставлении TP #{order_info['idx']}: {resp}")
-            
+
             if success_count > 0:
                 pos.tp_grid_initiated = True
                 logger.info(f"[{pos_key}] 🕸 Сетка TP успешно выставлена: {success_count}/{len(grid_orders)} ордеров.")
@@ -257,7 +261,7 @@ class OrderExecutor:
             # 4. Основной цикл постановки
             for attempt in range(max(1, self.max_exit_retries)):
                 try:
-                    resp = await self.client.place_limit_order(symbol, side, target_qty, price, phemex_pos_side)
+                    resp = await self.client.place_limit_order(symbol, side, target_qty, price, phemex_pos_side, reduce_only=True)
                     if resp.get("code") == 0:
                         new_order_id = resp.get("data", {}).get("orderID")
                         
@@ -300,3 +304,33 @@ class OrderExecutor:
         except Exception as e:
             logger.error(f"[{pos_key}] Глобальная ошибка execute_exit: {e}")
             return False
+
+    async def execute_market_exit(self, symbol: str, pos_key: str) -> bool:
+        """Закрывает позицию по маркету. Предварительно снимает все ордера."""
+        # 1. Снимаем все ордера, чтобы освободить маржу
+        await self.cancel_all_orders(symbol)
+        
+        async with self.tb._get_lock(pos_key):
+            pos = self.tb.state.active_positions.get(pos_key)
+            if not pos or not getattr(pos, 'in_position', False) or pos.current_qty <= 0: 
+                return False
+            qty = pos.current_qty
+            pos_side_raw = pos.side
+            pos.tp_orders.clear() # Очищаем стейт лимитных ордеров
+            
+        phemex_pos_side = "Long" if pos_side_raw == "LONG" else "Short"
+        side = "Sell" if pos_side_raw == "LONG" else "Buy"
+        
+        # 2. Швыряем маркет
+        for attempt in range(max(1, self.max_exit_retries)):
+            try:
+                resp = await self.client.place_market_order(symbol, side, qty, phemex_pos_side, reduce_only=True)
+                if resp.get("code") == 0:
+                    logger.info(f"[{pos_key}] ✅ Позиция экстренно закрыта по маркету!")
+                    return True
+                else:
+                    logger.warning(f"[{pos_key}] Ошибка market_exit: {resp}")
+            except Exception as e:
+                logger.error(f"[{pos_key}] Исключение market_exit: {e}")
+                
+        return False

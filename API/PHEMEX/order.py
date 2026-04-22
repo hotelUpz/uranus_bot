@@ -1,3 +1,7 @@
+# ============================================================
+# FILE: API/PHEMEX/order.py
+# ROLE: Phemex private REST client — order placement, cancel, equity
+# ============================================================
 import time
 import json
 import hmac
@@ -78,14 +82,16 @@ class PhemexPrivateClient:
             query_no_q = f"leverageRr={lev_str}&symbol={symbol}"
         return await self._request("PUT", "/g-positions/leverage", query_no_q=query_no_q)
 
-    async def place_limit_order(self, symbol: str, side: str, qty: float, price: float, pos_side: str) -> Dict[str, Any]:
+    async def place_limit_order(self, symbol: str, side: str, qty: float, price: float, pos_side: str, reduce_only: bool = False) -> Dict[str, Any]:
         body = {
             "symbol": symbol, "side": side, "orderQtyRq": float_to_str(qty),
             "priceRp": float_to_str(price), "ordType": "Limit", "timeInForce": "GoodTillCancel", "posSide": pos_side
         }
+        if reduce_only:
+            body["reduceOnly"] = True
         return await self._request("POST", "/g-orders", body=body)
     
-    async def place_market_order(self, symbol: str, side: str, qty: float, pos_side: str) -> Dict[str, Any]:
+    async def place_market_order(self, symbol: str, side: str, qty: float, pos_side: str, reduce_only: bool = False) -> Dict[str, Any]:
         body = {
             "symbol": symbol,
             "side": side,
@@ -94,6 +100,8 @@ class PhemexPrivateClient:
             "timeInForce": "ImmediateOrCancel",
             "posSide": pos_side,
         }
+        if reduce_only:
+            body["reduceOnly"] = True
         return await self._request("POST", "/g-orders", body=body)
 
     async def cancel_order(self, symbol: str, order_id: str, pos_side: str) -> Dict[str, Any]:

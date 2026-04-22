@@ -23,42 +23,63 @@ logger = UnifiedLogger("upbit_signal")
 # ==========================================
 # 2. УМНЫЙ МЕНЕДЖЕР ПРОКСИ (ЗАЩИТА ОТ 429)
 # ==========================================
+_COOLDOWN = object()  # Sentinel: все слоты на перезарядке
+
 class SmartProxyManager:
-    def __init__(self, proxies: list[str], cooldown_sec: float = 10.5):
+    def __init__(self, proxies: list, cooldown_sec: float = 8.0):
         """
-        Менеджер отслеживает время последнего использования каждого IP.
-        cooldown_sec: 10.5 секунд (Upbit банит за запросы чаще 1 раза в 10 сек на один IP).
+        Менеджер ротации прокси с кулдауном.
+
+        proxies: список адресов. null/None = локальный IP (без прокси).
+        Пример: [null, "http://user:pass@1.2.3.4:8080"] — 2 слота,
+        один из них — локальная машина.
+
+        cooldown_sec: минимальная пауза перед повторным использованием
+        одного слота. Upbit банит быстрее 1 запроса в 10 сек на IP.
+        Для poll_interval_sec=1 нужно floor(cooldown_sec / poll_interval_sec) + 1 слотов.
         """
-        self.proxies = {proxy: 0.0 for proxy in proxies}
+        # Ключ = адрес (str или None), значение = timestamp последнего использования
+        self.proxies: dict = {proxy: 0.0 for proxy in proxies}
         self.cooldown = cooldown_sec
 
-    def get_ready_proxy(self) -> str | None:
-        """Возвращает свободный прокси или None, если все на перезарядке."""
+    def get_ready_proxy(self):
+        """
+        Возвращает:
+          - str  — адрес прокси
+          - None — слот «локальный IP» готов к использованию
+          - _COOLDOWN — все слоты на перезарядке, пропустить такт
+        """
         if not self.proxies:
-            return None # Работаем без прокси (с локального IP)
+            # Список пуст — всегда работаем с локального IP без кулдауна
+            return None
 
         now = time.time()
         for proxy, last_used in self.proxies.items():
             if now - last_used >= self.cooldown:
                 self.proxies[proxy] = now
-                return proxy
-                
-        return None
+                return proxy   # None или строка — оба валидны для aiohttp
+
+        return _COOLDOWN
 
 # ==========================================
 # 3. ОСНОВНОЙ КЛАСС МОНИТОРИНГА
 # ==========================================
 class UpbitLiveMonitor:
-    def __init__(self, poll_interval_sec: float, proxies: list[str],
-                 on_signal=None,           # <-- новый параметр
+    def __init__(self, poll_interval_sec: float, proxies: list,
+                 on_signal=None,
+                 cooldown_sec: float = 8.0,
                  cache_file: str = "live_signals.json"):
         self._on_signal = on_signal
         self.poll_interval = poll_interval_sec
         self.api_url = "https://api-manager.upbit.com/api/v1/announcements"
         self.cache_file = cache_file
+        self.cooldown_sec = cooldown_sec
         
         # Инициализация менеджера прокси
-        self.proxy_manager = SmartProxyManager(proxies=proxies, cooldown_sec=10.5)
+        self.proxy_manager = SmartProxyManager(
+            proxies=proxies,
+            cooldown_sec=cooldown_sec,
+        )
         
         self.keywords = [
             "Market Support for",
@@ -128,9 +149,9 @@ class UpbitLiveMonitor:
     async def fetch_latest_announcements(self, session: aiohttp.ClientSession) -> list[dict]:
         """Запрашивает API через свободный прокси."""
         proxy = self.proxy_manager.get_ready_proxy()
-        
-        # Если используем прокси, но все они на перезарядке — пропускаем такт
-        if self.proxy_manager.proxies and proxy is None:
+
+        # Все слоты на перезарядке — пропускаем такт
+        if proxy is _COOLDOWN:
             return []
 
         params = {"category": "trade", "page": 1, "per_page": 10, "os": "web"}
@@ -189,14 +210,24 @@ class UpbitLiveMonitor:
     async def run(self):
         """Главный бесконечный цикл."""
         proxy_count = len(self.proxy_manager.proxies)
-        logger.info(f"Старт. Интервал цикла: {self.poll_interval} сек. Прокси в пуле: {proxy_count} шт.")
         
+        # Математика "как для взрослых": 
+        # Если прокси мало, мы физически не можем стучать чаще чем (cooldown / count)
         if proxy_count > 0:
-            # Проверка: хватит ли прокси для заданного интервала?
-            required_proxies = int(10.5 / self.poll_interval)
-            if proxy_count < required_proxies:
-                logger.warning(f"⚠️ ВНИМАНИЕ: Для парса каждые {self.poll_interval}с нужно минимум {required_proxies} прокси!")
-                logger.warning(f"Текущих прокси ({proxy_count}) не хватит, скрипт будет ждать их освобождения.")
+            actual_limit = self.cooldown_sec / proxy_count
+            effective_interval = max(self.poll_interval, actual_limit)
+        else:
+            effective_interval = self.cooldown_sec
+
+        logger.info(f"🚀 МОНИТОРИНГ UPBIT ЗАПУЩЕН")
+        logger.info(f"   - Желаемый интервал: {self.poll_interval}с")
+        logger.info(f"   - Слотов в пуле (IP): {proxy_count}")
+        logger.info(f"   - Кулдаун на 1 IP: {self.cooldown_sec}с")
+        
+        if effective_interval > self.poll_interval:
+            logger.warning(f"   - ⚠️ ФАКТИЧЕСКИЙ ИНТЕРВАЛ: {effective_interval}с (ограничено кол-вом прокси)")
+        else:
+            logger.info(f"   - ФАКТИЧЕСКИЙ ИНТЕРВАЛ: {effective_interval}с")
 
         is_startup = True
         
@@ -228,9 +259,9 @@ class UpbitLiveMonitor:
                     logger.info("Синхронизация завершена. Ожидаю новые анонсы...")
                     is_startup = False
                 
-                # Высчитываем, сколько еще нужно поспать, чтобы выдержать точный интервал
+                # Высчитываем, сколько еще нужно поспать до эффективного интервала
                 elapsed = time.time() - start_time
-                sleep_time = max(0.0, self.poll_interval - elapsed)
+                sleep_time = max(0.0, effective_interval - elapsed)
                 await asyncio.sleep(sleep_time)
 
 # # ==========================================
@@ -256,3 +287,22 @@ class UpbitLiveMonitor:
 #         asyncio.run(monitor.run())
 #     except KeyboardInterrupt:
 #         logger.info("Выход. Парсер остановлен.")
+
+# ==========================================
+# 5. MOCK ГЕНЕРАТОР (ДЛЯ ТЕСТОВ)
+# ==========================================
+class MockUpbitLiveMonitor(UpbitLiveMonitor):
+    def __init__(self, poll_interval_sec: float, on_signal=None, symbols_to_mock=None):
+        self._on_signal = on_signal
+        self.poll_interval = poll_interval_sec
+        self.symbols_to_mock = symbols_to_mock or ["BTC", "ETH", "XRP", "SOL", "DOGE"]
+        
+    async def run(self):
+        import random
+        logger.info(f"🟢 ЗАПУЩЕН MOCK-ГЕНЕРАТОР СИГНАЛОВ. Интервал: {self.poll_interval} сек.")
+        while True:
+            await asyncio.sleep(self.poll_interval)
+            symbol = random.choice(self.symbols_to_mock)
+            logger.debug(f"🛠 [MOCK] Генерирую фейковый сигнал листинга для {symbol}...")
+            if self._on_signal:
+                await self._on_signal(symbol)

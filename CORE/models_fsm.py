@@ -27,10 +27,8 @@ class ActivePosition:
     exit_status: ExitStatusType = "NORMAL"
     last_exit_status: ExitStatusType = "NORMAL"
     
-    in_base_mode: bool = False
     is_closed_by_exchange: bool = False  
     exit_in_flight: bool = False         # <-- НОВЫЙ ФЛАГ: Сетевой запрос выхода в процессе
-    interf_in_flight: bool = False       # Оставляем как отдельный асинхронный лок для скупки помех     
     
     tp_grid_initiated: bool = False
     tp_orders: dict = field(default_factory=dict)
@@ -39,31 +37,19 @@ class ActivePosition:
     entry_price: float = 0.0             
     pending_price: float = 0.0           
     avg_price: float = 0.0                
-    realized_exit_price: float = 0.0     
-    exit_price_hint: float = 0.0  # Цена, по которой мы ПОСЛЕДНИЙ РАЗ отправили ордер на выход
+    exit_price_hint: float = 0.0  # Цена, по которой мы ПОСЛЕДНИЙ РАЗ отправили ордер на выход, или исполнился закрывающий ордер
     
     pending_qty: float = 0.0             
     current_qty: float = 0.0    
     closed_qty: float = 0.0 
     max_realized_qty: float = 0.0        
-    interf_comulative_qty: float = 0.0 
-    max_allowed_remains: float = 0.0  # Считается один раз при входе (максимальное количество при скупе).
     
-    init_ask1: float = 0.0
-    init_bid1: float = 0.0
     mid_price: float = 0.0
-    base_target_price_100: float = 0.0   
     
     current_target_rate: float = 1.0     
     close_order_id: str = ""             
     
     opened_at: float = field(default_factory=time.time)
-    last_shift_ts: float = 0.0
-    last_negative_check_ts: float = 0.0
-    breakeven_start_ts: float = 0.0
-    last_extrime_try_ts: float = 0.0
-    
-    extrime_retries_count: int = 0
     marked_for_death_ts: float = 0.0
 
     def to_dict(self) -> dict:
@@ -129,7 +115,7 @@ class WsInterpreter:
                     fill_price = self._safe_float(o.get("priceRp", o.get("price", 0.0)))
 
                 if is_closing_order and fill_price > 0:
-                    pos.realized_exit_price = fill_price
+                    pos.exit_price_hint = fill_price
                 elif not is_closing_order and fill_price > 0:
                     if pos.entry_price == 0.0:
                         pos.opened_at = time.time()

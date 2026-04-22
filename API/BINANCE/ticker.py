@@ -1,3 +1,7 @@
+# ============================================================
+# FILE: API/BINANCE/ticker.py
+# ROLE: Binance Futures last-price snapshot for spread filter
+# ============================================================
 import aiohttp
 from typing import Dict, Optional
 

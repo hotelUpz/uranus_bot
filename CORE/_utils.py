@@ -75,16 +75,33 @@ class PriceCacheManager:
         self._is_running = False
 
     async def _fetch(self):
+        """Всегда запрашивает Phemex. Binance — опционально (но данные всё равно собираем)."""
         try:
             b_prices, p_tickers = await asyncio.gather(
                 self.binance_api.get_all_prices(),
-                self.phemex_api.get_all_tickers()   # <-- было get_all_prices
+                self.phemex_api.get_all_tickers()
             )
             self.binance_prices = b_prices
             self.phemex_prices = {sym: t.price for sym, t in p_tickers.items()}
             self.phemex_volumes = {sym: t.volume_24h_usd for sym, t in p_tickers.items()}
         except Exception as e:
             logger.debug(f"Ошибка фонового обновления цен тикеров: {e}")
+
+    async def warmup(self):
+        """Первичное заполнение кэша перед стартом."""
+        logger.info("⏳ PriceCacheManager: прогрев кэша...")
+        await self._fetch()
+        logger.info(f"✅ PriceCacheManager: прогрет. Phemex={len(self.phemex_prices)} монет, Binance={len(self.binance_prices)} монет.")
+
+    async def loop(self):
+        """Фоновый цикл периодического обновления."""
+        self._is_running = True
+        while self._is_running:
+            await asyncio.sleep(self.upd_sec)
+            await self._fetch()
+
+    def stop(self):
+        self._is_running = False
 
     def get_prices(self, symbol: str) -> Tuple[float, float]:
         return self.binance_prices.get(symbol, 0.0), self.phemex_prices.get(symbol, 0.0)
@@ -142,18 +159,8 @@ class ConfigManager:
             scen_cfg = exit_cfg.get("scenarios", {})
             
             from EXIT.scenarios.grid_tp import GridTPFactory
-            from EXIT.scenarios.negative import NegativeScenario
-            from EXIT.scenarios.breakeven import PositionTTLClose
-            from EXIT.extrime_close import ExtrimeClose
             
             self.tb.grid_tp_factory = GridTPFactory(scen_cfg.get("grid_tp", {}))
-            self.tb.scen_neg = NegativeScenario(scen_cfg.get("negative", {}))
-            self.tb.scen_ttl = PositionTTLClose(scen_cfg.get("breakeven_ttl_close", {}), self.tb.active_positions_locker)
-            self.tb.scen_extrime = ExtrimeClose(exit_cfg.get("extrime_close", {}))
-
-            self.tb.breakeven_order_timeout_sec = scen_cfg.get("breakeven_ttl_close", {}).get("order_timeout_sec", 0.1)     
-            self.tb.interference_order_timeout_sec = exit_cfg.get("interference", {}).get("order_timeout_sec", 0.1)        
-            self.tb.extrime_order_timeout_sec = exit_cfg.get("extrime_close", {}).get("order_timeout_sec", 0.1)
 
             return True, "Конфигурация успешно обновлена в памяти!"
         except Exception as e:

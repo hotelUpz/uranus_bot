@@ -42,6 +42,7 @@ class AdminTgBot:
             keyboard=[
                 [KeyboardButton(text="▶️ Старт"), KeyboardButton(text="⏹ Стоп")],
                 [KeyboardButton(text="📝 Установить BlackList"), KeyboardButton(text="⚙️ Установить настройки")],
+                [KeyboardButton(text="📄 Получить настройки"), KeyboardButton(text="💰 Задать размер входа")],
                 [KeyboardButton(text="📊 Статус")]
             ],
             resize_keyboard=True
@@ -176,6 +177,44 @@ class AdminTgBot:
                 logger.error(f"Ошибка при обработке нового BlackList: {e}")
                 await msg.answer("❌ Произошла ошибка при сохранении. Попробуйте снова.")
                 await state.clear()
+
+        @self.dp.message(F.text == "📄 Получить настройки", StateFilter("*"))
+        async def btn_get_config(msg: Message, state: FSMContext):
+            if str(msg.from_user.id) != self.chat_id: return
+            try:
+                from aiogram.types import FSInputFile
+                await msg.answer_document(FSInputFile(CFG_PATH))
+            except Exception as e:
+                logger.error(f"Ошибка отправки конфига: {e}")
+                await msg.answer("❌ Ошибка отправки файла.")
+
+        @self.dp.message(F.text == "💰 Задать размер входа", StateFilter("*"))
+        async def btn_set_notional(msg: Message, state: FSMContext):
+            if str(msg.from_user.id) != self.chat_id: return
+            await msg.answer("Отправьте размер входа (notional_limit) в USD (например: 100):")
+            await state.set_state("waiting_for_notional")
+
+        @self.dp.message(StateFilter("waiting_for_notional"))
+        async def process_notional(msg: Message, state: FSMContext):
+            if str(msg.from_user.id) != self.chat_id: return
+            try:
+                if msg.text and msg.text in ["▶️ Старт", "⏹ Стоп", "📊 Статус", "📝 Установить BlackList", "⚙️ Установить настройки", "📄 Получить настройки", "💰 Задать размер входа"]:
+                    await state.clear()
+                    await msg.answer("⚠️ Ввод отменен.")
+                    return
+                
+                new_limit = float(msg.text.strip())
+                if new_limit <= 0: raise ValueError("Must be positive")
+                
+                self.tb.cfg["risk"]["notional_limit"] = new_limit
+                with open(CFG_PATH, "w", encoding="utf-8") as f:
+                    json.dump(self.tb.cfg, f, indent=4, ensure_ascii=False)
+                    
+                self.tb.executor.notional_limit = new_limit
+                await msg.answer(f"✅ Размер входа (notional_limit) успешно изменен на: <b>{new_limit}$</b>")
+                await state.clear()
+            except ValueError:
+                await msg.answer("❌ Ошибка: Введите положительное число (например: 100).")
 
         # ---------- БЛОК ЗАГРУЗКИ КОНФИГОВ ----------
         @self.dp.message(F.text == "⚙️ Установить настройки", StateFilter("*"))

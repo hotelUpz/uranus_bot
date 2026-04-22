@@ -41,7 +41,7 @@ def get_config_summary(cfg: dict) -> str:
     
     lines.append(f"Leverage: <b>{lev_val}x</b> | Margin Mode: <b>{margin_mod}</b>")
     lines.append(f"Margin Size: <b>{risk.get('margin_size', 'N/A')}</b> | Notional Limit: <b>{risk.get('notional_limit', 'N/A')} USDT</b>")
-    lines.append(f"Margin Over Size: <b>{risk.get('margin_over_size_pct', 'N/A')}%</b>")
+
     
     q = risk.get("quarantine", {})
     lines.append(f"Quarantine: <b>{q.get('max_consecutive_fails', 'N/A')}</b> fails for <b>{q.get('quarantine_hours', 'N/A')}h</b>")
@@ -60,7 +60,7 @@ def get_config_summary(cfg: dict) -> str:
     entry_main = cfg.get("entry", {})
     entry = entry_main.get("pattern", {})
     lines.append("\n📥 <b>[ENTRY GENERAL]</b>")
-    lines.append(f"Sig Timeout: <b>{entry_main.get('signal_timeout_sec', 'N/A')}s</b> | Ord Timeout: <b>{entry_main.get('entry_timeout_sec', 'N/A')}s</b>")
+    lines.append(f"Sig Timeout: <b>{entry_main.get('signal_timeout_sec', 'N/A')}s</b>")
     lines.append(f"Max Retries: <b>{entry_main.get('max_place_order_retries', 'N/A')}</b> | Entry Qrntn: <b>{entry_main.get('quarantine', {}).get('quarantine_hours', 'N/A')}h</b>")
 
     ph = entry.get("phemex", {})
@@ -88,25 +88,28 @@ def get_config_summary(cfg: dict) -> str:
     exit_cfg = cfg.get("exit", {})
     scen = exit_cfg.get("scenarios", {})
     
-    lines.append("\n🚪 <b>[EXIT GENERAL]</b>")
-    lines.append(f"Max Retries: <b>{exit_cfg.get('max_place_order_retries', 'N/A')}</b> | Min Order Life: <b>{exit_cfg.get('min_order_life_sec', 'N/A')}s</b>")
+    sl = scen.get("stop_loss", {})
+    ttl = scen.get("ttl_market_close", {})
+    grid = scen.get("grid_tp", {})
 
-    avg = scen.get("base", {})
-    neg = scen.get("negative", {})
-    ttl = scen.get("breakeven_ttl_close", {})
-    inter = exit_cfg.get("interference", {})
-    ext = exit_cfg.get("extrime_close", {})
-    
-    lines.append("\n📦 <b>[EXIT SCENARIOS]</b>")
-    lines.append(f"<b>Base (Take):</b> {avg.get('enable', True)} | Rate: <b>{avg.get('target_rate', 'N/A')}</b> (Min: <b>{avg.get('min_target_rate', 'N/A')}</b>)")
-    lines.append(f"Base Shift: Demotion <b>{avg.get('shift_demotion', 'N/A')}</b> per <b>{avg.get('shift_ttl', 'N/A')}s</b> | Stab TTL: <b>{avg.get('stabilization_ttl', 'N/A')}s</b>")
-    lines.append(f"<b>Negative:</b> {neg.get('enable', 'N/A')} | Neg Spread &lt;= <b>{neg.get('negative_spread_pct', 'N/A')}%</b> for <b>{neg.get('negative_ttl', 'N/A')}s</b>")
-    lines.append(f"<b>Interference:</b> {inter.get('enable', 'N/A')} | Vol: <b>{inter.get('usual_vol_pct_to_init_size', 'N/A')}% - {inter.get('max_vol_pct_to_init_size', 'N/A')}%</b>")
-    lines.append(f"Interference Lvl Retries: <b>{inter.get('max_retries_per_level', 'N/A')}</b> | Stab TTL: <b>{inter.get('stabilization_ttl', 'N/A')}s</b>")
-    lines.append(f"<b>TTL Close:</b> {ttl.get('enable', 'N/A')} | TTL: <b>{ttl.get('position_ttl', 'N/A')}s</b> | Wait: <b>{ttl.get('breakeven_wait_sec', 'N/A')}s</b>")
-    lines.append(f"TTL Orient: <b>{ttl.get('to_entry_orientation', 'N/A')}</b>")
-    lines.append(f"<b>Extrime:</b> {ext.get('enable', 'N/A')} | Retries: <b>{ext.get('retry_num', 'N/A')}</b> per <b>{ext.get('retry_ttl', 'N/A')}s</b>")
-    lines.append(f"Extrime Incr Frac: <b>{ext.get('increase_fraction', 'N/A')}</b> | Orient: <b>{ext.get('bid_to_ask_orientation', 'N/A')}</b>")
+    lines.extend([
+        "────────────────────────────────────────",
+        "🔹 [GLOBAL]",
+        f"   Asset:     {cfg.get('quota_asset', 'USDT')}",
+        f"   Leverage:  {lev_cfg.get('val', 'N/A') if isinstance(lev_cfg, dict) else lev_cfg}x",
+        f"   Notional:  {risk.get('notional_limit', 0)}$",
+        "",
+        "🔹 [RISK & QUARANTINE]",
+        f"   Min Thr.:  {q.get('min_quarantine_threshold_usdt', '0')} $",
+        f"   Forc Thr.: {q.get('force_quarantine_threshold_usdt', '0')} $",
+        f"   Hours:     {q.get('quarantine_hours', 1)}h",
+        "",
+        "🔹 [EXIT STRATEGY]",
+        f"   Grid TP:   {'ON' if grid.get('enable') else 'OFF'}",
+        f"   Stop-Loss: {'ON' if sl.get('enable') else 'OFF'} ({sl.get('percent', 5.0)}%)",
+        f"   TTL Close: {'ON' if ttl.get('enable') else 'OFF'} ({ttl.get('ttl_sec', 3600)}s)",
+        "────────────────────────────────────────"
+    ])
 
     return "\n".join(lines)
 

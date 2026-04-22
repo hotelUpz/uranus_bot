@@ -1,3 +1,7 @@
+# ============================================================
+# FILE: TG/tg_sender.py
+# ROLE: Telegram outbound message sender (fire-and-forget async)
+# ============================================================
 import aiohttp
 import asyncio
 import time
