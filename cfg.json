@@ -21,6 +21,7 @@
         "timezone": "Europe/Kyiv"
     },
     "black_list": [
+        "BTCUSDT"
     ],
     "quota_asset": "USDT",
     "risk": {
