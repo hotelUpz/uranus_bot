@@ -1,0 +1,42 @@
+[
+    {
+        "symbol": "CHIP",
+        "phemex_symbol": "CHIPUSDT",
+        "announce_ts_ms": 1776775923000,
+        "announce_ts_str": "2026-04-21 12:52:03 UTC",
+        "title": "유에스디에이아이(CHIP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+        "status": "INITIAL_SIGNAL"
+    },
+    {
+        "symbol": "PIEVERSE",
+        "phemex_symbol": "PIEVERSEUSDT",
+        "announce_ts_ms": 1776661200000,
+        "announce_ts_str": "2026-04-20 05:00:00 UTC",
+        "title": "파이버스(PIEVERSE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+        "status": "INITIAL_SIGNAL"
+    },
+    {
+        "symbol": "SOON",
+        "phemex_symbol": "SOONUSDT",
+        "announce_ts_ms": 1776402002000,
+        "announce_ts_str": "2026-04-17 05:00:02 UTC",
+        "title": "쑨(SOON) KRW 마켓 디지털 자산 추가",
+        "status": "INITIAL_SIGNAL"
+    },
+    {
+        "symbol": "CC",
+        "phemex_symbol": "CCUSDT",
+        "announce_ts_ms": 1776229203000,
+        "announce_ts_str": "2026-04-15 05:00:03 UTC",
+        "title": "캔톤(CC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (입출금 서비스 개시 안내 및 거래지원 개시 시점 안내)",
+        "status": "INITIAL_SIGNAL"
+    },
+    {
+        "symbol": "ZAMA",
+        "phemex_symbol": "ZAMAUSDT",
+        "announce_ts_ms": 1776152920000,
+        "announce_ts_str": "2026-04-14 07:48:40 UTC",
+        "title": "자마(ZAMA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+        "status": "INITIAL_SIGNAL"
+    }
+]

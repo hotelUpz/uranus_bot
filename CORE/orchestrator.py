@@ -110,10 +110,10 @@ class TradingBot:
         else:
             self._upbit_monitor = None
             
-        self.stakan_stream: Optional[PhemexStakanStream] = None
-        self._stakan_task: Optional[asyncio.Task] = None
-
         self.signal_engine = SignalEngine(self.cfg["entry"], self.funding_manager)
+        
+        self.st_stream: Optional[PhemexStakanStream] = None
+        self._stakan_task: Optional[asyncio.Task] = None
 
         self._processing: Set[str] = set()
         self._signal_timeouts: Dict[str, float] = {}
@@ -267,28 +267,18 @@ class TradingBot:
             logger.info(f"[Upbit] {phemex_symbol} в блэклисте, пропускаем.")
             return
         if phemex_symbol not in self.symbol_specs:
-            # Новая монета может появиться на Phemex уже после старта бота.
-            # Делаем быстрый ре-фетч спецификаций и перезапускаем стакан.
-            logger.info(f"[Upbit] {phemex_symbol} не в кэше symbol_specs, пробуем ре-фетч...")
+            logger.info(f"[Upbit] {phemex_symbol} не в кэше, пробуем ре-фетч спецификаций...")
             try:
                 symbols_info = await self.phemex_sym_api.get_all(quote="USDT", only_active=True)
                 self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
-                # Перезапускаем стакан на обновлённом наборе символов
-                if getattr(self, 'stakan_stream', None):
-                    self.stakan_stream.stop()
-                    await self._await_task(getattr(self, '_stakan_task', None))
-                    symbols_to_stream = list(self.symbol_specs.keys())
-                    from API.PHEMEX.stakan import PhemexStakanStream
-                    self.stakan_stream = PhemexStakanStream(symbols_to_stream)
-                    mid_cache = self.price_manager.phemex_prices
-                    def on_stakan_depth(sym, depth):
-                        if depth.bid1 > 0 and depth.ask1 > 0:
-                            mid_cache[sym] = (depth.bid1 + depth.ask1) / 2.0
-                    self._stakan_task = asyncio.create_task(self.stakan_stream.run(on_stakan_depth))
+                # Если монета появилась — переподписываемся на WS
+                if phemex_symbol in self.symbol_specs:
+                    await self._refresh_stakan_stream()
             except Exception as e:
-                logger.error(f"[Upbit] Ошибка ре-фетча symbol_specs: {e}")
+                logger.error(f"[Upbit] Ошибка ре-фетча specs: {e}")
+            
             if phemex_symbol not in self.symbol_specs:
-                logger.warning(f"[Upbit] {phemex_symbol} всё равно не на Phemex, пропускаем.")
+                logger.warning(f"[Upbit] {phemex_symbol} всё ещё нет на Phemex, отмена.")
                 return
         if not await self.quarantine_util(phemex_symbol):
             return
@@ -296,9 +286,17 @@ class TradingBot:
         pos_key = f"{phemex_symbol}_{side}"
         logger.warning(f"🚀 [Upbit Signal] {phemex_symbol} → {side}")
 
+        # Запрашиваем цены из кэша (снапшот)
+        bids, asks = self.st_stream.get_depth(phemex_symbol) if self.st_stream else ([], [])
+        signal = self.signal_engine.create_signal(phemex_symbol, side, bids, asks)
+        
+        if not signal:
+            logger.warning(f"[Upbit] Не удалось сформировать сигнал для {phemex_symbol} (нет цен или фандинг).")
+            return
+
         async with self.global_entry_lock:
             if not self._can_open_position(phemex_symbol, side):
-                logger.info(f"[Upbit] Отклонен вход для {phemex_symbol} (лимит позиций или хедж).")
+                logger.info(f"[Upbit] Отклонен вход для {phemex_symbol} (лимит позиций).")
                 return
 
             async with self._get_lock(pos_key):
@@ -307,25 +305,8 @@ class TradingBot:
                 self.state.active_positions[pos_key] = ActivePosition(
                     symbol=phemex_symbol, side=side, pending_qty=0.0,
                     in_pending=True, in_position=False,
-                    mid_price=0.0,
+                    mid_price=signal.mid_price, # Используем актуальную цену из сигнала
                 )
-
-        # EntrySignal нужен для executor — берем текущую цену с Phemex
-        _, p_price = self.price_manager.get_prices(phemex_symbol)
-        if p_price <= 0:
-            logger.warning(f"[Upbit] Нет цены для {phemex_symbol}, вход невозможен.")
-            async with self._get_lock(pos_key):
-                self.state.active_positions.pop(pos_key, None)
-            return
-
-        signal = EntrySignal(
-            symbol=phemex_symbol,
-            side=side,
-            price=p_price,
-            init_ask1=p_price,
-            init_bid1=p_price,
-            mid_price=p_price,
-        )
 
         success = await self.executor.execute_entry(phemex_symbol, pos_key, signal)
         if success:
@@ -528,6 +509,25 @@ class TradingBot:
         logger.info("🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...")
         await self._recover_state()
 
+    async def _refresh_stakan_stream(self):
+        """Перезапускает стрим стаканов на актуальном наборе символов."""
+        await self._await_task(self._stakan_task)
+        
+        symbols_to_stream = list(self.symbol_specs.keys())
+        if not symbols_to_stream: return
+        
+        logger.info(f"🔄 Рестарт стрима стаканов на {len(symbols_to_stream)} символов...")
+        self.st_stream = PhemexStakanStream(symbols_to_stream)
+        
+        # Замыкаем кэш цен напрямую на price_manager
+        phemex_cache = self.price_manager.phemex_prices
+        
+        def on_stakan_depth(sym: str, depth: DepthTop):
+            if depth.bid1 > 0 and depth.ask1 > 0:
+                phemex_cache[sym] = (depth.bid1 + depth.ask1) / 2.0
+                
+        self._stakan_task = asyncio.create_task(self.st_stream.run(on_stakan_depth))
+
     async def start(self):
         if getattr(self, '_is_running', False): return
         self._is_running = True
@@ -542,15 +542,7 @@ class TradingBot:
         await self._recover_state()
         
         # --- БЫСТРЫЙ ПАРСИНГ ЦЕН ---
-        async def on_stakan_depth(d: DepthTop):
-            if d.bids and d.asks:
-                mid = (d.bids[0][0] + d.asks[0][0]) / 2
-                self.price_manager.phemex_prices[d.symbol] = mid
-                
-        symbols_to_stream = list(self.symbol_specs.keys())
-        if symbols_to_stream:
-            self.stakan_stream = PhemexStakanStream(symbols_to_stream, depth=1, chunk_size=40, throttle_ms=0)
-            self._stakan_task = asyncio.create_task(self.stakan_stream.run(on_stakan_depth))
+        await self._refresh_stakan_stream()
 
         # ==========================================
         # ИНИЦИАЛИЗАЦИЯ ФИНАНСОВОГО АУДИТА
