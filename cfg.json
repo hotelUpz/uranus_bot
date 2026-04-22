@@ -34,8 +34,7 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 100.0,
-        "hedge_mode": false
+        "notional_limit": 100.0
     },
     "upbit": {
         "test_mode": true,

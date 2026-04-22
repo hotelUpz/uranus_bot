@@ -56,7 +56,6 @@ class TradingBot:
         self.quota_asset = self.cfg["quota_asset"]
         
         self.signal_timeout_sec = self.cfg["entry"]["signal_timeout_sec"]
-        self.hedge_mode = self.cfg["risk"]["hedge_mode"]
         upd_sec = self.cfg["entry"]["pattern"]["binance"]["update_prices_sec"]
         
         api_key = os.getenv("API_KEY") or self.cfg["credentials"]["api_key"]
@@ -204,12 +203,6 @@ class TradingBot:
         for pos_key, pos in self.state.active_positions.items():
             if pos.in_position or pos.in_pending:
                 working_symbols.add(pos.symbol)
-                if pos.symbol == symbol:
-                    if pos.side == "LONG": has_long = True
-                    if pos.side == "SHORT": has_short = True
-
-        if not self.hedge_mode and (has_long or has_short):
-            return False
 
         if symbol in working_symbols:
             return True

@@ -121,7 +121,7 @@ class OrderExecutor:
                 return False
 
             side = "Buy" if signal.side == "LONG" else "Sell"
-            phemex_pos_side = "Merged" if not self.tb.hedge_mode else ("Long" if signal.side == "LONG" else "Short")
+            phemex_pos_side = "Long" if signal.side == "LONG" else "Short"
 
             async with self.tb._get_lock(pos_key):
                 pos = self.tb.state.active_positions.get(pos_key)
@@ -166,7 +166,7 @@ class OrderExecutor:
             pos = self.tb.state.active_positions.get(pos_key)
             if not pos or not getattr(pos, 'in_position', False):
                 return False
-            phemex_pos_side = "Merged" if not self.tb.hedge_mode else ("Long" if pos.side == "LONG" else "Short")
+            phemex_pos_side = "Long" if pos.side == "LONG" else "Short"
             side = "Sell" if pos.side == "LONG" else "Buy"
 
         # Защита от дублей при краше бота во время инициализации сетки
@@ -247,7 +247,7 @@ class OrderExecutor:
                 pos_side_raw = pos.side
                 old_order_id = pos.close_order_id # <-- Читаем ID старого ордера
 
-            phemex_pos_side = "Merged" if not self.tb.hedge_mode else ("Long" if pos_side_raw == "LONG" else "Short")
+            phemex_pos_side = "Long" if pos_side_raw == "LONG" else "Short"
             
             # 2. УБИВАЕМ СТАРЫЙ ОРДЕР fire-and-forget (разблокируем маржу для нового ордера)
             if old_order_id:
@@ -330,7 +330,7 @@ class OrderExecutor:
             pos_side_raw = pos.side
             pos.tp_orders.clear() # Очищаем стейт лимитных ордеров
             
-        phemex_pos_side = "Merged" if not self.tb.hedge_mode else ("Long" if pos_side_raw == "LONG" else "Short")
+        phemex_pos_side = "Long" if pos_side_raw == "LONG" else "Short"
         side = "Sell" if pos_side_raw == "LONG" else "Buy"
         
         # 2. Швыряем маркет
