@@ -74,7 +74,7 @@ class TradingBot:
         self.phemex_ticker_api = PhemexTickerAPI(session=self.phemex_session)        
 
         self.price_manager = PriceCacheManager(self.phemex_ticker_api, upd_sec, self)
-        self.signal_engine = SignalEngine(self.cfg, on_signal_callback=self._process_entry_from_signal)
+        self.signal_engine = SignalEngine(self.cfg["entry"], on_signal_callback=self._process_entry_from_signal)
         self.private_client = PhemexPrivateClient(api_key, api_secret, session=self.phemex_session)
         self.private_ws = PhemexPrivateWS(api_key, api_secret)
 
@@ -92,7 +92,7 @@ class TradingBot:
         if upbit_enabled:
             from ENTRY.upbit_signal import UpbitLiveMonitor, MockUpbitLiveMonitor
             if upbit_cfg.get("use_mock", False):
-                logger.warning("🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы для отладки ордеров).")
+                logger.warning("[MOCK] [Upbit] Запущен MOCK-режим (тестовые сигналы для отладки ордеров).")
                 self._upbit_monitor = MockUpbitLiveMonitor(
                     poll_interval_sec=upbit_cfg.get("poll_interval_sec", 1.0),
                     on_signal=self._on_upbit_signal,
@@ -108,7 +108,7 @@ class TradingBot:
         else:
             self._upbit_monitor = None
             
-        self.signal_engine = SignalEngine(self.cfg["entry"])
+        
         
         self.st_stream: Optional[PhemexStakanStream] = None
         self._stakan_task: Optional[asyncio.Task] = None
@@ -182,9 +182,9 @@ class TradingBot:
                     self.state.active_positions[pos_key].in_pending = False
 
             await self.state.save()
-            logger.info(f"✅ Стейт синхронизирован. В памяти {len(self.state.active_positions)} активных позиций.")
+            logger.info(f"[OK] Стейт синхронизирован. В памяти {len(self.state.active_positions)} активных позиций.")
         except Exception as e:
-            logger.error(f"❌ Ошибка Recovery: {e}")
+            logger.error(f"[ERR] Ошибка Recovery: {e}")
 
     async def _validate_notional_limit(self) -> bool:
         """
@@ -207,7 +207,7 @@ class TradingBot:
                 min_pct = min(min_pct, min(vols))
                 
         if min_pct <= 0 or min_pct > 100:
-            logger.error("❌ Критическая ошибка конфига: Некорректные проценты объемов в сетке TP!")
+            logger.error("[ERR] Критическая ошибка конфига: Некорректные проценты объемов в сетке TP!")
             return False
             
         buffer_mult = 1.10  # 10% буфер запаса на проскальзывания цены
@@ -251,7 +251,7 @@ class TradingBot:
                 await self.tg.send_message(msg)
             return False
             
-        logger.info(f"✅ Финансовая валидация пройдена. Мин. кусок сетки TP: {min_pct}%")
+        logger.info(f"[OK] Финансовая валидация пройдена. Мин. кусок сетки TP: {min_pct}%")
         return True
 
     def _get_lock(self, pos_key: str) -> asyncio.Lock:
@@ -275,7 +275,7 @@ class TradingBot:
         return True
     
     # Новый метод в TradingBot:
-    async def _on_upbit_signal(self, symbol: str) -> None:
+    async def _on_upbit_signal(self, symbol: str, received_ms: int = 0) -> None:
         """Входящий сигнал от Upbit: быстрая передача в SignalEngine."""
         # Глобальная блокировка лишних HTTP-запросов монитора на время входа
         self.stop_another_request = True 
@@ -284,20 +284,27 @@ class TradingBot:
         async def _safety_release():
             await asyncio.sleep(UPBIT_SIGNAL_SAFETY_RELEASE_SEC)
             self.stop_another_request = False
-        asyncio.create_task(_safety_release())
+        safety_task = asyncio.create_task(_safety_release())
         
-        # Делегируем всю работу (конвертация, стакан, спеки) движку сигналов
-        asyncio.create_task(
-            self.signal_engine.handle_upbit_signal(
+        async def _delegate():
+            # Делегируем всю работу (конвертация, стакан, спеки) движку сигналов
+            success = await self.signal_engine.handle_upbit_signal(
                 raw_symbol=symbol,
                 side=self.cfg.get("upbit", {}).get("default_side", "long").upper(),
                 st_stream=self.st_stream,
                 price_manager=self.price_manager,
                 symbol_specs=self.symbol_specs,
                 black_list=self.bl_manager,
-                phemex_sym_api=self.phemex_sym_api
+                phemex_sym_api=self.phemex_sym_api,
+                received_ms=received_ms
             )
-        )
+            # Если сигнал был отбракован на входе, сразу снимаем блокировку
+            if not success:
+                self.stop_another_request = False
+                if not safety_task.done():
+                    safety_task.cancel()
+
+        asyncio.create_task(_delegate())
 
     async def _process_entry_from_signal(self, signal: "EntrySignal"):
         """Компактный интерфейс исполнения входа."""
@@ -316,17 +323,15 @@ class TradingBot:
             # Исполняем вход (внутри экзекутора будут логи)
             await self.executor.execute_entry(
                 symbol=phemex_symbol,
-                side=side,
                 pos_key=pos_key,
-                signal=signal,
-                spec=spec
+                signal=signal
             )
             
             # После успешного (или неуспешного) входа - добавляем в блэклист
             asyncio.create_task(self.bl_manager.update_and_save([phemex_symbol]))
 
         except Exception as e:
-            logger.error(f"❌ Entry Error for {phemex_symbol}: {e}")
+            logger.error(f"[ERR] Entry Error for {phemex_symbol}: {e}")
         finally:
             # Снимаем блокировку монитора через 5 секунд (чтобы не спамить HTTP во время пампов)
             async def release_block():
@@ -384,7 +389,7 @@ class TradingBot:
                     volume_24h = self.price_manager.get_volume(pos.symbol)
                     spec = self.symbol_specs.get(pos.symbol)
                     if not spec:
-                        logger.error(f"[{pos_key}] ❌ Ошибка Grid TP: Нет спецификаций (tick_size/lot_size) для {pos.symbol}!")
+                        logger.error(f"[{pos_key}] [ERR] Ошибка Grid TP: Нет спецификаций (tick_size/lot_size) для {pos.symbol}!")
                         continue
                         
                     orders = self.grid_tp_factory.calculate_grid(
@@ -400,7 +405,7 @@ class TradingBot:
                         pos.tp_grid_initiated = True # Предотвращаем спам тасок
                         asyncio.create_task(self.executor.execute_tp_grid(pos.symbol, pos_key, orders))
                     else:
-                        logger.error(f"[{pos_key}] ❌ Ошибка расчета Grid TP (возвращен пустой список ордеров).")
+                        logger.error(f"[{pos_key}] [ERR] Ошибка расчета Grid TP (возвращен пустой список ордеров).")
                     continue
 
                 if pos.exit_in_flight:
@@ -431,7 +436,7 @@ class TradingBot:
             self._processing.discard(symbol)
 
     async def _main_trading_loop(self):
-        logger.info("🎮 Главная торговая живолупа (Game Loop) запущена.")
+        logger.info("[LOOP] Главная торговая живолупа (Game Loop) запущена.")
         while self._is_running:
             # 1. ОБРАБОТКА ТЕКУЩИХ ПОЗИЦИЙ
             keys_to_check = list(self.state.active_positions.keys())
@@ -446,7 +451,7 @@ class TradingBot:
                             if pos.in_position:
                                 pos.marked_for_death_ts = 0.0 
                             elif time.time() - pos.marked_for_death_ts > 5.0:
-                                logger.debug(f"[{pos_key}] 🗑 Удаление фантомной позиции (no WS fill).")
+                                logger.debug(f"[{pos_key}] [DEL] Удаление фантомной позиции (no WS fill).")
                                 self.state.active_positions.pop(pos_key, None)
                                 self.active_positions_locker.pop(pos_key, None)
                                 asyncio.create_task(self.state.save())
@@ -455,7 +460,7 @@ class TradingBot:
                         if getattr(pos, 'last_notified_tp_progress', 0) < getattr(pos, 'tp_progress', 0):
                             new_count = pos.tp_progress
                             if self.tg:
-                                msg = f"🎯 <b>[{pos.symbol}]</b> Тейк-профит (уровень {new_count}) исполнен!\n💰 Зафиксирована часть прибыли."
+                                msg = f"[HIT] <b>[{pos.symbol}]</b> Тейк-профит (уровень {new_count}) исполнен!\nЗафиксирована часть прибыли."
                                 asyncio.create_task(self.tg.send_message(msg))
                             pos.last_notified_tp_progress = new_count
                             asyncio.create_task(self.state.save())
@@ -477,14 +482,14 @@ class TradingBot:
 
                                 emoji = "💵" if is_win else "🩸"
 
-                                current_status = pos.exit_status if pos.exit_status in ("EXTREME", "BREAKEVEN") else pos.last_exit_status
+                                current_status = pos.exit_status if pos.exit_status in ("STOP_LOSS", "TTL_CLOSE") else pos.last_exit_status
                                 
-                                if current_status == "EXTREME": 
-                                    semantic = "⚠️ Аварийный выход (EXTREME Mode)"
-                                elif current_status == "BREAKEVEN": 
-                                    semantic = "🛡 Выход по безубытку (TTL)"                                
+                                if current_status == "STOP_LOSS": 
+                                    semantic = "[WARN] Стоп-лосс (Аварийный выход)"
+                                elif current_status == "TTL_CLOSE": 
+                                    semantic = "[PROT] Выход по таймауту (TTL Market)"                                
                                 else: 
-                                    semantic = "🎯 Тейк-профит" if is_win else "📉 Убыток (Ручное/Неизвестно)"
+                                    semantic = "[HIT] Тейк-профит" if is_win else "[DOWN] Убыток (Ручное/Неизвестно)"
 
                                 if is_win:
                                     self.state.consecutive_fails[pos.symbol] = 0
@@ -495,7 +500,7 @@ class TradingBot:
                                     msg += f"\n⏳ Время в сделке: {format_duration(duration_sec)}"
                                     asyncio.create_task(self.tg.send_message(msg))
                                     
-                                logger.info(f"[{pos_key}] 🛑 Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
+                                logger.info(f"[{pos_key}] [HALT] Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
 
                             # Снимаем все возможные ордера-призраки (лимитки тейк-профитов) перед удалением позиции
                             asyncio.create_task(self.executor.cancel_all_orders(pos.symbol))
@@ -505,7 +510,7 @@ class TradingBot:
                             asyncio.create_task(self.state.save())
 
                     except Exception as e:
-                        logger.error(f"[{pos_key}] 💥 Критическая ошибка при обработке позиции в Game Loop: {e}\n{traceback.format_exc()}")
+                        logger.error(f"[{pos_key}] [ERR] Критическая ошибка при обработке позиции в Game Loop: {e}\n{traceback.format_exc()}")
 
             active_symbols = set()
             for pos in self.state.active_positions.values():
@@ -525,8 +530,9 @@ class TradingBot:
 
     async def _on_ws_subscribe(self):
         """Срабатывает при первом подключении и каждом успешном реконнекте WS"""
-        logger.info("🔄 WS Подписан на приватный канал. Запуск синхронизации стейта (Recover)...")
+        logger.info("[WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...")
         await self._recover_state()
+        self.ws_ready = True
 
     async def _refresh_stakan_stream(self):
         """Перезапускает стрим стаканов на актуальном наборе символов."""
@@ -535,7 +541,7 @@ class TradingBot:
         symbols_to_stream = list(self.symbol_specs.keys())
         if not symbols_to_stream: return
         
-        logger.info(f"🔄 Рестарт стрима стаканов на {len(symbols_to_stream)} символов...")
+        logger.info(f"[WS] Рестарт стрима стаканов на {len(symbols_to_stream)} символов...")
         self.st_stream = PhemexStakanStream(symbols_to_stream)
         
         # Замыкаем кэш цен напрямую на price_manager
@@ -558,16 +564,16 @@ class TradingBot:
                 if specs:
                     new_specs = {s.symbol: s for s in specs}
                     self.symbol_specs.update(new_specs)
-                    logger.info(f"🔄 Спецификации монет обновлены в фоне: {len(new_specs)} шт.")
+                    logger.info(f"[WS] Спецификации монет обновлены в фоне: {len(new_specs)} шт.")
             except Exception as e:
-                logger.error(f"⚠️ Ошибка обновления спецификаций: {e}")
+                logger.error(f"[WARN] Ошибка обновления спецификаций: {e}")
             
             # Обновляем раз в 10 минут
             await asyncio.sleep(600)
 
     async def _wait_for_systems_ready(self) -> bool:
         """Ожидает, пока все фоновые системы (цены, фандинг, стаканы) не получат первые данные."""
-        logger.info(f"⏳ Ожидание готовности систем (Timeout: {READY_CHECK_TIMEOUT}s)...")
+        logger.info(f"[WAIT] Ожидание готовности систем (Timeout: {READY_CHECK_TIMEOUT}s)...")
         start_time = time.time()
         
         # ФОРСИРОВАННЫЙ ПРОГРЕВ: Делаем один прямой запрос цен через REST, чтобы не ждать WS
@@ -576,10 +582,10 @@ class TradingBot:
             tickers = await ticker_api.get_all_tickers()
             for sym, t_data in tickers.items():
                 self.price_manager.phemex_prices[sym] = t_data.price
-            logger.info(f"🚀 Пре-фетч цен завершен. Получено {len(tickers)} котировок.")
+            logger.info(f"[FAST] Пре-фетч цен завершен. Получено {len(tickers)} котировок.")
             await ticker_api.aclose()
         except Exception as e:
-            logger.warning(f"⚠️ Не удалось выполнить пре-фетч цен: {e}")
+            logger.warning(f"[WARN] Не удалось выполнить пре-фетч цен: {e}")
 
         await asyncio.sleep(READY_CHECK_INITIAL_SLEEP)
         
@@ -592,8 +598,11 @@ class TradingBot:
             # 2. Проверяем кэш цен из REST
             prices_ready = len(self.price_manager.phemex_prices) > 0
                 
-            if stakan_ready and prices_ready:
-                logger.info(f"✅ Системы готовы за {time.time() - start_time:.1f}с. Данные получены.")
+            # 3. Проверяем приватный вебсокет
+            ws_ready = getattr(self, 'ws_ready', False)
+                
+            if stakan_ready and prices_ready and ws_ready:
+                logger.info(f"[OK] Системы готовы за {time.time() - start_time:.1f}с. Данные получены.")
                 return True
             
             logger.info(f"   - Ожидание данных: Стаканы [{'OK' if stakan_ready else 'WAIT'}], Цены [{'OK' if prices_ready else 'WAIT'}]")
@@ -604,10 +613,10 @@ class TradingBot:
     async def start(self):
         if getattr(self, '_is_running', False): return
         self._is_running = True
-        logger.info("▶️ Инициализация систем...")
+        logger.info("[RUN] Инициализация систем...")
         summary = get_config_summary(self.cfg)
-        logger.info(f"⚙️ БОТ ЗАПУЩЕН С НАСТРОЙКАМИ\n{summary}")
-        if self.tg: asyncio.create_task(self.tg.send_message("🟢 <b>ТОРГОВЛЯ НАЧАТА</b>"))
+        logger.info(f"[CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ\n{summary}")
+        if self.tg: asyncio.create_task(self.tg.send_message("[START] <b>ТОРГОВЛЯ НАЧАТА</b>"))
 
         symbols_info = await self.phemex_sym_api.get_all(quote=self.bl_manager.quota_asset, only_active=True)
         self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
@@ -625,20 +634,20 @@ class TradingBot:
                 saved_start_balance = self.tracker.data.get("start_balance", 0.0)
                 
                 if saved_start_balance > 0:
-                    logger.info(f"💰 Стартовый баланс успешно загружен из стейта: {saved_start_balance:.2f} {self.quota_asset}")
+                    logger.info(f"[USD] Стартовый баланс успешно загружен из стейта: {saved_start_balance:.2f} {self.quota_asset}")
                 else:
-                    logger.info("📡 Запрашиваем Equity с биржи для инициализации аудита...")
+                    logger.info("[REST] Запрашиваем Equity с биржи для инициализации аудита...")
                     usd_balance = await self.private_client.get_equity(self.quota_asset)
                     
                     self.tracker.set_initial_balance(usd_balance)
-                    logger.info(f"💰 Стартовый баланс зафиксирован: {usd_balance:.2f} {self.quota_asset}")
+                    logger.info(f"[USD] Стартовый баланс зафиксирован: {usd_balance:.2f} {self.quota_asset}")
                     await self.state.save()
                     
         except Exception as e:
-            logger.error(f"❌ Не удалось получить/установить стартовый баланс: {e}")
+            logger.error(f"[ERR] Не удалось получить/установить стартовый баланс: {e}")
         # ==========================================
 
-        logger.info("🔄 Прогрев кэша цен и фандинга...")
+        logger.info("[WS] Прогрев кэша цен и фандинга...")
         await self.price_manager.warmup()
 
         # ==========================================
@@ -646,7 +655,7 @@ class TradingBot:
         # ==========================================
         if self._is_validate_notional_limit:
             if not await self._validate_notional_limit():
-                logger.error("🛑 Бот остановлен из-за ошибки в расчете лимитов риска.")
+                logger.error("[HALT] Бот остановлен из-за ошибки в расчете лимитов риска.")
                 # Мягко гасим всё, что успели запустить выше, но не убиваем ТГ-бота
                 await self.stop() 
                 return
@@ -665,13 +674,13 @@ class TradingBot:
 
         self._game_loop_task = asyncio.create_task(self._main_trading_loop())
         self._specs_updater_task = asyncio.create_task(self._specs_updater_loop())
-        logger.info("🎮 Главная торговая живолупа (Game Loop) запущена.")
+        logger.info("[LOOP] Главная торговая живолупа (Game Loop) запущена.")
 
         # --- ЖЕСТКАЯ ПРОВЕРКА ГОТОВНОСТИ ---
         if not await self._wait_for_systems_ready():
-            msg = f"❌ КРИТИЧЕСКАЯ ОШИБКА: Системы не инициализированы (нет данных) за {READY_CHECK_TIMEOUT} сек!"
+            msg = f"[ERR] КРИТИЧЕСКАЯ ОШИБКА: Системы не инициализированы (нет данных) за {READY_CHECK_TIMEOUT} сек!"
             logger.error(msg)
-            if self.tg: await self.tg.send_message(f"🚨 {msg}\nБот остановлен.")
+            if self.tg: await self.tg.send_message(f"[ALARM] {msg}\nБот остановлен.")
             
             # Мягко гасим всё, что успели запустить, но не убиваем процесс
             await self.stop()
@@ -683,7 +692,7 @@ class TradingBot:
 
     async def aclose(self):
         await self.stop()
-        logger.info("💾 Финальное сохранение стейта на диск...")
+        logger.info("[SAVE] Финальное сохранение стейта на диск...")
         await self.state.save()
         await self.phemex_session.close()
         if self.tg: await self.tg.aclose()
@@ -695,8 +704,8 @@ class TradingBot:
         if getattr(self, 'st_stream', None):
             self.st_stream.stop()
             
-        logger.info("⏹ Остановка процессов...")
-        if self.tg: await self.tg.send_message("⏹ Остановка процессов...")
+        logger.info("[SHUT] Остановка процессов...")
+        if self.tg: await self.tg.send_message("[SHUT] Остановка процессов...")
         self.price_manager.stop()
         await self.private_ws.aclose()
         await self._await_task(getattr(self, '_price_updater_task', None))

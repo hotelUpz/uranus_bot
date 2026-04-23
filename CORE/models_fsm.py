@@ -12,7 +12,7 @@ from c_log import UnifiedLogger
 if TYPE_CHECKING:
     from CORE.restorator import BotState
 
-ExitStatusType = Literal["NORMAL", "EXTREME", "HUNTING", "INTERFERENCE", "BREAKEVEN"]
+ExitStatusType = Literal["NORMAL", "GRID_TP", "STOP_LOSS", "TTL_CLOSE"]
 
 logger = UnifiedLogger("ws")
 

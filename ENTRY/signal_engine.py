@@ -36,19 +36,24 @@ class SignalEngine:
         price_manager: Any,
         symbol_specs: Dict[str, Any],
         black_list: Any,
-    ):
+        phemex_sym_api: Any = None,
+        received_ms: int = 0
+    ) -> bool:
         """
         Основной входной путь для сигнала от Upbit.
+        Возвращает True если сигнал прошел проверки и запущен в обработку, иначе False.
         """
-        if raw_symbol in self._processing: return
+        if raw_symbol in self._processing: return False
         self._processing.add(raw_symbol)
         
         try:
-            phemex_symbol = f"{raw_symbol}USDT"
+            raw_symbol_upper = raw_symbol.upper().strip()
+            phemex_symbol = raw_symbol_upper if raw_symbol_upper.endswith("USDT") else f"{raw_symbol_upper}USDT"
             
             # 1. Проверка черного списка (в памяти)
             if black_list.is_blacklisted_sync(phemex_symbol):
-                return
+                logger.warning(f"[{phemex_symbol}] Монета в BlackList. Отказ от входа.")
+                return False
 
             # 2. Подписка WS (в фоне, не ждем)
             if st_stream:
@@ -56,19 +61,26 @@ class SignalEngine:
             
             # 3. Проверка наличия спецификаций в памяти
             if phemex_symbol not in symbol_specs:
-                logger.warning(f"[{phemex_symbol}] Спецификации отсутствуют. Пропуск.")
-                return
+                logger.warning(f"[{phemex_symbol}] Спецификации отсутствуют. Отказ от входа.")
+                return False
 
             # 4. МГНОВЕННОЕ получение цены из кэша (без циклов и ожиданий)
             signal = self.create_signal_instant(phemex_symbol, side, st_stream, price_manager)
             
             if signal:
-                signal.timestamp = time.time()
+                # Стартовая точка: момент получения сигнала от Upbit-монитора.
+                # Если received_ms не передан (напр. из тестов), fallback на текущий момент.
+                signal.timestamp = received_ms / 1000.0 if received_ms > 0 else time.time()
                 # ПРЯМОЙ ПРОСТРЕЛ
                 asyncio.create_task(self.on_signal_callback(signal))
+                return True
+            else:
+                logger.warning(f"[{phemex_symbol}] Не удалось получить цены из кэша. Отказ от входа.")
+                return False
             
         except Exception as e:
             logger.error(f"❌ SignalEngine Critical Error for {raw_symbol}: {e}")
+            return False
         finally:
             self._processing.discard(raw_symbol)
 

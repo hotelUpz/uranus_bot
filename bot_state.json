@@ -1,60 +1,124 @@
 {
-    "positions": {},
+    "positions": {
+        "SOLUSDT_LONG": {
+            "symbol": "SOLUSDT",
+            "side": "LONG",
+            "in_pending": false,
+            "in_position": true,
+            "exit_status": "TTL_CLOSE",
+            "last_exit_status": "TTL_CLOSE",
+            "is_closed_by_exchange": false,
+            "exit_in_flight": false,
+            "tp_grid_initiated": true,
+            "tp_orders": {},
+            "tp_progress": 0,
+            "last_notified_tp_progress": 0,
+            "entry_price": 86.09,
+            "pending_price": 0.0,
+            "avg_price": 86.09,
+            "exit_price_hint": 0.0,
+            "pending_qty": 3.48,
+            "current_qty": 3.48,
+            "closed_qty": 0.0,
+            "max_realized_qty": 3.48,
+            "mid_price": 0.0,
+            "current_target_rate": 1.0,
+            "close_order_id": "",
+            "opened_at": 1776984025.9060462,
+            "marked_for_death_ts": 0.0,
+            "sl_trigger_time": 0.0
+        }
+    },
     "fails": {},
     "analytics": {
-        "start_balance": 9.42727257709,
-        "current_balance": 8.989297297090001,
-        "max_balance": 9.42727257709,
-        "min_balance": 8.989297297090001,
-        "mdd_usd": 0.4379752799999981,
-        "mdd_pct": 4.645832359449947,
+        "start_balance": 78.49260895709,
+        "current_balance": 76.80545167709118,
+        "max_balance": 78.49260895709,
+        "min_balance": 76.80545167709118,
+        "mdd_usd": 1.6871572799988144,
+        "mdd_pct": 2.1494473204746476,
         "max_profit_usd": 0.0,
         "max_profit_pct": 0.0,
         "total_wins": 0,
-        "total_losses": 3,
-        "total_pnl": -0.4379752799999982,
+        "total_losses": 6,
+        "total_pnl": -1.6871572799988108,
         "symbols": {
+            "SOLUSDT": {
+                "wins": 0,
+                "losses": 2,
+                "pnl": -0.7195570799987999
+            },
             "BTCUSDT": {
                 "wins": 0,
-                "losses": 1,
-                "pnl": -0.09475547999999998
+                "losses": 2,
+                "pnl": -0.3990632400000262
             },
             "ETHUSDT": {
                 "wins": 0,
                 "losses": 2,
-                "pnl": -0.3432197999999982
+                "pnl": -0.5685369599999845
             }
         },
         "history": [
             {
-                "ts": 1776883586.304812,
+                "ts": 1776979672.5156534,
+                "symbol": "SOLUSDT",
+                "side": "LONG",
+                "entry_usd": 299.9,
+                "exit_usd": 299.9,
+                "pnl": -0.3599,
+                "is_win": false,
+                "duration": "0.7s"
+            },
+            {
+                "ts": 1776983298.675282,
                 "symbol": "BTCUSDT",
                 "side": "LONG",
-                "entry_usd": 78.96,
-                "exit_usd": 78.96,
-                "pnl": -0.0948,
+                "entry_usd": 234.49,
+                "exit_usd": 234.48,
+                "pnl": -0.2838,
                 "is_win": false,
-                "duration": "0.5s"
+                "duration": "33.8s"
             },
             {
-                "ts": 1776883648.6832247,
-                "symbol": "ETHUSDT",
+                "ts": 1776983308.0048542,
+                "symbol": "SOLUSDT",
                 "side": "LONG",
-                "entry_usd": 95.96,
-                "exit_usd": 95.96,
-                "pnl": -0.1156,
+                "entry_usd": 299.73,
+                "exit_usd": 299.73,
+                "pnl": -0.3597,
                 "is_win": false,
-                "duration": "1.0m"
+                "duration": "7.7s"
             },
             {
-                "ts": 1776890349.3733983,
+                "ts": 1776983326.5991344,
+                "symbol": "BTCUSDT",
+                "side": "LONG",
+                "entry_usd": 234.49,
+                "exit_usd": 234.65,
+                "pnl": -0.1153,
+                "is_win": false,
+                "duration": "15.1s"
+            },
+            {
+                "ts": 1776983587.6508791,
                 "symbol": "ETHUSDT",
                 "side": "LONG",
-                "entry_usd": 167.57,
-                "exit_usd": 167.54,
-                "pnl": -0.2277,
+                "entry_usd": 280.04,
+                "exit_usd": 280.04,
+                "pnl": -0.336,
                 "is_win": false,
-                "duration": "1.0m"
+                "duration": "4.3m"
+            },
+            {
+                "ts": 1776983648.9533012,
+                "symbol": "ETHUSDT",
+                "side": "LONG",
+                "entry_usd": 279.69,
+                "exit_usd": 279.79,
+                "pnl": -0.2325,
+                "is_win": false,
+                "duration": "58.6s"
             }
         ]
     }

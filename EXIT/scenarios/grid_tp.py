@@ -36,6 +36,11 @@ class GridTPFactory:
             else:
                 return []
 
+        from c_log import UnifiedLogger
+        logger = UnifiedLogger("core")
+        bucket_comment = selected_bucket.get("comment", "Unknown")
+        logger.info(f"[{symbol}] 🎯 TP Grid: Применен профиль '{bucket_comment}' (Объем 24ч: ${volume_k:.1f}k)")
+
         levels = selected_bucket.get("levels", [])
         volumes = selected_bucket.get("volumes", [])
 

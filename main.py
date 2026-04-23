@@ -24,13 +24,14 @@ load_dotenv(BASE_DIR / ".env")
 logger = UnifiedLogger("main")
 
 FINAL_CLEANUP_PAUSE_SEC = 0.5
+TG_RETRY_PAUSE_SEC = 5.0  # Пауза перед рестартом при ошибке
 
 
 async def polling_supervisor(tg_admin: AdminTgBot):
     """Следит за тем, чтобы Telegram бот всегда был онлайн"""
-    logger.info("🤖 Запуск супервизора Telegram...")
+    logger.info("[TG] Запуск супервизора Telegram...")
     
-    retry_pause = 5.0  # Пауза перед рестартом при ошибке
+    retry_pause = TG_RETRY_PAUSE_SEC
     
     while True:
         try:
@@ -40,14 +41,14 @@ async def polling_supervisor(tg_admin: AdminTgBot):
                 skip_updates=True,
                 handle_as_tasks=True
             )
-            logger.error("⚠️ Поллинг завершился штатно (неожиданно)")
+            logger.error("[TG] Поллинг завершился штатно (неожиданно)")
         
         except asyncio.CancelledError:
             logger.info("Stopping TG supervisor...")
             break
             
         except Exception as e:
-            logger.error(f"💥 Критическая ошибка TG Polling: {e}")
+            logger.error(f"[TG] Критическая ошибка TG Polling: {e}")
             logger.info(f"Перезапуск через {retry_pause} сек...")
         
         await tg_admin.reset_session()
@@ -80,7 +81,7 @@ async def _main():
         
         if set_previous:
             # 1. Запуск глобальной конфигурации
-            logger.info("⚙️ Запуск глобальной конфигурации параметров (Leverage & Margin)...")
+            logger.info("[LEV] Запуск глобальной конфигурации параметров (Leverage & Margin)...")
             setter = GlobalLeverageSetter(
                 api_key=api_key,
                 api_secret=api_secret,
@@ -95,7 +96,7 @@ async def _main():
             print("lev set succ")
         
         else:
-            logger.info("⚙️ Скип установки (Leverage & Margin), так как set_previous == false")
+            logger.info("[LEV] Скип установки (Leverage & Margin), так как set_previous == false")
 
         # 2. Инициализация TG и Торговли
         if tg_enabled:
@@ -122,16 +123,16 @@ async def _main():
         await stop_event.wait()
                 
     except (asyncio.CancelledError, KeyboardInterrupt):
-        logger.warning("\n🛑 Получен сигнал прерывания. Остановка...")
+        logger.warning("\n[STOP] Получен сигнал прерывания. Остановка...")
     finally:
-        logger.info("🧹 Очистка ресурсов...")
+        logger.info("[CLEAN] Очистка ресурсов...")
         await bot.aclose()  # aclose() вызывает stop() внутри — двойной вызов был лишним
         
         for t in tasks:
             t.cancel()
         
         await asyncio.sleep(FINAL_CLEANUP_PAUSE_SEC) 
-        logger.info("✅ Программа безопасно завершена.")
+        logger.info("[EXIT] Программа безопасно завершена.")
 
 if __name__ == "__main__":
     try:

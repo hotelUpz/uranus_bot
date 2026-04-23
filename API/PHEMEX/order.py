@@ -101,7 +101,7 @@ class PhemexPrivateClient:
             query_no_q = f"leverageRr={lev_str}&symbol={symbol}"
         return await self._request("PUT", "/g-positions/leverage", query_no_q=query_no_q)
 
-    async def place_market_order(self, symbol: str, side: str, qty: float, pos_side: str) -> Dict[str, Any]:
+    async def place_market_order(self, symbol: str, side: str, qty: float, pos_side: str, reduce_only: bool = False) -> Dict[str, Any]:
         """Рыночный ордер (G-API)"""
         body = {
             "symbol": symbol, 
@@ -110,9 +110,11 @@ class PhemexPrivateClient:
             "ordType": "Market", 
             "posSide": pos_side
         }
+        if reduce_only:
+            body["reduceOnly"] = True
         return await self._request("POST", "/g-orders", body=body)
 
-    async def place_limit_order(self, symbol: str, side: str, qty: float, price: float, pos_side: str) -> Dict[str, Any]:
+    async def place_limit_order(self, symbol: str, side: str, qty: float, price: float, pos_side: str, reduce_only: bool = False) -> Dict[str, Any]:
         """Лимитный ордер (G-API)"""
         body = {
             "symbol": symbol, 
@@ -123,6 +125,8 @@ class PhemexPrivateClient:
             "timeInForce": "GoodTillCancel", 
             "posSide": pos_side
         }
+        if reduce_only:
+            body["reduceOnly"] = True
         return await self._request("POST", "/g-orders", body=body)
 
     async def cancel_order(self, symbol: str, order_id: str, pos_side: str) -> Dict[str, Any]:

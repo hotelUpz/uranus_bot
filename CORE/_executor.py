@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from CORE.orchestrator import TradingBot
     from ENTRY.signal_engine import EntrySignal
 
+from CORE.models_fsm import ActivePosition
 from dotenv import load_dotenv    
 load_dotenv()
 
@@ -138,9 +139,13 @@ class OrderExecutor:
             initial_qty = 0.0
             async with self.tb._get_lock(pos_key):
                 pos = self.tb.state.active_positions.get(pos_key)
-                if pos:
-                    initial_qty = getattr(pos, 'current_qty', 0.0)
-                    pos.pending_qty = qty
+                if not pos:
+                    pos = ActivePosition(symbol=symbol, side=signal.side)
+                    self.tb.state.active_positions[pos_key] = pos
+                
+                initial_qty = getattr(pos, 'current_qty', 0.0)
+                pos.pending_qty = qty
+                pos.in_pending = True
 
             # 2. Цикл отправки с ретраями
             for attempt in range(max(1, self.max_entry_retries)):
@@ -166,7 +171,8 @@ class OrderExecutor:
                         
                         # Умное ожидание физического налива по вебсокету
                         await self._smart_wait(pos_key, initial_qty, WAIT_ENTRY_TIMEOUT_SEC, WAIT_ENTRY_MIN_WAIT_SEC)
-                        
+                        filled_ts = time.time()
+
                         # 4. Отмена недолитых остатков (только для лимиток)
                         if order_id and is_limit_used:
                             curr_qty = 0.0
@@ -175,20 +181,33 @@ class OrderExecutor:
                                 if pos: curr_qty = getattr(pos, 'current_qty', 0.0)
                                 
                             if curr_qty < qty:
-                                logger.debug(f"[{pos_key}] Исполнено {curr_qty} из {qty}. Отменяю остаток...")
+                                logger.info(f"[{pos_key}] Исполнено {curr_qty} из {qty}. Отменяю остаток (лимит)...")
                                 asyncio.create_task(self.execute_cancel(symbol, phemex_pos_side, order_id))
 
                         # 5. Итоговая проверка и отчет
                         async with self.tb._get_lock(pos_key):
                             pos = self.tb.state.active_positions.get(pos_key)
                             if pos and (pos.current_qty > 0 or getattr(pos, "in_position", False)):
+                                pos.in_pending = False
                                 entry_usd_vol = pos.current_qty * ref_price
+
+                                # Замер полной латенции: сигнал → налив WS
+                                signal_ts = getattr(signal, 'timestamp', 0.0)
+                                if signal_ts > 0:
+                                    total_latency = filled_ts - signal_ts
+                                    logger.info(f"[{pos_key}] ⏱ Латенция сигнал→налив: {total_latency:.3f}s")
+
                                 logger.info(f"[{pos_key}] ✅ Вход выполнен. Объем: {pos.current_qty} (≈ {entry_usd_vol:.2f} $)")
                                 
                                 if self.tb.tg:
-                                    msg = Reporters.entry_signal(symbol, signal, signal.b_price, signal.p_price)
+                                    latency_str = f"{total_latency:.3f}s" if signal_ts > 0 else "N/A"
+                                    msg = Reporters.entry_signal(symbol, signal, signal.init_bid1, signal.init_ask1)
+                                    msg += f"\nНалив за: <b>{latency_str}</b>"
                                     asyncio.create_task(self.tb.tg.send_message(msg))
                                 return True
+                            
+                            if pos:
+                                pos.in_pending = False
                                 
                         err_msg = f"🚨 <b>[{pos_key}]</b> Ордер принят, но налива по WS не последовало за {WAIT_ENTRY_TIMEOUT_SEC}с!"
                         logger.warning(err_msg)

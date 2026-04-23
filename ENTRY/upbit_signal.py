@@ -196,18 +196,31 @@ class UpbitLiveMonitor:
     async def process_new_listing(self, notice: dict, symbol: str, is_startup: bool):
         announce_ms = self._parse_iso_to_ms(notice.get("first_listed_at") or notice.get("listed_at"))
         announce_str = datetime.fromtimestamp(announce_ms / 1000.0, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        
-        if not is_startup and (time.time() * 1000 - announce_ms > 300000): return
-        
+
+        # Метка времени именно в момент получения сигнала ботом
+        received_ms = int(time.time() * 1000)
+        received_str = datetime.fromtimestamp(received_ms / 1000.0, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f UTC")[:-3]
+
+        if not is_startup and (received_ms - announce_ms > 300000): return
+
         if not is_startup and self._on_signal:
-            await self._on_signal(symbol)
-            logger.info(f"🚀 СИГНАЛ: {symbol} | Анонс: {announce_str}")
-            
+            await self._on_signal(symbol, received_ms)
+            latency_sec = (received_ms - announce_ms) / 1000.0
+            logger.info(
+                f"🚀 СИГНАЛ: {symbol} | "
+                f"Анонс: {announce_str} | "
+                f"Получен: {received_str} | "
+                f"Дистанция: {latency_sec:+.3f}s"
+            )
+
         self.seen_symbols.add(symbol)
         self.signals_log.append({
             "symbol": symbol,
             "announce_ts_ms": announce_ms,
             "announce_ts_str": announce_str,
+            "received_ts_ms": received_ms,
+            "received_ts_str": received_str,
+            "latency_sec": round((received_ms - announce_ms) / 1000.0, 3),
             "status": "NEW" if not is_startup else "INIT"
         })
         self._save_cache()
@@ -322,7 +335,10 @@ class MockUpbitLiveMonitor:
         while True:
             await asyncio.sleep(self.poll_interval)
             if self._is_paused_func and self._is_paused_func(): continue
-            if self._on_signal: await self._on_signal(random.choice(["BTC", "ETH", "SOL"]))
+            
+            sym = random.choice(["BTC", "ETH", "SOL"])
+            logger.info(f"🟢 [MOCK] Сгенерирован тестовый сигнал: {sym}")
+            if self._on_signal: await self._on_signal(sym, int(time.time() * 1000))
 
 async def run_all_probers():
     """Запускает пробер для каждого прокси из конфига по очереди"""

@@ -152,12 +152,11 @@ class ConfigManager:
 
 class Reporters:
     @staticmethod
-    def entry_signal(symbol: str, signal: EntrySignal, b_price: float, p_price: float) -> str:
-        side_str = "🟢 LONG" if signal.side == "LONG" else "🔴 SHORT"
+    def entry_signal(symbol: str, signal: EntrySignal, bid_price: float, ask_price: float) -> str:
+        arrow = "🟢 LONG" if signal.side == "LONG" else "🔴 SHORT"
         return (
-            f"<b>#{symbol}</b> | {side_str}\n"
-            f"Вход: <b>{signal.price}</b>\n"
-            f"Binance: {b_price} | Phemex: {p_price}"
+            f"🚀 <b>[Upbit Signal]</b> {symbol} → {arrow}\n"
+            f"Bid: {bid_price} | Ask: {ask_price}"
         )
 
     @staticmethod
