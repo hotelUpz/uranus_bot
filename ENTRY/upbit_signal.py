@@ -85,7 +85,6 @@ class AdaptiveCooldownTuner:
     def on_rate_limit(self) -> float:
         self._streak = 0
         if ADAPTIVE_ENABLED:
-            # Экспоненциальный откат: удваиваем задержку при 429
             self.current_cooldown = min(10.0, self.current_cooldown * 2.0)
         else:
             self.current_cooldown = self.initial_cooldown
@@ -269,20 +268,24 @@ class UpbitLiveMonitor:
 # 5. ТЕСТИРОВЩИК (STRESS PROBER)
 # ==========================================
 class WafLimitTester:
-    def __init__(self, start_delay: float, step: float, hits: int):
+    def __init__(self, proxy: str | None, start_delay: float, step: float, hits: int):
+        self.proxy = proxy
         self.current_delay = start_delay
         self.step = step
         self.hits_per_step = hits
         self.api_url = "https://api-manager.upbit.com/api/v1/announcements"
         
     async def run(self):
-        logger.info(f"--- START SPEED TEST (STRESS MODE) ---")
-        session = cffi_requests.AsyncSession(impersonate="chrome120", headers=DEFAULT_HEADERS)
+        label = self.proxy or "Localhost"
+        logger.info(f"--- START SPEED TEST on [{label}] ---")
+        
+        proxy_dict = {"http": self.proxy, "https": self.proxy} if self.proxy else None
+        session = cffi_requests.AsyncSession(impersonate="chrome120", proxies=proxy_dict, headers=DEFAULT_HEADERS)
         params = {"category": "trade", "page": 1, "per_page": 10, "os": "web"}
         
         try:
             while self.current_delay > 0:
-                logger.info(f">>> Testing level: {self.current_delay:.2f}s")
+                logger.info(f">>> [{label}] Testing level: {self.current_delay:.2f}s")
                 for i in range(1, self.hits_per_step + 1):
                     resp = await session.get(self.api_url, params=params)
                     if resp.status_code == 200:
@@ -290,10 +293,10 @@ class WafLimitTester:
                             logger.info(f"  [{i}/{self.hits_per_step}] CD {self.current_delay:.2f}s OK")
                         await asyncio.sleep(self.current_delay)
                     elif resp.status_code == 429:
-                        logger.warning(f"🛑 БАН (429) на {self.current_delay:.2f}с!")
+                        logger.warning(f"🛑 БАН (429) на {self.current_delay:.2f}с (Hit {i})!")
                         return
                     else:
-                        logger.error(f"Error {resp.status_code}")
+                        logger.error(f"Error {resp.status_code} on {label}")
                         return
                 self.current_delay = round(self.current_delay - self.step, 2)
         finally:
@@ -316,6 +319,13 @@ class MockUpbitLiveMonitor:
             if self._is_paused_func and self._is_paused_func(): continue
             if self._on_signal: await self._on_signal(random.choice(["BTC", "ETH", "SOL"]))
 
+async def run_all_probers():
+    """Запускает пробер для каждого прокси из конфига по очереди"""
+    for p in PROXIES:
+        tester = WafLimitTester(p, PROBER_START, PROBER_STEP, PROBER_HITS)
+        await tester.run()
+        print("\n" + "="*50 + "\n")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--test-waf", action="store_true")
@@ -326,7 +336,7 @@ if __name__ == "__main__":
     def dummy_is_paused(): return False
 
     if args.test_waf:
-        asyncio.run(WafLimitTester(PROBER_START, PROBER_STEP, PROBER_HITS).run())
+        asyncio.run(run_all_probers())
     elif args.mock:
         asyncio.run(MockUpbitLiveMonitor(POLL_INTERVAL_SEC, dummy_on_signal, dummy_is_paused).run())
     else:

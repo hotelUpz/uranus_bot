@@ -39,7 +39,8 @@
         "poll_interval_sec": 0.1,
         "min_cooldown_sec": 0.1,
         "proxies": [
-            null
+            "http://smart-rvjai9lybinm:Y03Lp1sVqvdmikHm@203.227.45.166:6014",
+            "http://smart-rvjai9lybinm:Y03Lp1sVqvdmikHm@203.227.190.239:6014"
         ],
         "default_side": "long",
         "bang_sleep_sec": 30,
@@ -49,9 +50,9 @@
             "n_stable": 10
         },
         "prober": {
-            "start_delay": 0.5,
+            "start_delay": 5.5,
             "step": 0.1,
-            "hits_per_step": 100
+            "hits_per_step": 10
         }
     },
     "entry": {

@@ -1,86 +1,66 @@
-import asyncio
 import time
 from curl_cffi import requests
 
-# Твои прокси в формате IP:PORT:USER:PASS
+# Твои прокси в формате ip:port:user:pass
 RAW_PROXIES = [
     "203.227.45.166:6014:smart-rvjai9lybinm:Y03Lp1sVqvdmikHm",
-    "203.227.190.239:6014:smart-rvjai9lybinm:Y03Lp1sVqvdmikHm",
-    None  # Локальный сервер (для сравнения)
+    "203.227.190.239:6014:smart-rvjai9lybinm:Y03Lp1sVqvdmikHm"
 ]
 
-def format_proxy(raw_proxy: str | None) -> dict | None:
-    """Конвертирует формат ip:port:user:pass в словарь для curl_cffi"""
-    if not raw_proxy:
-        return None
-        
-    parts = raw_proxy.split(':')
-    if len(parts) == 4:
-        ip, port, user, pwd = parts
-        proxy_url = f"http://{user}:{pwd}@{ip}:{port}"
-        return {"http": proxy_url, "https": proxy_url}
+        # "proxies": [
+        #     "http://smart-rvjai9lybinm:Y03Lp1sVqvdmikHm@203.227.45.166:6014",
+        #     "http://smart-rvjai9lybinm:Y03Lp1sVqvdmikHm@203.227.190.239:6014"
+        # ],
+
+# Боевые заголовки из проекта
+HEADERS = {
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "en-US,en;q=0.9,ru;q=0.8",
+    "origin": "https://upbit.com",
+    "referer": "https://upbit.com/",
+    "sec-ch-ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+}
+
+def check_upbit(label, proxies=None):
+    print(f"\n--- Checking UPBIT: {label} ---")
+    url = "https://api-manager.upbit.com/api/v1/announcements"
+    params = {"category": "trade", "page": 1, "per_page": 1, "os": "web"}
     
-    # Если прокси уже в правильном формате URL
-    return {"http": raw_proxy, "https": raw_proxy}
-
-async def check_proxy(raw_proxy: str | None):
-    label = raw_proxy.split(':')[0] if raw_proxy else "Localhost"
-    proxies = format_proxy(raw_proxy)
-    
-    print(f"🔄 Тестируем: {label} ...")
-    
-    # Поднимаем сессию с маскировкой под Chrome 120
-    async with requests.AsyncSession(impersonate="chrome120", proxies=proxies, timeout=10.0) as session:
+    try:
+        start = time.perf_counter()
+        r = requests.get(url, 
+                        params=params, 
+                        headers=HEADERS, 
+                        proxies=proxies, 
+                        timeout=10, 
+                        impersonate="chrome120")
+        rtt = (time.perf_counter() - start) * 1000
         
-        # --- ШАГ 1: ПРОВЕРКА ЛОКАЦИИ И ПРОВАЙДЕРА ---
-        try:
-            resp_info = await session.get("http://ip-api.com/json/")
-            data = resp_info.json()
-            if data.get("status") == "success":
-                real_ip = data.get("query")
-                country = data.get("country")
-                city = data.get("city")
-                isp = data.get("isp")
-                print(f"  📍 [INFO] IP: {real_ip} | Локация: {country}, {city} | ISP: {isp}")
-            else:
-                print(f"  📍 [INFO] Ошибка определения локации: {data}")
-        except Exception as e:
-            print(f"  ❌ [INFO] Не удалось проверить IP: {e}")
-
-
-        # --- ШАГ 2: БОЕВОЙ ПИНГ ДО UPBIT ---
-        upbit_url = "https://api-manager.upbit.com/api/v1/announcements"
-        params = {"category": "trade", "page": 1, "per_page": 1, "os": "web"}
-        
-        # Делаем "прогревочный" запрос (инициализация TLS хэндшейка занимает время)
-        try:
-            await session.get(upbit_url, params=params)
-        except Exception:
-            pass
-
-        # Делаем чистовой замер
-        start_time = time.time()
-        try:
-            resp_upbit = await session.get(upbit_url, params=params)
-            rtt_ms = (time.time() - start_time) * 1000
+        if r.status_code == 200:
+            print(f"  Upbit Status: 200 OK (SUCCESS!) | Time: {rtt:.0f}ms")
+        elif r.status_code == 403:
+            print(f"  Upbit Status: 403 Forbidden (IP BANNED) | Time: {rtt:.0f}ms")
+        elif r.status_code == 429:
+            print(f"  Upbit Status: 429 Rate Limit | Time: {rtt:.0f}ms")
+        else:
+            print(f"  Upbit Status: {r.status_code} | Time: {rtt:.0f}ms")
             
-            if resp_upbit.status_code == 200:
-                print(f"  ⚡ [PING] Upbit RTT: {rtt_ms:.2f} ms | Статус: 200 OK")
-            else:
-                print(f"  ⚠️ [PING] Upbit ответил статусом: {resp_upbit.status_code} | RTT: {rtt_ms:.2f} ms")
-                
-        except Exception as e:
-            print(f"  ❌ [PING] Запрос к Upbit провалился: {e}")
-            
-    print("-" * 50)
-
-async def main():
-    print(f"🚀 Запуск проверки {len(RAW_PROXIES)} каналов...\n" + "="*50)
-    
-    # Можно запустить параллельно через asyncio.gather, 
-    # но для чистоты замера пинга лучше прогнать их по очереди:
-    for p in RAW_PROXIES:
-        await check_proxy(p)
+    except Exception as e:
+        print(f"  Upbit FAILED: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    for p in RAW_PROXIES:
+        try:
+            parts = p.split(':')
+            if len(parts) != 4: continue
+            ip, port, user, pwd = parts
+            proxy_url = f"http://{user}:{pwd}@{ip}:{port}"
+            proxies = {"http": proxy_url, "https": proxy_url}
+            check_upbit(f"PROXY: {ip}", proxies)
+        except Exception as e:
+            print(f"ERROR: {e}")
