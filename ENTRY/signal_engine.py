@@ -4,6 +4,7 @@
 # ============================================================
 from __future__ import annotations
 
+import asyncio
 from typing import Optional, Literal, Any, Dict
 from dataclasses import dataclass
 
@@ -19,17 +20,41 @@ class EntrySignal:
     p_price: Optional[float] = None
     spread: Optional[float] = None
 
+
 class SignalEngine:
     def __init__(self, cfg: Dict[str, Any]):
         self.cfg = cfg
         
-    def create_signal(self, symbol: str, side: str, bids: list, asks: list) -> Optional[Any]:
+    async def create_signal(self, symbol: str, side: str, st_stream: Any, price_manager: Any) -> Optional[EntrySignal]:
+        """
+        Пытается получить лучшие цены из WS стакана. 
+        Если стакан пуст, фолбечится на цены из REST-кэша.
+        """
+        bids, asks = [], []
         
-        if not bids or not asks:
-            return None
+        # 1. Пытаемся поймать WS стакан (максимально быстрый поллинг)
+        if st_stream:
+            for _ in range(30):
+                bids, asks = st_stream.get_depth(symbol)
+                if bids and asks:
+                    break
+                await asyncio.sleep(0.001) # Ультракороткая пауза (1мс)
 
-        ask1, bid1 = asks[0][0], bids[0][0]
-        mid_price = (ask1 + bid1) / 2.0
+        # 2. Оценка результатов и ФОЛБЕК
+        if not bids or not asks:
+            # WS не успел или отвалился, берем цену из PriceCacheManager
+            phemex_price, _ = price_manager.get_prices(symbol)
+            
+            if phemex_price <= 0:
+                return None  # Цен нет нигде, вход невозможен
+                
+            ask1 = bid1 = phemex_price
+            mid_price = phemex_price
+        else:
+            ask1, bid1 = asks[0][0], bids[0][0]
+            mid_price = (ask1 + bid1) / 2.0
+        
+        # 3. Формирование цены входа
         entry_price = ask1 if side == "LONG" else bid1
         
         return EntrySignal(

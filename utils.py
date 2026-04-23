@@ -46,35 +46,12 @@ def get_config_summary(cfg: dict) -> str:
     tg = cfg.get("tg", {})
     lines.append("\n📡 <b>[SYSTEM]</b>")
     lines.append(f"TG Enabled: <b>{tg.get('enable', 'N/A')}</b>")
-    lines.append(f"Logs: D:{log.get('debug', 'N/A')} I:{log.get('info', 'N/A')} W:{log.get('warning', 'N/A')} E:{log.get('error', 'N/A')}")
-
-    # Входные паттерны общие
-    entry_main = cfg.get("entry", {})
-    entry = entry_main.get("pattern", {})
-    lines.append("\n📥 <b>[ENTRY GENERAL]</b>")
-    lines.append(f"Sig Timeout: <b>{entry_main.get('signal_timeout_sec', 'N/A')}s</b>")
-    lines.append(f"Max Retries: <b>{entry_main.get('max_place_order_retries', 'N/A')}</b>")
-
-    ph = entry.get("phemex", {})
-    lines.append("\n🎯 <b>[ENTRY PHEMEX]</b>")
-    lines.append(f"Enable: <b>{ph.get('enable', 'N/A')}</b> | Depth: <b>{ph.get('depth', 'N/A')}</b> | TTL: <b>{ph.get('pattern_ttl_sec', 'N/A')}s</b>")
-    lines.append(f"Row1 Notional: <b>{ph.get('min_first_row_usdt_notional', 'N/A')} - {ph.get('max_first_row_usdt_notional', 'N/A')} USDT</b>")
     
-    hdr = ph.get("header", {})
-    bdy = ph.get("body", {})
-    btm = ph.get("bottom", {})
-    lines.append(f"ROC Win: <b>{hdr.get('roc_window', 'N/A')}</b> (SMA: <b>{bdy.get('roc_sma_window', 'N/A')}</b>) | Max 1 ROC: <b>{hdr.get('max_one_roc_pct', 'N/A')}%</b>")
-    lines.append(f"Sprd 2 row: &gt;= <b>{btm.get('min_spread_between_two_row_pct', 'N/A')}%</b> | 3 row: &gt;= <b>{btm.get('min_spread_between_three_row_pct', 'N/A')}%</b>")
-    lines.append(f"Hdr/Btm Rate: <b>{ph.get('header_to_bottom_desired_rate', 'N/A')}</b> | Max Bid/Ask Dist: <b>{ph.get('max_bid_ask_distance_rate', 'N/A')}</b>")
-    
-    binance = entry.get("binance", {})
-    f1 = entry.get("funding_pattern1", {})
-    f2 = entry.get("funding_pattern2", {})
-    lines.append("\n🔶 <b>[ENTRY BINANCE & FUNDING]</b>")
-    lines.append(f"Binance: <b>{binance.get('enable', 'N/A')}</b> | Sprd: &gt;= <b>{binance.get('min_price_spread_rate', 'N/A')}%</b>")
-    lines.append(f"Binance Upd: <b>{binance.get('update_prices_sec', 'N/A')}s</b> | Sprd TTL: <b>{binance.get('spread_ttl_sec', 'N/A')}s</b>")
-    lines.append(f"Fund1(Phemex): <b>{f1.get('enable', 'N/A')}</b> | Thresh: &gt;= <b>{f1.get('threshold_pct', 'N/A')}%</b>")
-    lines.append(f"Fund2(Diff): <b>{f2.get('enable', 'N/A')}</b> | Diff: &gt;= <b>{f2.get('diff_threshold_pct', 'N/A')}%</b>")
+    # Блок Upbit
+    upb = cfg.get("upbit", {})
+    lines.append("\n🚀 <b>[UPBIT SIGNAL]</b>")
+    lines.append(f"Default Side: <b>{upb.get('default_side', 'LONG').upper()}</b>")
+    lines.append(f"Poll Interval: <b>{upb.get('poll_interval_sec', 'N/A')}s</b> | Proxies: <b>{len(upb.get('proxies', []))}</b>")
 
     # Сценарии выхода
     exit_cfg = cfg.get("exit", {})
@@ -86,11 +63,6 @@ def get_config_summary(cfg: dict) -> str:
 
     lines.extend([
         "────────────────────────────────────────",
-        "🔹 [GLOBAL]",
-        f"   Asset:     {cfg.get('quota_asset', 'USDT')}",
-        f"   Leverage:  {lev_cfg.get('val', 'N/A') if isinstance(lev_cfg, dict) else lev_cfg}x",
-        f"   Notional:  {risk.get('notional_limit', 0)}$",
-        "",
         "🔹 [EXIT STRATEGY]",
         f"   Grid TP:   {'ON' if grid.get('enable') else 'OFF'}",
         f"   Stop-Loss: {'ON' if sl.get('enable') else 'OFF'} ({sl.get('percent', 5.0)}% | {sl.get('ttl_sec', 0.0)}s)",

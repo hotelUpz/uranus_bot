@@ -1,6 +1,6 @@
 {
     "app": {
-        "name": "Rucheiok Bot",
+        "name": "Uranos Bot",
         "max_active_positions": 1
     },
     "credentials": {
@@ -18,13 +18,10 @@
         "warning": true,
         "error": true,
         "max_lines": 1500,
-        "timezone": "Europe/Kyiv"
+        "timezone": "UTC"
     },
     "black_list": [
-        "ETHUSDT",
-        "SOLUSDT",
-        "BTCUSDT",
-        "SPKUSDT"
+        "BTCUSDT"
     ],
     "quota_asset": "USDT",
     "risk": {
@@ -41,7 +38,6 @@
     "upbit": {
         "test_mode": false,
         "symbols_to_mock": [
-            "BTC",
             "ETH",
             "SOL"
         ],
@@ -58,30 +54,12 @@
             "mode": "market | limit",
             "limit_distance_pct": "Дальность заброса агрессивной лимитки"
         },
-        "max_place_order_retries": 1,        
-        "mode": "limit",          
-        "limit_distance_pct": 5.0,  
+        "max_place_order_retries": 1,
+        "mode": "limit",
+        "limit_distance_pct": 5.0,
         "signal_timeout_sec": 0.01,
         "pattern": {
-            "upbit_signal": true,
-            "binance": {
-                "enable": false,
-                "min_price_spread_rate": 0.8,
-                "update_prices_sec": 1.1,
-                "spread_ttl_sec": 2
-            },
-            "funding_pattern1": {
-                "enable": false,
-                "check_interval_sec": 60,
-                "skip_before_counter_sec": 1800,
-                "threshold_pct": 1.0
-            },
-            "funding_pattern2": {
-                "enable": false,
-                "check_interval_sec": 60,
-                "skip_before_counter_sec": 1800,
-                "diff_threshold_pct": 0.05
-            }
+            "upbit_signal": true
         }
     },
     "exit": {
@@ -95,22 +73,58 @@
                         "comment": "< $500K",
                         "min_vol": 0,
                         "max_vol": 500,
-                        "levels": [4, 10, 20, 40, 70],
-                        "volumes": [30, 25, 20, 15, 10]
+                        "levels": [
+                            4,
+                            10,
+                            20,
+                            40,
+                            70
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
                     },
                     {
                         "comment": "$500K - $2M",
                         "min_vol": 500,
                         "max_vol": 2000,
-                        "levels": [3, 8, 16, 30, 55],
-                        "volumes": [25, 25, 20, 20, 10]
+                        "levels": [
+                            3,
+                            8,
+                            16,
+                            30,
+                            55
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
                     },
                     {
                         "comment": "> $2M",
                         "min_vol": 2000,
                         "max_vol": null,
-                        "levels": [2, 5, 12, 22, 40],
-                        "volumes": [20, 20, 20, 20, 20]
+                        "levels": [
+                            2,
+                            5,
+                            12,
+                            22,
+                            40
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
                     }
                 ]
             },

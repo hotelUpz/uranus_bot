@@ -271,8 +271,7 @@ class TradingBot:
     # Новый метод в TradingBot:
     async def _on_upbit_signal(self, symbol: str) -> None:
         """Сигнал с Upbit: новый листинг."""
-        # 🔴 ВКЛЮЧАЕМ РЕЖИМ ТИШИНЫ (отключаем все HTTP поллинги)
-        self.stop_another_request = True
+        self.stop_another_request = True  # ГЛОБАЛЬНЫЙ БЛОК ЛЕВОГО ТРАФИКА
         
         try:
             side = self.cfg.get("upbit", {}).get("default_side", "long").upper()
@@ -281,9 +280,8 @@ class TradingBot:
             if phemex_symbol in self.black_list:
                 logger.info(f"[Upbit] {phemex_symbol} в блэклисте, пропускаем.")
                 return
-                
+
             if phemex_symbol not in self.symbol_specs:
-                logger.info(f"[Upbit] {phemex_symbol} не в кэше, быстрый фетч...")
                 if self.st_stream:
                     await self.st_stream.add_symbols([phemex_symbol])
                 try:
@@ -299,18 +297,21 @@ class TradingBot:
             
             asyncio.create_task(self.set_blacklist(list(set(self.black_list + [phemex_symbol]))))
 
-            # Ждем появления цен в стакане по WS
-            bids, asks = ([], [])
-            for _ in range(40): # Увеличили кол-во итераций...
-                bids, asks = self.st_stream.get_depth(phemex_symbol) if self.st_stream else ([], [])
-                if bids and asks: break
-                await asyncio.sleep(0.001) # ...но уменьшили слип до 1мс (максимальная отзывчивость)
-
-            signal = self.signal_engine.create_signal(phemex_symbol, side, bids, asks)
-            if not signal: return
+            # 👇 АСИНХРОННЫЙ ВЫЗОВ НОВОГО SIGNAL ENGINE
+            signal = await self.signal_engine.create_signal(
+                symbol=phemex_symbol, 
+                side=side, 
+                st_stream=self.st_stream, 
+                price_manager=self.price_manager
+            )
+            
+            if not signal:
+                logger.warning(f"[Upbit] Нет цен для {phemex_symbol}, отмена входа.")
+                return
 
             async with self.global_entry_lock:
-                if not self._can_open_position(phemex_symbol, side): return
+                if not self._can_open_position(phemex_symbol, side):
+                    return
                 async with self._get_lock(pos_key):
                     if pos_key in self.state.active_positions: return
                     self.state.active_positions[pos_key] = ActivePosition(
@@ -318,7 +319,7 @@ class TradingBot:
                         in_pending=True, in_position=False, mid_price=signal.mid_price,
                     )
 
-            # БРОСОК ОРДЕРА В СЕТЬ (REST curl_cffi)
+            # ВХОД
             success = await self.executor.execute_entry(phemex_symbol, pos_key, signal)
 
             if success:
@@ -327,11 +328,10 @@ class TradingBot:
                 asyncio.create_task(self.set_blacklist(list(set(self.black_list + [phemex_symbol]))))
                 async with self._get_lock(pos_key):
                     p = self.state.active_positions.get(pos_key)
-                    if p and not p.in_position: p.marked_for_death_ts = time.time()
-                    
+                    if p and not p.in_position:
+                        p.marked_for_death_ts = time.time()
         finally:
-            # 🟢 ВЫКЛЮЧАЕМ РЕЖИМ ТИШИНЫ (ВСЕГДА!)
-            self.stop_another_request = False
+            self.stop_another_request = False  # СНЯТИЕ БЛОКИРОВКИ
         
     # --- СЕТЕВЫЕ ОПЕРАЦИИ (ВНЕ ЛОКА) ---
     async def _payloader(self, action_payload: List[Tuple], symbol: str) -> None:
