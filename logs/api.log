@@ -97,3 +97,64 @@
 2026-04-23 00:00:38 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
 2026-04-23 00:00:38 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
 2026-04-23 00:00:39 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
+2026-04-23 00:04:22 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:22 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 00:04:23 | INFO | api | 🌐 Stakan WS подключен: на 34 монет.
+2026-04-23 00:04:24 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-04-23 00:04:25 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-04-23 00:04:25 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
+2026-04-23 05:20:09 | ERROR | api | API Request Failed (POST /g-orders): Phemex Error [11082]: TE_CANNOT_COVER_ESTIMATE_ORDER_LOSS
+2026-04-23 08:31:15 | ERROR | api | Private WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:17 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:18 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:18 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:31:18 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:41 | ERROR | api | Private WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:44 | ERROR | api | Stakan WS Переподключение: Cannot connect to host ws.phemex.com:443 ssl:default [Превышен таймаут семафора]
+2026-04-23 08:32:53 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:53 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:53 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 34 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:54 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-04-23 08:32:59 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-04-23 08:32:59 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-04-23 08:33:00 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
