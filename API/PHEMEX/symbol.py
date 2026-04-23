@@ -78,4 +78,4 @@ class PhemexSymbols:
             return []
 
     async def aclose(self):
-        self.session.close()
+        await self.session.close()

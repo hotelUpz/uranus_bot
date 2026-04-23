@@ -66,4 +66,4 @@ class PhemexTickerAPI:
         return {sym: t.price for sym, t in tickers.items()}
 
     async def aclose(self):
-        self.session.close()
+        await self.session.close()
