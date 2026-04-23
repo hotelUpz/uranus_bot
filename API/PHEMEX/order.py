@@ -1,6 +1,6 @@
 # # ============================================================
 # # FILE: API/PHEMEX/order.py
-# # ROLE: Phemex private REST client — order placement, cancel, equity
+# # ROLE: Phemex private REST client — order placement, cancel, equity (не трогать этот закомент, оставить для возможного алияса)
 # # ============================================================
 # import time
 # import json
