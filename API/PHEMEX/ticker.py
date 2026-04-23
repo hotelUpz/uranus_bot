@@ -1,5 +1,5 @@
 # ============================================================
-# FILE: API/PHEMEX/ticker.py
+# python -m API.PHEMEX.ticker
 # ROLE: Phemex 24h ticker snapshot (curl_cffi)
 # Учебник для будущих поколений (старый aiohttp вариант):
 #   async with session.get(url) as resp:
@@ -21,9 +21,9 @@ class TickerData:
 class PhemexTickerAPI:
     BASE_URL = "https://api.phemex.com"
 
-    def __init__(self):
-        self.session = AsyncSession(
-            impersonate="chrome110",
+    def __init__(self, session: Optional[AsyncSession] = None):
+        self.session = session or AsyncSession(
+            impersonate="chrome120",
             http_version=2,
             verify=True
         )
@@ -67,3 +67,16 @@ class PhemexTickerAPI:
 
     async def aclose(self):
         await self.session.close()
+
+if __name__ == "__main__":
+    import asyncio
+    async def test():
+        api = PhemexTickerAPI()
+        try:
+            res = await api.get_all_tickers()
+            print(f"Fetched {len(res)} tickers")
+            if "BTCUSDT" in res:
+                print(f"BTC Price: {res['BTCUSDT'].price}")
+        finally:
+            await api.aclose()
+    asyncio.run(test())

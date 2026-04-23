@@ -32,15 +32,15 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 301.0,
+        "notional_limit": 300.0,
         "_is_validate_notional_limit": false
     },
     "upbit": {
-        "poll_interval_sec": 0.1,
-        "min_cooldown_sec": 0.1,
+        "use_mock": true,
+        "poll_interval_sec": 0.5,
+        "min_cooldown_sec": 0.5,
         "proxies": [
-            "http://smart-rvjai9lybinm:Y03Lp1sVqvdmikHm@203.227.45.166:6014",
-            "http://smart-rvjai9lybinm:Y03Lp1sVqvdmikHm@203.227.190.239:6014"
+            null
         ],
         "default_side": "long",
         "bang_sleep_sec": 30,

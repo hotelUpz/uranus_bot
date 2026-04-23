@@ -37,8 +37,8 @@ CFG_PATH = BASE_DIR / "cfg.json"
 
 # Константы для пауз и таймингов
 READY_CHECK_INITIAL_SLEEP = 1.0
-READY_CHECK_TIMEOUT = 10.0
-READY_CHECK_INTERVAL = 0.5
+READY_CHECK_TIMEOUT = 30.0
+READY_CHECK_INTERVAL = 1.0
 
 UPBIT_SIGNAL_SAFETY_RELEASE_SEC = 10.0  # Резервная разблокировка если сигнал не прошел
 UPBIT_SIGNAL_RELEASE_PAUSE_SEC  = 5.0   # Пауза перед возвратом монитора после входа
@@ -67,11 +67,14 @@ class TradingBot:
         self._is_running = False
         self.stop_another_request = False
 
-        self.phemex_sym_api = PhemexSymbols()
-        self.phemex_ticker_api = PhemexTickerAPI()        
+        from curl_cffi.requests import AsyncSession
+        self.phemex_session = AsyncSession(impersonate="chrome120", http_version=2, verify=True)
+        
+        self.phemex_sym_api = PhemexSymbols(session=self.phemex_session)
+        self.phemex_ticker_api = PhemexTickerAPI(session=self.phemex_session)        
 
         self.price_manager = PriceCacheManager(self.phemex_ticker_api, upd_sec, self)
-        self.private_client = PhemexPrivateClient(api_key, api_secret)
+        self.private_client = PhemexPrivateClient(api_key, api_secret, session=self.phemex_session)
         self.private_ws = PhemexPrivateWS(api_key, api_secret)
 
         tg_cfg = self.cfg.get("tg", {})
@@ -87,18 +90,17 @@ class TradingBot:
         upbit_enabled = self.cfg.get("entry", {}).get("pattern", {}).get("upbit_signal", False)
         if upbit_enabled:
             from ENTRY.upbit_signal import UpbitLiveMonitor, MockUpbitLiveMonitor
-            if upbit_cfg.get("test_mode", False):
-                logger.warning("🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы, реальных сделок нет).")
+            if upbit_cfg.get("use_mock", False):
+                logger.warning("🧨 [Upbit] Запущен MOCK-режим (тестовые сигналы для отладки ордеров).")
                 self._upbit_monitor = MockUpbitLiveMonitor(
-                    poll_interval_sec=upbit_cfg.get("poll_interval_sec", 8.0),
+                    poll_interval_sec=upbit_cfg.get("poll_interval_sec", 1.0),
                     on_signal=self._on_upbit_signal,
-                    symbols_to_mock=upbit_cfg.get("symbols_to_mock", ["BTCUSDT", "ETHUSDT", "SOLUSDT"]),
+                    is_paused_func=lambda: self.stop_another_request
                 )
             else:
                 self._upbit_monitor = UpbitLiveMonitor(
-                    poll_interval_sec=upbit_cfg.get("poll_interval_sec", 8.0),
-                    proxies=upbit_cfg.get("proxies", []),
-                    cooldown_sec=upbit_cfg.get("cooldown_sec", 8.0),
+                    poll_interval_sec=upbit_cfg.get("poll_interval_sec", 0.5),
+                    proxies=upbit_cfg.get("proxies", [None]),
                     on_signal=self._on_upbit_signal,
                     is_paused_func=lambda: self.stop_another_request
                 )
@@ -567,6 +569,17 @@ class TradingBot:
         logger.info(f"⏳ Ожидание готовности систем (Timeout: {READY_CHECK_TIMEOUT}s)...")
         start_time = time.time()
         
+        # ФОРСИРОВАННЫЙ ПРОГРЕВ: Делаем один прямой запрос цен через REST, чтобы не ждать WS
+        try:
+            ticker_api = PhemexTickerAPI()
+            tickers = await ticker_api.get_all_tickers()
+            for sym, t_data in tickers.items():
+                self.price_manager.phemex_prices[sym] = t_data.price
+            logger.info(f"🚀 Пре-фетч цен завершен. Получено {len(tickers)} котировок.")
+            await ticker_api.aclose()
+        except Exception as e:
+            logger.warning(f"⚠️ Не удалось выполнить пре-фетч цен: {e}")
+
         await asyncio.sleep(READY_CHECK_INITIAL_SLEEP)
         
         while time.time() - start_time < READY_CHECK_TIMEOUT:
@@ -582,6 +595,7 @@ class TradingBot:
                 logger.info(f"✅ Системы готовы за {time.time() - start_time:.1f}с. Данные получены.")
                 return True
             
+            logger.info(f"   - Ожидание данных: Стаканы [{'OK' if stakan_ready else 'WAIT'}], Цены [{'OK' if prices_ready else 'WAIT'}]")
             await asyncio.sleep(READY_CHECK_INTERVAL)
             
         return False
@@ -669,9 +683,7 @@ class TradingBot:
         await self.stop()
         logger.info("💾 Финальное сохранение стейта на диск...")
         await self.state.save()
-        await self.phemex_sym_api.aclose()
-        await self.phemex_ticker_api.aclose()
-        await self.private_client.aclose()
+        await self.phemex_session.close()
         if self.tg: await self.tg.aclose()
 
     async def stop(self):
