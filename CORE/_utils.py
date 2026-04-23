@@ -14,8 +14,7 @@ from c_log import UnifiedLogger
 if TYPE_CHECKING:
     from CORE.orchestrator import TradingBot
     from API.PHEMEX.ticker import PhemexTickerAPI, TickerData
-    from API.BINANCE.ticker import BinanceTickerAPI
-    from ENTRY.pattern_math import EntrySignal
+    from ENTRY.signal_engine import EntrySignal
 
 logger = UnifiedLogger("core")
 
@@ -36,11 +35,6 @@ class BlackListManager:
             full_sym = sym if sym.endswith(self.quota_asset) else sym + self.quota_asset
             if full_sym not in new_bl:
                 new_bl.append(full_sym)
-                
-            # if "OG" in full_sym: # -- так и оставить закомент.
-            #     new_bl.append(full_sym.replace("OG", "0G"))
-            # if "0G" in full_sym:
-            #     new_bl.append(full_sym.replace("0G", "OG"))
                 
         self.symbols = new_bl
         return self.symbols
@@ -68,50 +62,49 @@ class BlackListManager:
 
 
 class PriceCacheManager:
-    def __init__(self, binance_api: "BinanceTickerAPI", phemex_api: 'PhemexTickerAPI', upd_sec: float = 3.0):
-        self.binance_api = binance_api
+    def __init__(self, phemex_api, upd_sec: float, bot_ref):
         self.phemex_api = phemex_api
         self.upd_sec = upd_sec
-        self.binance_prices: Dict[str, float] = {}
-        self.phemex_prices: Dict[str, float] = {}
-        self.phemex_volumes: Dict[str, float] = {}   # <-- новое
+        self.bot = bot_ref  # Ссылка на оркестратор для проверки stop_another_request
         self._is_running = False
-
-    async def _fetch(self):
-        """Всегда запрашивает Phemex. Binance — опционально (но данные всё равно собираем)."""
-        try:
-            b_prices, p_tickers = await asyncio.gather(
-                self.binance_api.get_all_prices(),
-                self.phemex_api.get_all_tickers()
-            )
-            self.binance_prices = b_prices
-            self.phemex_prices = {sym: t.price for sym, t in p_tickers.items()}
-            self.phemex_volumes = {sym: t.volume_24h_usd for sym, t in p_tickers.items()}
-        except Exception as e:
-            logger.debug(f"Ошибка фонового обновления цен тикеров: {e}")
+        self.phemex_prices = {}
+        self.phemex_volumes = {}
 
     async def warmup(self):
-        """Первичное заполнение кэша перед стартом."""
-        logger.info("⏳ PriceCacheManager: прогрев кэша...")
-        await self._fetch()
-        logger.info(f"✅ PriceCacheManager: прогрет. Phemex={len(self.phemex_prices)} монет, Binance={len(self.binance_prices)} монет.")
+        try:
+            tickers = await self.phemex_api.get_all_tickers()
+            self.phemex_prices = {sym: t.price for sym, t in tickers.items()}
+            self.phemex_volumes = {sym: t.volume_24h_usd for sym, t in tickers.items()}
+        except Exception as e:
+            logger.error(f"Warmup API Error: {e}")
 
     async def loop(self):
-        """Фоновый цикл периодического обновления."""
         self._is_running = True
         while self._is_running:
+            # Тормозим обновление цен, пока идет боевой ордер!
+            if self.bot.stop_another_request:
+                await asyncio.sleep(0.01)
+                continue
+
+            try:
+                tickers = await self.phemex_api.get_all_tickers()
+                for sym, t in tickers.items():
+                    self.phemex_prices[sym] = t.price
+                    self.phemex_volumes[sym] = t.volume_24h_usd
+            except Exception:
+                pass
             await asyncio.sleep(self.upd_sec)
-            await self._fetch()
+
+    def get_prices(self, symbol: str) -> tuple[float, float]:
+        # Возвращаем (Binance, Phemex). Т.к. Binance нет, возвращаем дважды Phemex
+        p = self.phemex_prices.get(symbol, 0.0)
+        return p, p
+
+    def get_volume(self, symbol: str) -> float:
+        return self.phemex_volumes.get(symbol, 0.0)
 
     def stop(self):
         self._is_running = False
-
-    def get_prices(self, symbol: str) -> Tuple[float, float]:
-        return self.binance_prices.get(symbol, 0.0), self.phemex_prices.get(symbol, 0.0)
-
-    def get_volume(self, symbol: str) -> float:
-        """Объём 24ч в USD по символу Phemex."""
-        return self.phemex_volumes.get(symbol, 0.0)
     
 
 class ConfigManager:
@@ -131,31 +124,9 @@ class ConfigManager:
             if hasattr(self.tb.state, 'black_list'):
                 self.tb.state.black_list = self.tb.black_list
 
-            # --- ПЕРЕЗАГРУЗКА ИНСТРУМЕНТОВ ВХОДА (ВКЛЮЧАЯ ФАНДИНГ V5) ---
-            from ENTRY.funding_manager import FundingManager
+            # --- ПЕРЕЗАГРУЗКА ИНСТРУМЕНТОВ ВХОДА ---
             from ENTRY.signal_engine import SignalEngine
-            
-            # Тормозим старую таску фандинга, если есть
-            if hasattr(self.tb, 'funding_manager'):
-                self.tb.funding_manager.stop()
-                
-            old_task = getattr(self.tb, '_funding_task', None)
-            if old_task and not old_task.done():
-                old_task.cancel()
-
-            # Создаем новый инстанс FundingManager
-            self.tb.funding_manager = FundingManager(
-                self.tb.cfg.get("entry", {}).get("pattern", {}), 
-                self.tb.phemex_funding_api, 
-                self.tb.binance_funding_api
-            )
-            
-            # Пересоздаем движок сигналов (математика стакана обновится здесь же)
-            self.tb.signal_engine = SignalEngine(self.tb.cfg["entry"], self.tb.funding_manager)
-
-            # Перезапускаем луп фандинга
-            if getattr(self.tb, '_is_running', False):
-                self.tb._funding_task = asyncio.create_task(self.tb.funding_manager.run())
+            self.tb.signal_engine = SignalEngine(self.tb.cfg["entry"])
 
             # --- ПЕРЕЗАГРУЗКА СЦЕНАРИЕВ ВЫХОДА ---
             exit_cfg = self.tb.cfg.get("exit", {})

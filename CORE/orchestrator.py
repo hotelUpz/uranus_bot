@@ -17,10 +17,8 @@ from API.PHEMEX.order import PhemexPrivateClient
 from API.PHEMEX.ws_private import PhemexPrivateWS
 from API.BINANCE.ticker import BinanceTickerAPI
 from API.PHEMEX.ticker import PhemexTickerAPI
-from API.PHEMEX.funding import PhemexFunding
-from API.BINANCE.funding import BinanceFunding
 
-from ENTRY.signal_engine import SignalEngine
+from ENTRY.signal_engine import SignalEngine, EntrySignal
 from API.PHEMEX.stakan import PhemexStakanStream, DepthTop
 from CORE.restorator import BotState
 from CORE._executor import OrderExecutor
@@ -30,9 +28,7 @@ from CORE._utils import BlackListManager, PriceCacheManager, ConfigManager, Repo
 from EXIT.scenarios.grid_tp import GridTPFactory
 from EXIT.scenarios.stop_loss import StopLossScenario
 from EXIT.scenarios.ttl_close import TtlCloseScenario
-from ENTRY.funding_manager import FundingManager
 from ANALYTICS.tracker import PerformanceTracker, format_duration
-from ENTRY.pattern_math import EntrySignal
 
 from c_log import UnifiedLogger
 from utils import get_config_summary
@@ -70,8 +66,6 @@ class TradingBot:
         self.phemex_sym_api = PhemexSymbols()
         self.binance_ticker_api = BinanceTickerAPI()
         self.phemex_ticker_api = PhemexTickerAPI()        
-        self.phemex_funding_api = PhemexFunding()
-        self.binance_funding_api = BinanceFunding()
         self.session = aiohttp.ClientSession()
 
         self.price_manager = PriceCacheManager(self.binance_ticker_api, self.phemex_ticker_api, upd_sec)
@@ -86,12 +80,6 @@ class TradingBot:
             self.tg = TelegramSender(token, chat_id)
         else:
             self.tg = None
-
-        self.funding_manager = FundingManager(
-            self.cfg["entry"]["pattern"],
-            self.phemex_funding_api,
-            self.binance_funding_api
-        )
 
         upbit_cfg = self.cfg.get("upbit", {})
         upbit_enabled = self.cfg.get("entry", {}).get("pattern", {}).get("upbit_signal", False)
@@ -282,75 +270,68 @@ class TradingBot:
     
     # Новый метод в TradingBot:
     async def _on_upbit_signal(self, symbol: str) -> None:
-        """Сигнал с Upbit: новый листинг. Всегда входим LONG."""
-        side = self.cfg.get("upbit", {}).get("default_side", "long").upper()  # хардкод LONG, но из конфига
-        phemex_symbol = f"{symbol}USDT"   # формат Phemex для perpetual
+        """Сигнал с Upbit: новый листинг."""
+        # 🔴 ВКЛЮЧАЕМ РЕЖИМ ТИШИНЫ (отключаем все HTTP поллинги)
+        self.stop_another_request = True
         
-        if phemex_symbol in self.black_list:
-            logger.info(f"[Upbit] {phemex_symbol} в блэклисте, пропускаем.")
-            return
-        if phemex_symbol not in self.symbol_specs:
-            logger.info(f"[Upbit] {phemex_symbol} не в кэше, выполняем быстрый фетч и подписку...")
-            try:
-                # 1. Сначала инициируем подписку на WS (динамически, без рестарта!)
+        try:
+            side = self.cfg.get("upbit", {}).get("default_side", "long").upper()
+            phemex_symbol = f"{symbol}USDT"
+            
+            if phemex_symbol in self.black_list:
+                logger.info(f"[Upbit] {phemex_symbol} в блэклисте, пропускаем.")
+                return
+                
+            if phemex_symbol not in self.symbol_specs:
+                logger.info(f"[Upbit] {phemex_symbol} не в кэше, быстрый фетч...")
                 if self.st_stream:
                     await self.st_stream.add_symbols([phemex_symbol])
-                
-                # 2. Параллельно тянем спецификации (HTTP)
-                symbols_info = await self.phemex_sym_api.get_all(quote="USDT", only_active=True)
-                self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
-            except Exception as e:
-                logger.error(f"[Upbit] Ошибка подготовки для {phemex_symbol}: {e}")
-            
-            if phemex_symbol not in self.symbol_specs:
-                logger.warning(f"[Upbit] {phemex_symbol} всё ещё нет на Phemex, отмена.")
-                return
-
-        pos_key = f"{phemex_symbol}_{side}"
-        logger.warning(f"🚀 [Upbit Signal] {phemex_symbol} → {side}")
-        # Сразу в бан, чтобы не было повторных входов по этому же сигналу (перма-бан в cfg.json)
-        # Делаем это асинхронно, чтобы не тормозить вход
-        asyncio.create_task(self.set_blacklist(list(set(self.black_list + [phemex_symbol]))))
-
-        # Запрашиваем цены из кэша (снапшот). Для новой монеты ждем до 200мс появления данных.
-        bids, asks = ([], [])
-        for _ in range(20):
-            bids, asks = self.st_stream.get_depth(phemex_symbol) if self.st_stream else ([], [])
-            if bids and asks: break
-            await asyncio.sleep(0.01)
-
-        signal = self.signal_engine.create_signal(phemex_symbol, side, bids, asks)
-        
-        if not signal:
-            logger.warning(f"[Upbit] Не удалось сформировать сигнал для {phemex_symbol} (нет цен или фандинг).")
-            return
-
-        async with self.global_entry_lock:
-            if not self._can_open_position(phemex_symbol, side):
-                logger.info(f"[Upbit] Отклонен вход для {phemex_symbol} (лимит позиций).")
-                return
-
-            async with self._get_lock(pos_key):
-                if pos_key in self.state.active_positions:
+                try:
+                    symbols_info = await self.phemex_sym_api.get_all(quote="USDT", only_active=True)
+                    self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
+                except Exception:
+                    pass
+                if phemex_symbol not in self.symbol_specs:
                     return
-                self.state.active_positions[pos_key] = ActivePosition(
-                    symbol=phemex_symbol, side=side, pending_qty=0.0,
-                    in_pending=True, in_position=False,
-                    mid_price=signal.mid_price, # Используем актуальную цену из сигнала
-                )
 
-        # 3. ВХОД (ВСЕГДА РЕАЛЬНЫЙ)
-        success = await self.executor.execute_entry(phemex_symbol, pos_key, signal)
-
-        if success:
-            await self.state.save()
-        else:
-            logger.warning(f"[{phemex_symbol}] Ошибка входа! Монета заносится в черный список.")
+            pos_key = f"{phemex_symbol}_{side}"
+            logger.warning(f"🚀 [Upbit Signal] {phemex_symbol} → {side}")
+            
             asyncio.create_task(self.set_blacklist(list(set(self.black_list + [phemex_symbol]))))
-            async with self._get_lock(pos_key):
-                p = self.state.active_positions.get(pos_key)
-                if p and not p.in_position:
-                    p.marked_for_death_ts = time.time()
+
+            # Ждем появления цен в стакане по WS
+            bids, asks = ([], [])
+            for _ in range(40): # Увеличили кол-во итераций...
+                bids, asks = self.st_stream.get_depth(phemex_symbol) if self.st_stream else ([], [])
+                if bids and asks: break
+                await asyncio.sleep(0.001) # ...но уменьшили слип до 1мс (максимальная отзывчивость)
+
+            signal = self.signal_engine.create_signal(phemex_symbol, side, bids, asks)
+            if not signal: return
+
+            async with self.global_entry_lock:
+                if not self._can_open_position(phemex_symbol, side): return
+                async with self._get_lock(pos_key):
+                    if pos_key in self.state.active_positions: return
+                    self.state.active_positions[pos_key] = ActivePosition(
+                        symbol=phemex_symbol, side=side, pending_qty=0.0,
+                        in_pending=True, in_position=False, mid_price=signal.mid_price,
+                    )
+
+            # БРОСОК ОРДЕРА В СЕТЬ (REST curl_cffi)
+            success = await self.executor.execute_entry(phemex_symbol, pos_key, signal)
+
+            if success:
+                await self.state.save()
+            else:
+                asyncio.create_task(self.set_blacklist(list(set(self.black_list + [phemex_symbol]))))
+                async with self._get_lock(pos_key):
+                    p = self.state.active_positions.get(pos_key)
+                    if p and not p.in_position: p.marked_for_death_ts = time.time()
+                    
+        finally:
+            # 🟢 ВЫКЛЮЧАЕМ РЕЖИМ ТИШИНЫ (ВСЕГДА!)
+            self.stop_another_request = False
         
     # --- СЕТЕВЫЕ ОПЕРАЦИИ (ВНЕ ЛОКА) ---
     async def _payloader(self, action_payload: List[Tuple], symbol: str) -> None:
@@ -513,13 +494,6 @@ class TradingBot:
                                     asyncio.create_task(self.tg.send_message(msg))
                                     
                                 logger.info(f"[{pos_key}] 🛑 Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
-
-                                # if self.tg:
-                                #     msg = Reporters.exit_success(pos_key, semantic, exit_pr)
-                                #     msg += f"\n⏳ Время в сделке: {format_duration(duration_sec)}"
-                                #     asyncio.create_task(self.tg.send_message(msg))
-                                    
-                                # logger.info(f"[{pos_key}] 🛑 Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
 
                             # Снимаем все возможные ордера-призраки (лимитки тейк-профитов) перед удалением позиции
                             asyncio.create_task(self.executor.cancel_all_orders(pos.symbol))
@@ -690,9 +664,8 @@ class TradingBot:
         logger.info("💾 Финальное сохранение стейта на диск...")
         await self.state.save()
         await self.phemex_sym_api.aclose()
-        await self.binance_ticker_api.aclose()
         await self.phemex_ticker_api.aclose()
-        await self.phemex_funding_api.aclose()
+        await self.private_client.close()
         if self.tg: await self.tg.aclose()
         if self.session and not self.session.closed: await self.session.close()
 
@@ -700,7 +673,6 @@ class TradingBot:
         if not getattr(self, '_is_running', False): return
         self._is_running = False
         
-        # 👇 ИСПРАВЛЕНО: обращаемся к правильному атрибуту
         if getattr(self, 'st_stream', None):
             self.st_stream.stop()
             
@@ -710,7 +682,6 @@ class TradingBot:
         self.funding_manager.stop()
         await self.private_ws.aclose()
         await self._await_task(getattr(self, '_price_updater_task', None))
-        await self._await_task(getattr(self, '_funding_task', None))
         await self._await_task(getattr(self, '_private_ws_task', None))
         await self._await_task(getattr(self, '_game_loop_task', None))
         await self._await_task(getattr(self, '_upbit_task', None))

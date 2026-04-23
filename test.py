@@ -4,7 +4,7 @@ import aiohttp
 
 # Импортируем твои модули
 from API.PHEMEX.order import PhemexPrivateClient
-from API.PHEMEX.order_fast import PhemexFastClient
+from API.PHEMEX.test_order_fast import PhemexFastClient
 from API.PHEMEX.ticker import PhemexTickerAPI
 from utils import float_to_str
 

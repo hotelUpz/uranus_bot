@@ -173,12 +173,14 @@ class UpbitLiveMonitor:
     def __init__(self, poll_interval_sec: float, proxies: list,
                  on_signal=None,
                  cooldown_sec: float = 8.0,
-                 cache_file: str = "live_signals.json"):
+                 cache_file: str = "live_signals.json",
+                 is_paused_func=None):  # <-- НОВОЕ
         self._on_signal = on_signal
         self.poll_interval = poll_interval_sec
         self.api_url = "https://api-manager.upbit.com/api/v1/announcements"
         self.cache_file = cache_file
         self.cooldown_sec = cooldown_sec
+        self.is_paused_func = is_paused_func # <-- НОВОЕ
         
         self.session_manager = SmartSessionManager(
             proxies=proxies,
@@ -339,6 +341,11 @@ class UpbitLiveMonitor:
         
         try:
             while True:
+                # <-- НОВОЕ: Тормозим HTTP-спам, пока открывается ордер
+                if self.is_paused_func and self.is_paused_func():
+                    await asyncio.sleep(0.01)
+                    continue
+
                 start_time = time.time()
                 time_since_last = start_time - last_request_time
                 last_request_time = start_time

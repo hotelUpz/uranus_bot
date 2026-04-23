@@ -15,7 +15,7 @@ from CORE._utils import Reporters
 
 if TYPE_CHECKING:
     from CORE.orchestrator import TradingBot
-    from ENTRY.pattern_math import EntrySignal
+    from ENTRY.signal_engine import EntrySignal
 
 from dotenv import load_dotenv    
 load_dotenv()
