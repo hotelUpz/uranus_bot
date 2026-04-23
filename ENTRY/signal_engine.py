@@ -6,16 +6,11 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Optional, Literal, Any, Dict, Tuple
+from typing import Optional, Literal, Any, Dict, Callable, Awaitable
 from dataclasses import dataclass
 from c_log import UnifiedLogger
 
 logger = UnifiedLogger("signal")
-
-# Константы для пауз и таймингов
-STAKAN_POLLING_STEP_SEC    = 0.001 # Шаг поллинга стакана (1мс)
-STAKAN_POLLING_MAX_ATTEMPTS = 30    # Макс. кол-во попыток (итого 30мс)
-FETCH_SPECS_RETRY_PAUSE_SEC = 0.5   # Пауза при ошибке фетча спеков
 
 @dataclass
 class EntrySignal:
@@ -25,16 +20,13 @@ class EntrySignal:
     init_ask1: float
     init_bid1: float
     mid_price: float
-    b_price: Optional[float] = None
-    p_price: Optional[float] = None
-    spread: Optional[float] = None
     timestamp: float = 0.0
 
 class SignalEngine:
-    def __init__(self, cfg: Dict[str, Any]):
+    def __init__(self, cfg: Dict[str, Any], on_signal_callback: Callable[[EntrySignal], Awaitable[None]]):
         self.cfg = cfg
-        self.signal_queue = asyncio.Queue()
-        self._processing = set() # Чтобы не обрабатывать один и тот же символ дважды в моменте
+        self.on_signal_callback = on_signal_callback
+        self._processing = set()
 
     async def handle_upbit_signal(
         self, 
@@ -44,83 +36,53 @@ class SignalEngine:
         price_manager: Any,
         symbol_specs: Dict[str, Any],
         black_list: Any,
-        phemex_sym_api: Any,
     ):
         """
         Основной входной путь для сигнала от Upbit.
-        Превращает сырой тикер в полноценный EntrySignal и кладет в очередь.
         """
         if raw_symbol in self._processing: return
         self._processing.add(raw_symbol)
         
         try:
-            # 1. Конвертация в Phemex символ
             phemex_symbol = f"{raw_symbol}USDT"
             
-            # 2. Быстрая проверка черного списка
-            if await black_list.is_blacklisted(phemex_symbol):
+            # 1. Проверка черного списка (в памяти)
+            if black_list.is_blacklisted_sync(phemex_symbol):
                 return
 
-            # 3. Запуск фоновых задач (Подписка WS + Спецификации)
-            # Мы НЕ ЖДЕМ их завершения прямо сейчас, чтобы как можно быстрее начать поллинг стакана.
-            sub_task = None
+            # 2. Подписка WS (в фоне, не ждем)
             if st_stream:
-                sub_task = asyncio.create_task(st_stream.add_symbols([phemex_symbol]))
+                asyncio.create_task(st_stream.add_symbols([phemex_symbol]))
             
-            spec_task = None
+            # 3. Проверка наличия спецификаций в памяти
             if phemex_symbol not in symbol_specs:
-                spec_task = asyncio.create_task(self._fetch_and_update_specs(phemex_symbol, phemex_sym_api, symbol_specs))
+                logger.warning(f"[{phemex_symbol}] Спецификации отсутствуют. Пропуск.")
+                return
 
-            # 4. ФОРМИРОВАНИЕ СИГНАЛА (Ожидание стакана)
-            # Это самая важная часть. Поллинг стакана идет параллельно с сетевым запросом спецификаций.
-            signal = await self.create_signal(phemex_symbol, side, st_stream, price_manager)
+            # 4. МГНОВЕННОЕ получение цены из кэша (без циклов и ожиданий)
+            signal = self.create_signal_instant(phemex_symbol, side, st_stream, price_manager)
             
             if signal:
                 signal.timestamp = time.time()
-                
-                # Дожидаемся спецификаций, если они еще не прилетели. 
-                # Без них Orchestrator не сможет посчитать объем лота.
-                if spec_task:
-                    await spec_task
-                
-                await self.signal_queue.put(signal)
+                # ПРЯМОЙ ПРОСТРЕЛ
+                asyncio.create_task(self.on_signal_callback(signal))
             
         except Exception as e:
             logger.error(f"❌ SignalEngine Critical Error for {raw_symbol}: {e}")
         finally:
             self._processing.discard(raw_symbol)
 
-    async def _fetch_and_update_specs(self, symbol: str, api: Any, symbol_specs: Dict[str, Any]):
-        """Быстро дотягивает спецификации для новой монеты."""
-        try:
-            # Используем curl_cffi версию api.get_all
-            all_specs = await api.get_all()
-            for s in all_specs:
-                symbol_specs[s.symbol] = s
-        except Exception as e:
-            logger.error(f"⚠️ Error fetching specs for {symbol}: {e}")
-            await asyncio.sleep(FETCH_SPECS_RETRY_PAUSE_SEC)
-
-    async def create_signal(self, symbol: str, side: str, st_stream: Any, price_manager: Any) -> Optional[EntrySignal]:
+    def create_signal_instant(self, symbol: str, side: str, st_stream: Any, price_manager: Any) -> Optional[EntrySignal]:
         """
-        Пытается получить лучшие цены из WS стакана. 
-        Если стакан пуст, фолбечится на цены из REST-кэша.
+        Мгновенно вытаскивает цены из кэша. Если данных нет - возвращает None.
         """
+        # 1. Пробуем стакан (если стрим готов)
         bids, asks = [], []
-        
-        # 1. Пытаемся поймать WS стакан (максимально быстрый поллинг)
         if st_stream:
-            for _ in range(STAKAN_POLLING_MAX_ATTEMPTS):
-                bids, asks = st_stream.get_depth(symbol)
-                if bids and asks:
-                    break
-                await asyncio.sleep(STAKAN_POLLING_STEP_SEC)
+            bids, asks = st_stream.get_depth(symbol)
 
-        # 2. Оценка результатов и ФОЛБЕК
-        ask1, bid1 = None, None
-
+        # 2. Фолбэк на ценовой кэш
         if not bids or not asks:
-            # WS не успел или отвалился, берем цену из PriceCacheManager
             phemex_price, _ = price_manager.get_prices(symbol)
             if phemex_price <= 0:
                 return None

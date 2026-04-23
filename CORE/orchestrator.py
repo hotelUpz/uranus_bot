@@ -74,6 +74,7 @@ class TradingBot:
         self.phemex_ticker_api = PhemexTickerAPI(session=self.phemex_session)        
 
         self.price_manager = PriceCacheManager(self.phemex_ticker_api, upd_sec, self)
+        self.signal_engine = SignalEngine(self.cfg, on_signal_callback=self._process_entry_from_signal)
         self.private_client = PhemexPrivateClient(api_key, api_secret, session=self.phemex_session)
         self.private_ws = PhemexPrivateWS(api_key, api_secret)
 
@@ -432,22 +433,7 @@ class TradingBot:
     async def _main_trading_loop(self):
         logger.info("🎮 Главная торговая живолупа (Game Loop) запущена.")
         while self._is_running:
-            # 1. СНАЙПЕРСКИЙ ЧЕК СИГНАЛОВ (Приоритет №1)
-            while not self.signal_engine.signal_queue.empty():
-                try:
-                    signal = self.signal_engine.signal_queue.get_nowait()
-                    
-                    # ЧЕК ТАЙМАУТА (КОНФИГ)
-                    age = time.time() - signal.timestamp
-                    if age > self.signal_timeout_sec:
-                        logger.warning(f"⏰ Сигнал {signal.symbol} протух ({age:.4f}s > {self.signal_timeout_sec}s). Скип.")
-                        continue
-                        
-                    asyncio.create_task(self._process_entry_from_signal(signal))
-                except Exception:
-                    break
-
-            # 2. ОБРАБОТКА ТЕКУЩИХ ПОЗИЦИЙ
+            # 1. ОБРАБОТКА ТЕКУЩИХ ПОЗИЦИЙ
             keys_to_check = list(self.state.active_positions.keys())
             for pos_key in keys_to_check:
                 async with self._get_lock(pos_key):
@@ -564,6 +550,21 @@ class TradingBot:
                 
         self._stakan_task = asyncio.create_task(self.st_stream.run(on_stakan_depth))
 
+    async def _specs_updater_loop(self):
+        """Фоновый воркер для обновления спецификаций монет (тиков, лотов) в памяти."""
+        while self._is_running:
+            try:
+                specs = await self.phemex_sym_api.get_all(quote=self.quota_asset)
+                if specs:
+                    new_specs = {s.symbol: s for s in specs}
+                    self.symbol_specs.update(new_specs)
+                    logger.info(f"🔄 Спецификации монет обновлены в фоне: {len(new_specs)} шт.")
+            except Exception as e:
+                logger.error(f"⚠️ Ошибка обновления спецификаций: {e}")
+            
+            # Обновляем раз в 10 минут
+            await asyncio.sleep(600)
+
     async def _wait_for_systems_ready(self) -> bool:
         """Ожидает, пока все фоновые системы (цены, фандинг, стаканы) не получат первые данные."""
         logger.info(f"⏳ Ожидание готовности систем (Timeout: {READY_CHECK_TIMEOUT}s)...")
@@ -663,6 +664,7 @@ class TradingBot:
         )
 
         self._game_loop_task = asyncio.create_task(self._main_trading_loop())
+        self._specs_updater_task = asyncio.create_task(self._specs_updater_loop())
         logger.info("🎮 Главная торговая живолупа (Game Loop) запущена.")
 
         # --- ЖЕСТКАЯ ПРОВЕРКА ГОТОВНОСТИ ---

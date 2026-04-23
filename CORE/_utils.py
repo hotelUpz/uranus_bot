@@ -42,6 +42,9 @@ class BlackListManager:
         return self.symbols
 
     async def is_blacklisted(self, symbol: str) -> bool:
+        return self.is_blacklisted_sync(symbol)
+
+    def is_blacklisted_sync(self, symbol: str) -> bool:
         return symbol.upper() in self.symbols
 
     async def update_and_save(self, raw_symbols: List[str]) -> Tuple[bool, str]:

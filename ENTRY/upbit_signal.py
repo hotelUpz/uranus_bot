@@ -150,11 +150,16 @@ class UpbitLiveMonitor:
                 logger.error(f"Ошибка кеша: {e}")
 
     def _save_cache(self):
-        try:
-            with open(self.cache_file, "w", encoding="utf-8") as f:
-                json.dump(self.signals_log, f, ensure_ascii=False, indent=4)
-        except Exception as e:
-            logger.error(f"Ошибка записи JSON: {e}")
+        """Запись кеша в фоне, чтобы не тормозить цикл мониторинга."""
+        def sync_save():
+            try:
+                with open(self.cache_file, "w", encoding="utf-8") as f:
+                    json.dump(self.signals_log, f, ensure_ascii=False, indent=4)
+            except Exception as e:
+                logger.error(f"Ошибка записи JSON: {e}")
+        
+        # Запускаем в отдельном потоке, чтобы не блокировать Event Loop
+        asyncio.get_event_loop().run_in_executor(None, sync_save)
 
     def _parse_iso_to_ms(self, dt_str: str) -> int:
         if not dt_str: return 0
