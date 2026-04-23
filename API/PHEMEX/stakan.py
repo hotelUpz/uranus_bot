@@ -70,6 +70,10 @@ class PhemexStakanStream:
 
         self._bids: Dict[str, Dict[float, float]] = {}
         self._asks: Dict[str, Dict[float, float]] = {}
+        
+        # Очередь для динамических подписок
+        self._sub_queue = asyncio.Queue()
+        self._all_symbols = set(self.symbols)
 
     def get_depth(self, symbol: str) -> Tuple[List[PriceLevel], List[PriceLevel]]:
         """Возвращает текущий снимок стакана для символа."""
@@ -82,6 +86,15 @@ class PhemexStakanStream:
 
     def stop(self) -> None:
         self._stop.set()
+
+    async def add_symbols(self, new_symbols: List[str]) -> None:
+        """Добавляет новые символы в стрим без перезагрузки."""
+        for s in new_symbols:
+            s_u = s.upper().strip()
+            if s_u and s_u not in self._all_symbols:
+                self._all_symbols.add(s_u)
+                await self._sub_queue.put(s_u)
+                logger.info(f"➕ Добавлен запрос на подписку (динамически): {s_u}")
 
     def _chunks(self) -> List[List[str]]:
         out: List[List[str]] = []
@@ -173,17 +186,34 @@ class PhemexStakanStream:
 
     async def _run_chunk(self, symbols: List[str], on_depth: Callable[[DepthTop], Awaitable[None]]) -> None:
         backoff = self.reconnect_min_sec
+        chunk_symbols = list(symbols) # Локальный список символов этого чанка
 
         while not self._stop.is_set():
             ws = None
             ping_task = None
+            sub_worker = None
             try:
                 async with aiohttp.ClientSession() as session:
                     # max_msg_size=0 СПАСАЕТ ОТ ПАДЕНИЙ ПРИ БОЛЬШИХ СНАПШОТАХ!
                     ws = await session.ws_connect(self.WS_URL, autoping=False, max_msg_size=0)
-                    logger.info(f"🌐 Stakan WS подключен: на {len(symbols)} монет.")
+                    logger.info(f"🌐 Stakan WS подключен: на {len(chunk_symbols)} монет.")
                     ping_task = asyncio.create_task(self._ping_loop(ws))
-                    await self._subscribe(ws, symbols)
+                    await self._subscribe(ws, chunk_symbols)
+                    
+                    # Воркер для обработки новых подписок на этом соединении
+                    async def sub_listener():
+                        while not ws.closed:
+                            try:
+                                sym = await self._sub_queue.get()
+                                req = {"id": self._next_id(), "method": "orderbook_p.subscribe", "params": [sym, False, self.depth]}
+                                await ws.send_str(json.dumps(req))
+                                if sym not in chunk_symbols:
+                                    chunk_symbols.append(sym)
+                                logger.info(f"✅ Динамическая подписка выполнена на {sym}")
+                            except asyncio.CancelledError: break
+                            except Exception as e: logger.error(f"Ошибка в sub_listener: {e}")
+                    
+                    sub_worker = asyncio.create_task(sub_listener())
                     backoff = self.reconnect_min_sec
 
                     async for m in ws:
@@ -206,6 +236,9 @@ class PhemexStakanStream:
                 await asyncio.sleep(sleep_for)
                 backoff = min(self.reconnect_max_sec, backoff * 1.7)
             finally:
+                if sub_worker:
+                    sub_worker.cancel()
+                    with contextlib.suppress(asyncio.CancelledError, Exception): await sub_worker
                 if ping_task:
                     ping_task.cancel()
                     with contextlib.suppress(asyncio.CancelledError, Exception): await ping_task

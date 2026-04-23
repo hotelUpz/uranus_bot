@@ -23,7 +23,7 @@ from API.BINANCE.funding import BinanceFunding
 from ENTRY.signal_engine import SignalEngine
 from API.PHEMEX.stakan import PhemexStakanStream, DepthTop
 from CORE.restorator import BotState
-from CORE.executor import OrderExecutor
+from CORE._executor import OrderExecutor
 from CORE.models_fsm import WsInterpreter, ActivePosition
 from CORE._utils import BlackListManager, PriceCacheManager, ConfigManager, Reporters
 
@@ -145,8 +145,8 @@ class TradingBot:
         except asyncio.CancelledError: pass
         except Exception as e: logger.debug(f"Task shutdown note: {e}")
 
-    def set_blacklist(self, symbols: list) -> tuple[bool, str]:
-        success, msg = self.bl_manager.update_and_save(symbols)
+    async def set_blacklist(self, symbols: list) -> tuple[bool, str]:
+        success, msg = await self.bl_manager.update_and_save(symbols)
         if success:
             self.black_list = self.bl_manager.symbols
             if hasattr(self.state, 'black_list'):
@@ -290,15 +290,17 @@ class TradingBot:
             logger.info(f"[Upbit] {phemex_symbol} в блэклисте, пропускаем.")
             return
         if phemex_symbol not in self.symbol_specs:
-            logger.info(f"[Upbit] {phemex_symbol} не в кэше, пробуем ре-фетч спецификаций...")
+            logger.info(f"[Upbit] {phemex_symbol} не в кэше, выполняем быстрый фетч и подписку...")
             try:
+                # 1. Сначала инициируем подписку на WS (динамически, без рестарта!)
+                if self.st_stream:
+                    await self.st_stream.add_symbols([phemex_symbol])
+                
+                # 2. Параллельно тянем спецификации (HTTP)
                 symbols_info = await self.phemex_sym_api.get_all(quote="USDT", only_active=True)
                 self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
-                # Если монета появилась — переподписываемся на WS
-                if phemex_symbol in self.symbol_specs:
-                    await self._refresh_stakan_stream()
             except Exception as e:
-                logger.error(f"[Upbit] Ошибка ре-фетча specs: {e}")
+                logger.error(f"[Upbit] Ошибка подготовки для {phemex_symbol}: {e}")
             
             if phemex_symbol not in self.symbol_specs:
                 logger.warning(f"[Upbit] {phemex_symbol} всё ещё нет на Phemex, отмена.")
@@ -307,10 +309,16 @@ class TradingBot:
         pos_key = f"{phemex_symbol}_{side}"
         logger.warning(f"🚀 [Upbit Signal] {phemex_symbol} → {side}")
         # Сразу в бан, чтобы не было повторных входов по этому же сигналу (перма-бан в cfg.json)
-        self.set_blacklist(list(set(self.black_list + [phemex_symbol])))
+        # Делаем это асинхронно, чтобы не тормозить вход
+        asyncio.create_task(self.set_blacklist(list(set(self.black_list + [phemex_symbol]))))
 
-        # Запрашиваем цены из кэша (снапшот)
-        bids, asks = self.st_stream.get_depth(phemex_symbol) if self.st_stream else ([], [])
+        # Запрашиваем цены из кэша (снапшот). Для новой монеты ждем до 200мс появления данных.
+        bids, asks = ([], [])
+        for _ in range(20):
+            bids, asks = self.st_stream.get_depth(phemex_symbol) if self.st_stream else ([], [])
+            if bids and asks: break
+            await asyncio.sleep(0.01)
+
         signal = self.signal_engine.create_signal(phemex_symbol, side, bids, asks)
         
         if not signal:
@@ -338,7 +346,7 @@ class TradingBot:
             await self.state.save()
         else:
             logger.warning(f"[{phemex_symbol}] Ошибка входа! Монета заносится в черный список.")
-            self.set_blacklist(list(set(self.black_list + [phemex_symbol])))
+            asyncio.create_task(self.set_blacklist(list(set(self.black_list + [phemex_symbol]))))
             async with self._get_lock(pos_key):
                 p = self.state.active_positions.get(pos_key)
                 if p and not p.in_position:

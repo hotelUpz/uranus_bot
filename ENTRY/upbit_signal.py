@@ -208,10 +208,12 @@ class UpbitLiveMonitor:
             except Exception as e:
                 logger.error(f"Ошибка чтения кеша: {e}")
 
-    def _save_cache(self):
-        try:
+    async def _save_cache(self):
+        def _save():
             with open(self.cache_file, "w", encoding="utf-8") as f:
                 json.dump(self.signals_log, f, ensure_ascii=False, indent=4)
+        try:
+            await asyncio.to_thread(_save)
         except Exception as e:
             logger.error(f"Ошибка сохранения JSON: {e}")
 
@@ -308,8 +310,8 @@ class UpbitLiveMonitor:
         
         self.seen_symbols.add(symbol)
         self.signals_log.append(signal_data)
-        self._save_cache()
-
+        
+        # Сначала пускаем сигнал дальше, потом сохраняем кэш (в фоне)
         if not is_startup and self._on_signal:
             await self._on_signal(symbol)
             logger.debug(
@@ -318,6 +320,9 @@ class UpbitLiveMonitor:
                 f"Метка времени: {announce_str}\n"
                 f"{'='*60}\n"
             )
+        
+        # Сохраняем кэш асинхронно
+        asyncio.create_task(self._save_cache())
 
     async def run(self):
         tuner = AdaptiveCooldownTuner(self.cooldown_sec)

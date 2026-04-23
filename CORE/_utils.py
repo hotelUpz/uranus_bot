@@ -45,7 +45,7 @@ class BlackListManager:
         self.symbols = new_bl
         return self.symbols
 
-    def update_and_save(self, raw_symbols: List[str]) -> Tuple[bool, str]:
+    async def update_and_save(self, raw_symbols: List[str]) -> Tuple[bool, str]:
         clean_symbols_for_cfg = []
         for sym in raw_symbols:
             sym = sym.upper().strip()
@@ -53,12 +53,15 @@ class BlackListManager:
             
         self.load_from_config(clean_symbols_for_cfg)
         
-        try:
+        def _save():
             with open(self.cfg_path, "r", encoding="utf-8") as f:
                 c = json.load(f)
             c["black_list"] = clean_symbols_for_cfg
             with open(self.cfg_path, "w", encoding="utf-8") as f:
                 json.dump(c, f, indent=4)
+
+        try:
+            await asyncio.to_thread(_save)
             return True, "✅ Список успешно обновлен."
         except Exception as e:
             return False, f"❌ Ошибка записи: {e}"
