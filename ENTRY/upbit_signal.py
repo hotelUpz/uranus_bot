@@ -336,8 +336,8 @@ class MockUpbitLiveMonitor:
             await asyncio.sleep(self.poll_interval)
             if self._is_paused_func and self._is_paused_func(): continue
             
-            sym = random.choice(["BTC", "ETH", "SOL"])
-            logger.info(f"🟢 [MOCK] Сгенерирован тестовый сигнал: {sym}")
+            sym = random.choice(["BTC", "ETH"])
+            # logger.info(f"🟢 [MOCK] Сгенерирован тестовый сигнал: {sym}")
             if self._on_signal: await self._on_signal(sym, int(time.time() * 1000))
 
 async def run_all_probers():

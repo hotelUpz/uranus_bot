@@ -49,9 +49,11 @@ class SignalEngine:
         try:
             raw_symbol_upper = raw_symbol.upper().strip()
             phemex_symbol = raw_symbol_upper if raw_symbol_upper.endswith("USDT") else f"{raw_symbol_upper}USDT"
-            
+
             # 1. Проверка черного списка (в памяти)
-            if black_list.is_blacklisted_sync(phemex_symbol):
+            bl_result = black_list.is_blacklisted_sync(phemex_symbol)
+            logger.debug(f"[BL-CHECK] symbol={phemex_symbol} | blacklisted={bl_result} | bl.symbols={getattr(black_list, 'symbols', '???')}")
+            if bl_result:
                 logger.warning(f"[{phemex_symbol}] Монета в BlackList. Отказ от входа.")
                 return False
 

@@ -176,10 +176,21 @@ class TradingBot:
                     self.state.active_positions.pop(k, None) # Удаляем только пустые/фантомные
 
             for pos_key, ex_data in exchange_positions.items():
+                symbol = ex_data["symbol"]
+                # Blacklist-guard: позиции по заблокированным монетам не восстанавливаем
+                if symbol in self.black_list:
+                    logger.warning(f"[RECOVER] {pos_key} — монета в BlackList, пропускаем восстановление.")
+                    continue
                 if pos_key in self.state.active_positions:
                     self.state.active_positions[pos_key].current_qty = ex_data["size"]
                     self.state.active_positions[pos_key].in_position = True
                     self.state.active_positions[pos_key].in_pending = False
+                else:
+                    # Новая позиция, которой нет в локальном стейте (реконнект/перезапуск)
+                    new_pos = ActivePosition(symbol=symbol, side=ex_data["side"])
+                    new_pos.current_qty = ex_data["size"]
+                    new_pos.in_position = True
+                    self.state.active_positions[pos_key] = new_pos
 
             await self.state.save()
             logger.info(f"[OK] Стейт синхронизирован. В памяти {len(self.state.active_positions)} активных позиций.")
@@ -260,8 +271,11 @@ class TradingBot:
         return self.active_positions_locker[pos_key]
 
     def _can_open_position(self, symbol: str, side: str = "LONG") -> bool:
+        # Абсолютная блокировка: черный список
+        if symbol in self.black_list:
+            return False
+
         working_symbols = set()
-        
         for pos_key, pos in self.state.active_positions.items():
             if pos.in_position or pos.in_pending:
                 working_symbols.add(pos.symbol)
@@ -271,7 +285,7 @@ class TradingBot:
 
         if len(working_symbols) >= self.max_active_positions:
             return False
-            
+
         return True
     
     # Новый метод в TradingBot:
@@ -445,6 +459,16 @@ class TradingBot:
                     try:
                         pos: "ActivePosition" = self.state.active_positions.get(pos_key)
                         if not pos: continue
+
+                        # --- BLACKLIST-GUARD: ПРИНУДИТЕЛЬНЫЙ ВЫХОД ---
+                        # Если монета попала в blacklist пока позиция была активна —
+                        # немедленно закрываем и удаляем из памяти.
+                        if pos.symbol in self.black_list and (pos.in_position or pos.in_pending):
+                            if not pos.exit_in_flight:
+                                logger.warning(f"[{pos_key}] ⛔ BLACKLIST: Монета заблокирована, принудительный выход!")
+                                pos.exit_in_flight = True
+                                asyncio.create_task(self.executor.execute_market_exit(pos.symbol, pos_key))
+                            continue
 
                         # --- СБОРЩИК ФАНТОМНЫХ ВХОДОВ ---
                         if getattr(pos, 'marked_for_death_ts', 0) > 0:

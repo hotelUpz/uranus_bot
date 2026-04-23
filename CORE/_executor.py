@@ -151,7 +151,14 @@ class OrderExecutor:
             for attempt in range(max(1, self.max_entry_retries)):
                 try:
                     is_limit_used = False
-                    
+
+                    # Замер латенции: сигнал → постановка ордера
+                    signal_ts = getattr(signal, 'timestamp', 0.0)
+                    order_placed_ts = time.time()
+                    if signal_ts > 0:
+                        sig_to_order_ms = (order_placed_ts - signal_ts) * 1000
+                        logger.info(f"[{pos_key}] ⚡ Латенция сигнал->ордер: {sig_to_order_ms:.1f}ms")
+
                     if self.entry_mode == "limit":
                         # АГРЕССИВНАЯ ЛИМИТКА
                         limit_pr = ref_price * (1 + self.limit_dist_pct / 100.0) if side == "Buy" else ref_price * (1 - self.limit_dist_pct / 100.0)

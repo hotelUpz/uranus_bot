@@ -1,0 +1,192 @@
+2026-04-23 22:58:42 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:58:42 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:58:46 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:58:52 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:58:56 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:58:56 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:59:02 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:59:06 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:59:06 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:59:07 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:59:12 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 22:59:17 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:02 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:02 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:02 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:02 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:03 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:03 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:03 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:03 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:04 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:04 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:04 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:04 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:05 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:05 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:05 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:05 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:06 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:06 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:06 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:06 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:07 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:07 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:07 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:07 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:08 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:08 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:08 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:08 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:09 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:09 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:04:09 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:04:09 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:06 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:06 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:06 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:06 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:07 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=False | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:12 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:12 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:13 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:17 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:18 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:22 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:22 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:22 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:22 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:23 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:27 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:28 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:28 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:29 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:32 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:32 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:33 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:33 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:33 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:34 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:37 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:37 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:38 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:39 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:43 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:43 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:43 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:43 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:44 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:44 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:44 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:44 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:45 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:48 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:48 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:48 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:49 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:49 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:49 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:50 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:53 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:06:54 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:54 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:55 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:55 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:55 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:55 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:56 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:56 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:56 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=False | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:58 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:58 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:59 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:06:59 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:06:59 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=False | bl.symbols=['BTCUSDT']
+2026-04-23 23:07:00 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:07:00 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:07:00 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:07:00 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:07:01 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=False | bl.symbols=['BTCUSDT']
+2026-04-23 23:07:01 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:07:01 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:07:02 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=True | bl.symbols=['BTCUSDT']
+2026-04-23 23:07:02 | WARNING | signal | [BTCUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:09 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=False | bl.symbols=['BTCUSDT']
+2026-04-23 23:18:14 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:19 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:19 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:19 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:20 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:24 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:24 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:24 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:24 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:25 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:29 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:30 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:30 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:30 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:30 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:31 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:31 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:31 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:34 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:34 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:34 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:35 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:36 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:36 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:37 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:37 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:37 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:39 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:39 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:39 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:40 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:40 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:40 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:41 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:42 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:42 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:43 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:43 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:43 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:43 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:44 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:44 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:44 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:45 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:45 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:45 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:47 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:48 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:49 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:51 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:51 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:51 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:52 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:53 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:54 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:54 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:55 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:55 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:55 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:56 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:56 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:56 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:57 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:58 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:58 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:58 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:58 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:59 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:59 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:18:59 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:18:59 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:19:00 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:19:00 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:19:00 | DEBUG | signal | [BL-CHECK] symbol=BTCUSDT | blacklisted=False | bl.symbols=['ETHUSDT']
+2026-04-23 23:19:01 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:19:01 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
+2026-04-23 23:19:01 | DEBUG | signal | [BL-CHECK] symbol=ETHUSDT | blacklisted=True | bl.symbols=['ETHUSDT']
+2026-04-23 23:19:01 | WARNING | signal | [ETHUSDT] Монета в BlackList. Отказ от входа.
