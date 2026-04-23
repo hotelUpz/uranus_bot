@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import asyncio
-import aiohttp
 from typing import List, Dict, Optional, Any, TYPE_CHECKING
 from pathlib import Path
 
@@ -83,8 +82,8 @@ class GlobalLeverageSetter:
         current_cache = self._load_cache()
         new_cache = current_cache.copy()
 
-        async with aiohttp.ClientSession() as session:
-            client = PhemexPrivateClient(self.api_key, self.api_secret, session, retries=1)
+        client = PhemexPrivateClient(self.api_key, self.api_secret, retries=1)
+        try:
             success_count, skipped_count = 0, 0
             
             for spec in symbols_info:
@@ -98,6 +97,8 @@ class GlobalLeverageSetter:
                 if res_lev is not None:
                     success_count += 1
                 await asyncio.sleep(self.delay_sec)
+        finally:
+            await client.aclose()
 
         self._save_cache(new_cache)
         logger.info(f"✅ Готово. Настроено: {success_count}, Пропущено: {skipped_count}")

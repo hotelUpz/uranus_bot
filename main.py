@@ -23,6 +23,8 @@ CACHE_PATH = BASE_DIR / "leverage_cache.json"
 load_dotenv(BASE_DIR / ".env")
 logger = UnifiedLogger("main")
 
+FINAL_CLEANUP_PAUSE_SEC = 0.5
+
 
 async def polling_supervisor(tg_admin: AdminTgBot):
     """Следит за тем, чтобы Telegram бот всегда был онлайн"""
@@ -128,7 +130,7 @@ async def _main():
         for t in tasks:
             t.cancel()
         
-        await asyncio.sleep(0.5) 
+        await asyncio.sleep(FINAL_CLEANUP_PAUSE_SEC) 
         logger.info("✅ Программа безопасно завершена.")
 
 if __name__ == "__main__":

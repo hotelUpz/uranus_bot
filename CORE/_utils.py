@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
 logger = UnifiedLogger("core")
 
+PRICE_WARMUP_POLL_SEC = 0.01 # Пауза при прогреве кэша цен
+
 
 class BlackListManager:
     """Управление черным списком: парсинг, квотирование, сохранение."""
@@ -38,6 +40,9 @@ class BlackListManager:
                 
         self.symbols = new_bl
         return self.symbols
+
+    async def is_blacklisted(self, symbol: str) -> bool:
+        return symbol.upper() in self.symbols
 
     async def update_and_save(self, raw_symbols: List[str]) -> Tuple[bool, str]:
         clean_symbols_for_cfg = []
@@ -83,7 +88,7 @@ class PriceCacheManager:
         while self._is_running:
             # Тормозим обновление цен, пока идет боевой ордер!
             if self.bot.stop_another_request:
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(PRICE_WARMUP_POLL_SEC)
                 continue
 
             try:

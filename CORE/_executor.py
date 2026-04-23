@@ -25,6 +25,10 @@ TZ = pytz.timezone(TIME_ZONE)
 
 WAIT_ENTRY_TIMEOUT_SEC = 2.0
 WAIT_ENTRY_MIN_WAIT_SEC = 0.05
+SMART_WAIT_POLL_STEP_SEC = 0.01   # Шаг проверки налива (10мс)
+GRID_TP_BASE_SLEEP_SEC = 0.1      # Базовый слип между ордерами сетки
+GRID_TP_RETRY_SLEEP_SEC = 1.0     # Слип при ошибке 11011
+MARKET_EXIT_RETRY_SLEEP_SEC = 0.5 # Слип между попытками выхода по маркету
 
 def round_step(value: float, step: float) -> float:
     if not step or step <= 0:
@@ -67,8 +71,8 @@ class OrderExecutor:
         if min_wait_sec > 0:
             await asyncio.sleep(min_wait_sec)
             
-        # 2. Петля поллинга с шагом 10 мс
-        poll_step = 0.01 
+        # 2. Петля поллинга
+        poll_step = SMART_WAIT_POLL_STEP_SEC
         while time.time() - start_ts < timeout_sec:
             async with self.tb._get_lock(pos_key):
                 pos = self.tb.state.active_positions.get(pos_key)
@@ -232,7 +236,7 @@ class OrderExecutor:
         results = []
         for idx, order in enumerate(grid_orders):
             # Слип между ордерами
-            await asyncio.sleep(0.1 + 0.1 * idx)
+            await asyncio.sleep(GRID_TP_BASE_SLEEP_SEC + GRID_TP_BASE_SLEEP_SEC * idx)
             
             # Попытки для каждого ордера сетки (важно при TE_REDUCE_ONLY_ABORT)
             for tp_attempt in range(3):
@@ -247,7 +251,7 @@ class OrderExecutor:
                     if "11011" in err_msg or "reduce_only" in err_msg:
                         if tp_attempt < 2:
                             logger.debug(f"[{pos_key}] TP #{idx+1} [11011] retry {tp_attempt+1}...")
-                            await asyncio.sleep(1.0)
+                            await asyncio.sleep(GRID_TP_RETRY_SLEEP_SEC)
                             continue
                     results.append((idx, None, e))
                     break
@@ -349,7 +353,7 @@ class OrderExecutor:
                     logger.error(err_msg)
                     if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                 
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(MARKET_EXIT_RETRY_SLEEP_SEC)
                 
             # 👇 АЛЕРТ: Все попытки исчерпаны, позиция зависла
             err_msg = f"🚨 <b>[{pos_key}]</b> FATAL ERROR: Не удалось закрыть позицию по маркету после {self.max_exit_retries} попыток! СРОЧНО ПРОВЕРЬТЕ ТЕРМИНАЛ!"

@@ -26,6 +26,8 @@ from c_log import UnifiedLogger
 
 logger = UnifiedLogger("api")
 
+STAKAN_RECONNECT_PAUSE_SEC = 0.02
+
 PriceLevel = Tuple[float, float]  # (price, qty)
 
 @dataclass(frozen=True)
@@ -142,7 +144,7 @@ class PhemexStakanStream:
         for sym in symbols:
             req = {"id": self._next_id(), "method": "orderbook_p.subscribe", "params": [sym, False, self.depth]}
             await ws.send_str(json.dumps(req))
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(STAKAN_RECONNECT_PAUSE_SEC)
 
     def _apply_side(self, book: Dict[float, float], levels: List) -> None:
         for lv in levels:

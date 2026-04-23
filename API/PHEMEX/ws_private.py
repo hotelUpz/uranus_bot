@@ -14,6 +14,8 @@ from c_log import UnifiedLogger
 
 logger = UnifiedLogger("api")
 
+WS_PING_INTERVAL_SEC = 15.0
+
 class PhemexPrivateWS:
     WS_URL = "wss://ws.phemex.com"
 
@@ -31,7 +33,7 @@ class PhemexPrivateWS:
 
     async def _ping_loop(self, ws: aiohttp.ClientWebSocketResponse) -> None:
         while not self._stop.is_set() and not ws.closed:
-            await asyncio.sleep(15.0)
+            await asyncio.sleep(WS_PING_INTERVAL_SEC)
             try: await ws.send_str(json.dumps({"id": 0, "method": "server.ping", "params": []}))
             except Exception: break
 
