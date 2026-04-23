@@ -43,7 +43,10 @@ class OrderExecutor:
         self.client = tb.private_client
         self.cfg = tb.cfg
         
-        self.max_entry_retries = self.cfg["entry"]["max_place_order_retries"]
+        entry_cfg = self.cfg["entry"]
+        self.max_entry_retries = entry_cfg["max_place_order_retries"]
+        self.entry_mode = entry_cfg["mode"].lower()
+        self.limit_dist_pct = float(entry_cfg["limit_distance_pct"])
         
         # Параметры выхода
         self.max_exit_retries = self.cfg["exit"]["max_place_order_retries"]
@@ -106,7 +109,7 @@ class OrderExecutor:
 
     async def execute_entry(self, symbol: str, pos_key: str, signal: EntrySignal) -> bool:
         """
-        ВХОД ПО МАРКЕТУ с ожиданием реального налива через WS и строгими алертами.
+        ВХОД (Market или Aggressive Limit) с ожиданием WS и отменой остатка.
         """
         try:
             spec = self.tb.symbol_specs.get(symbol)
@@ -128,47 +131,77 @@ class OrderExecutor:
             phemex_pos_side = "Long" if signal.side == "LONG" else "Short"
             side = "Buy" if signal.side == "LONG" else "Sell"
 
+            initial_qty = 0.0
             async with self.tb._get_lock(pos_key):
                 pos = self.tb.state.active_positions.get(pos_key)
                 if pos:
+                    initial_qty = getattr(pos, 'current_qty', 0.0)
                     pos.pending_qty = qty
 
+            # 2. Цикл отправки с ретраями
             for attempt in range(max(1, self.max_entry_retries)):
                 try:
-                    resp = await self.client.place_market_order(symbol, side, qty, phemex_pos_side)
+                    is_limit_used = False
                     
-                    if resp.get("code") == 0:
-                        # Ждем физического налива позиции по вебсокету
-                        await self._smart_wait(pos_key, 0.0, WAIT_ENTRY_TIMEOUT_SEC, WAIT_ENTRY_MIN_WAIT_SEC)
+                    if self.entry_mode == "limit":
+                        # АГРЕССИВНАЯ ЛИМИТКА
+                        limit_pr = ref_price * (1 + self.limit_dist_pct / 100.0) if side == "Buy" else ref_price * (1 - self.limit_dist_pct / 100.0)
+                        limit_pr = round_step(limit_pr, spec.tick_size)
                         
+                        resp = await self.client.place_limit_order(
+                            symbol, side, qty, limit_pr, phemex_pos_side
+                        )
+                        is_limit_used = True
+                    else:
+                        # ЧИСТЫЙ МАРКЕТ
+                        resp = await self.client.place_market_order(symbol, side, qty, phemex_pos_side)
+
+                    # 3. Обработка успешного ответа API
+                    if resp.get("code") == 0:
+                        order_id = resp.get("data", {}).get("orderID")
+                        
+                        # Умное ожидание физического налива по вебсокету
+                        await self._smart_wait(pos_key, initial_qty, WAIT_ENTRY_TIMEOUT_SEC, WAIT_ENTRY_MIN_WAIT_SEC)
+                        
+                        # 4. Отмена недолитых остатков (только для лимиток)
+                        if order_id and is_limit_used:
+                            curr_qty = 0.0
+                            async with self.tb._get_lock(pos_key):
+                                pos = self.tb.state.active_positions.get(pos_key)
+                                if pos: curr_qty = getattr(pos, 'current_qty', 0.0)
+                                
+                            if curr_qty < qty:
+                                logger.debug(f"[{pos_key}] Исполнено {curr_qty} из {qty}. Отменяю остаток...")
+                                asyncio.create_task(self.execute_cancel(symbol, phemex_pos_side, order_id))
+
+                        # 5. Итоговая проверка и отчет
                         async with self.tb._get_lock(pos_key):
                             pos = self.tb.state.active_positions.get(pos_key)
                             if pos and (pos.current_qty > 0 or getattr(pos, "in_position", False)):
                                 entry_usd_vol = pos.current_qty * ref_price
-                                logger.info(f"[{pos_key}] ✅ Вход ПО МАРКЕТУ выполнен. Объем: {pos.current_qty} (≈ {entry_usd_vol:.2f} $)")
+                                logger.info(f"[{pos_key}] ✅ Вход выполнен. Объем: {pos.current_qty} (≈ {entry_usd_vol:.2f} $)")
                                 
                                 if self.tb.tg:
                                     msg = Reporters.entry_signal(symbol, signal, signal.b_price, signal.p_price)
                                     asyncio.create_task(self.tb.tg.send_message(msg))
                                 return True
                                 
-                        err_msg = f"🚨 <b>[{pos_key}]</b> Маркет ордер принят, но налива по WS не последовало за {WAIT_ENTRY_TIMEOUT_SEC}с!"
+                        err_msg = f"🚨 <b>[{pos_key}]</b> Ордер принят, но налива по WS не последовало за {WAIT_ENTRY_TIMEOUT_SEC}с!"
                         logger.warning(err_msg)
                         if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                         return False
+                        
                     else:
-                        # 👇 АЛЕРТ: Отказ биржи при входе
                         err_msg = f"🚨 <b>[{pos_key}]</b> Отказ API при входе (попытка {attempt+1}): {resp}"
                         logger.warning(err_msg)
                         if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                         
                 except Exception as e:
-                    # 👇 АЛЕРТ: Сетевая ошибка или краш
-                    err_msg = f"🚨 <b>[{pos_key}]</b> Исключение при выполнении маркет-входа: {e}"
+                    err_msg = f"🚨 <b>[{pos_key}]</b> Исключение при выполнении входа: {e}"
                     logger.error(err_msg)
                     if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                 
-                await asyncio.sleep(0.3) 
+                if self.max_entry_retries > 1: await asyncio.sleep(0.3) 
 
             # Если все попытки исчерпаны
             err_msg = f"🚨 <b>[{pos_key}]</b> FATAL: Не удалось войти в позицию после {self.max_entry_retries} попыток."
