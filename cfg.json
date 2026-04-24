@@ -13,7 +13,7 @@
         "chat_id": ""
     },
     "log": {
-        "debug": false,
+        "debug": true,
         "info": true,
         "warning": true,
         "error": true,
