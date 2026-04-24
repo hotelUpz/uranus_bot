@@ -134,8 +134,10 @@
             },
             "stop_loss": {
                 "enable": true,
+                "trailing": true,
                 "percent": 50.0,
-                "ttl_sec": 0.0
+                "stabilization_sec": 0,
+                "ttl_sec": 2.0
             },
             "ttl_market_close": {
                 "enable": true,
