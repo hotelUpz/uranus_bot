@@ -39,6 +39,11 @@ class ActivePosition:
     pending_price: float = 0.0           
     avg_price: float = 0.0                
     exit_price_hint: float = 0.0  # Цена, по которой мы ПОСЛЕДНИЙ РАЗ отправили ордер на выход, или исполнился закрывающий ордер
+
+    # --- ДОБАВЛЕНО ДЛЯ РАСЧЕТА ИСТИННОГО ВЫХОДА (VWAP) ---
+    total_exit_usd: float = 0.0   
+    total_exit_qty: float = 0.0   
+    # -----------------------------------------------------
     
     pending_qty: float = 0.0             
     current_qty: float = 0.0    
@@ -115,9 +120,17 @@ class WsInterpreter:
                 fill_price = self._safe_float(o.get("execPriceRp", 0.0))
                 if fill_price <= 0:
                     fill_price = self._safe_float(o.get("priceRp", o.get("price", 0.0)))
+                
+                # --- ИЗВЛЕКАЕМ ОБЪЕМ ТЕКУЩЕЙ ЗАЛИВКИ ---
+                exec_qty = self._safe_float(o.get("execQtyRp", o.get("execQty", o.get("lastExecQty", 0.0))))
 
                 if is_closing_order and fill_price > 0:
                     pos.exit_price_hint = fill_price
+                    # --- НАКАПЛИВАЕМ VWAP ---
+                    if exec_qty > 0:
+                        pos.total_exit_usd += (fill_price * exec_qty)
+                        pos.total_exit_qty += exec_qty
+                    # ------------------------
                 elif not is_closing_order and fill_price > 0:
                     if pos.entry_price == 0.0:
                         pos.opened_at = time.time()
@@ -129,7 +142,50 @@ class WsInterpreter:
                         pos.tp_orders[order_id]["status"] = "FILLED"
                         pos.tp_progress += 1
                         idx = pos.tp_orders[order_id].get("idx", "?")
-                        logger.info(f"[{pos_key}] 🎯 Исполнен тейк-профит #{idx} по цене {fill_price}")
+                        logger.info(f"[{pos_key}] 🎯 Исполнен тейк-профит #{idx} по цене {fill_price} (Объем: {exec_qty})")
+
+    # async def _handle_order_update(self, o: Dict[str, Any]):
+    #     symbol = o.get("symbol")
+    #     if not symbol: return
+
+    #     raw_pos_side = str(o.get("posSide", "")).upper()
+    #     order_side = str(o.get("side", "")).lower()
+
+    #     if raw_pos_side in ("NONE", ""):
+    #         pos_side = "LONG" if order_side == "sell" else "SHORT"
+    #     else:
+    #         pos_side = raw_pos_side
+
+    #     pos_key = f"{symbol}_{pos_side}"
+    #     ord_status = str(o.get("ordStatus", "")).upper()
+    #     exec_status = str(o.get("execStatus", "")).upper()
+
+    #     async with self._get_lock(pos_key):
+    #         pos: ActivePosition = self.state.active_positions.get(pos_key)
+    #         if not pos: return
+
+    #         is_closing_order = (pos.side == "LONG" and order_side == "sell") or \
+    #                            (pos.side == "SHORT" and order_side == "buy")
+
+    #         if ord_status in ("FILLED", "PARTIALLYFILLED") or "FILL" in exec_status:
+    #             fill_price = self._safe_float(o.get("execPriceRp", 0.0))
+    #             if fill_price <= 0:
+    #                 fill_price = self._safe_float(o.get("priceRp", o.get("price", 0.0)))
+
+    #             if is_closing_order and fill_price > 0:
+    #                 pos.exit_price_hint = fill_price
+    #             elif not is_closing_order and fill_price > 0:
+    #                 if pos.entry_price == 0.0:
+    #                     pos.opened_at = time.time()
+    #                     pos.entry_price = fill_price
+
+    #             order_id = o.get("orderID")
+    #             if order_id and order_id in pos.tp_orders and (ord_status == "FILLED" or "FILL" in exec_status):
+    #                 if pos.tp_orders[order_id].get("status") != "FILLED":
+    #                     pos.tp_orders[order_id]["status"] = "FILLED"
+    #                     pos.tp_progress += 1
+    #                     idx = pos.tp_orders[order_id].get("idx", "?")
+    #                     logger.info(f"[{pos_key}] 🎯 Исполнен тейк-профит #{idx} по цене {fill_price}")
 
     async def _handle_position_update(self, p: Dict[str, Any]):
         symbol = p.get("symbol")

@@ -492,7 +492,14 @@ class TradingBot:
                         if getattr(pos, 'is_closed_by_exchange', False):
                             if pos.entry_price > 0.0:
                                 
-                                exit_pr = pos.exit_price_hint or pos.avg_price
+                                # --- РАСЧЕТ ИСТИННОЙ ЦЕНЫ ВЫХОДА (VWAP) ---
+                                if getattr(pos, 'total_exit_qty', 0.0) > 0:
+                                    exit_pr = pos.total_exit_usd / pos.total_exit_qty
+                                else:
+                                    # Фолбэк, если биржа не прислала объем
+                                    exit_pr = pos.exit_price_hint or pos.avg_price
+                                # ------------------------------------------
+                                
                                 duration_sec = time.time() - pos.opened_at
                                 
                                 net_pnl, is_win = self.tracker.register_trade(
@@ -519,12 +526,11 @@ class TradingBot:
                                     self.state.consecutive_fails[pos.symbol] = 0
 
                                 if self.tg:
-                                    # Передаем net_pnl и emoji в обновленный репортер
                                     msg = Reporters.exit_success(pos_key, semantic, exit_pr, net_pnl, emoji)
                                     msg += f"\n⏳ Время в сделке: {format_duration(duration_sec)}"
                                     asyncio.create_task(self.tg.send_message(msg))
                                     
-                                logger.info(f"[{pos_key}] [HALT] Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
+                                logger.info(f"[{pos_key}] [HALT] Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Средняя цена выхода: {exit_pr:.4f} | Время: {format_duration(duration_sec)}")
 
                             # Снимаем все возможные ордера-призраки (лимитки тейк-профитов) перед удалением позиции
                             asyncio.create_task(self.executor.cancel_all_orders(pos.symbol))
@@ -532,6 +538,50 @@ class TradingBot:
                             self.state.active_positions.pop(pos_key, None)
                             self.active_positions_locker.pop(pos_key, None) 
                             asyncio.create_task(self.state.save())
+
+                        # if getattr(pos, 'is_closed_by_exchange', False):
+                        #     if pos.entry_price > 0.0:
+                                
+                        #         exit_pr = pos.exit_price_hint or pos.avg_price
+                        #         duration_sec = time.time() - pos.opened_at
+                                
+                        #         net_pnl, is_win = self.tracker.register_trade(
+                        #             symbol=pos.symbol,
+                        #             side=pos.side,
+                        #             entry_price=pos.avg_price if pos.avg_price > 0 else pos.entry_price,
+                        #             exit_price=exit_pr,
+                        #             qty=pos.max_realized_qty,
+                        #             duration_sec=duration_sec
+                        #         )
+
+                        #         emoji = "💵" if is_win else "🩸"
+
+                        #         current_status = pos.exit_status if pos.exit_status in ("STOP_LOSS", "TTL_CLOSE") else pos.last_exit_status
+                                
+                        #         if current_status == "STOP_LOSS": 
+                        #             semantic = "[WARN] Стоп-лосс (Аварийный выход)"
+                        #         elif current_status == "TTL_CLOSE": 
+                        #             semantic = "[PROT] Выход по таймауту (TTL Market)"                                
+                        #         else: 
+                        #             semantic = "[HIT] Тейк-профит" if is_win else "[DOWN] Убыток (Ручное/Неизвестно)"
+
+                        #         if is_win:
+                        #             self.state.consecutive_fails[pos.symbol] = 0
+
+                        #         if self.tg:
+                        #             # Передаем net_pnl и emoji в обновленный репортер
+                        #             msg = Reporters.exit_success(pos_key, semantic, exit_pr, net_pnl, emoji)
+                        #             msg += f"\n⏳ Время в сделке: {format_duration(duration_sec)}"
+                        #             asyncio.create_task(self.tg.send_message(msg))
+                                    
+                        #         logger.info(f"[{pos_key}] [HALT] Позиция закрыта. {emoji} PnL: {net_pnl:.4f}$ | Время: {format_duration(duration_sec)}")
+
+                        #     # Снимаем все возможные ордера-призраки (лимитки тейк-профитов) перед удалением позиции
+                        #     asyncio.create_task(self.executor.cancel_all_orders(pos.symbol))
+
+                        #     self.state.active_positions.pop(pos_key, None)
+                        #     self.active_positions_locker.pop(pos_key, None) 
+                        #     asyncio.create_task(self.state.save())
 
                     except Exception as e:
                         logger.error(f"[{pos_key}] [ERR] Критическая ошибка при обработке позиции в Game Loop: {e}\n{traceback.format_exc()}")
