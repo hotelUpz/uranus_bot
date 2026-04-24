@@ -52,7 +52,7 @@ class AdminTgBot:
     async def reset_session(self):
         """Безопасное пересоздание сессии при сетевых сбоях"""
         try:
-            if self.bot.session and not self.bot.session.closed:
+            if self.bot.session:
                 await self.bot.session.close()
         except Exception as e:
             logger.error(f"Ошибка при закрытии сессии TG: {e}")
@@ -65,7 +65,7 @@ class AdminTgBot:
         """Корректное закрытие сессий при выходе"""
         logger.info("[TG] Закрытие сессии AdminTgBot...")
         try:
-            if self.bot.session and not self.bot.session.closed:
+            if self.bot.session:
                 await self.bot.session.close()
         except Exception as e:
             logger.debug(f"Note on TG session close: {e}")
