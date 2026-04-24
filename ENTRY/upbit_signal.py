@@ -52,6 +52,10 @@ PROBER_START      = PROBER_CFG.get("start_delay", 0.5)
 PROBER_STEP       = PROBER_CFG.get("step", 0.1)
 PROBER_HITS       = PROBER_CFG.get("hits_per_step", 100)
 
+# Тестирование backoff без реальных 429
+MOCK_429          = False
+_mock_req_count   = 0
+
 _RATE_LIMIT = object()
 
 DEFAULT_HEADERS = {
@@ -75,10 +79,26 @@ class AdaptiveCooldownTuner:
         self.initial_cooldown = initial_cooldown
         self.current_cooldown = initial_cooldown
         self._streak = 0
+        self._backoff_active = False
 
     def on_success(self) -> float | None:
-        if not ADAPTIVE_ENABLED: return None
         self._streak += 1
+        
+        # Если мы в режиме восстановления после 429
+        if self._backoff_active:
+            if self._streak >= 5: # Для восстановления нужно 5 успешных шагов
+                self._streak = 0
+                old_cd = self.current_cooldown
+                # Снижаем кулдаун на 30% в сторону начального
+                self.current_cooldown = max(self.initial_cooldown, round(self.current_cooldown * 0.7, 2))
+                if self.current_cooldown <= self.initial_cooldown:
+                    self._backoff_active = False
+                if self.current_cooldown != old_cd:
+                    return self.current_cooldown
+            return None
+
+        # Обычная адаптивная логика (если включена)
+        if not ADAPTIVE_ENABLED: return None
         if self._streak >= ADAPTIVE_N_STABLE:
             self._streak = 0
             new_cd = max(MIN_COOLDOWN_SEC, round(self.current_cooldown - ADAPTIVE_STEP, 2))
@@ -89,10 +109,9 @@ class AdaptiveCooldownTuner:
 
     def on_rate_limit(self) -> float:
         self._streak = 0
-        if ADAPTIVE_ENABLED:
-            self.current_cooldown = min(10.0, self.current_cooldown * 2.0)
-        else:
-            self.current_cooldown = self.initial_cooldown
+        self._backoff_active = True
+        # Exponential Backoff: увеличиваем в 2 раза, лимит 60с
+        self.current_cooldown = min(60.0, round(self.current_cooldown * 2.0, 2))
         return self.current_cooldown
 
 # ==========================================
@@ -191,6 +210,12 @@ class UpbitLiveMonitor:
         return None
 
     async def fetch_announcements(self, session: cffi_requests.AsyncSession, label: str):
+        global _mock_req_count
+        if MOCK_429:
+            _mock_req_count += 1
+            if _mock_req_count % 5 == 0: # Имитируем 429 на каждый 5-й запрос
+                return _RATE_LIMIT
+
         params = {"category": "trade", "page": 1, "per_page": 10, "os": "web"}
         try:
             resp = await session.get(self.api_url, params=params)
@@ -250,7 +275,7 @@ class UpbitLiveMonitor:
             
             if notices is _RATE_LIMIT:
                 new_cd = tuner.on_rate_limit()
-                logger.warning(f"🛑 429 на [{label}]. CD -> {new_cd:.2f}с. Bang sleep {BANG_SLEEP_SEC}с...")
+                logger.warning(f"🛑 429 (Rate Limit) на [{label}]. Увеличиваем CD -> {new_cd:.2f}с. Штрафной сон {BANG_SLEEP_SEC}с...")
                 await asyncio.sleep(BANG_SLEEP_SEC)
                 continue
                 
@@ -323,13 +348,23 @@ class WafLimitTester:
             while self.current_delay > 0:
                 logger.info(f">>> [{label}] Testing level: {self.current_delay:.2f}s")
                 for i in range(1, self.hits_per_step + 1):
+                    global _mock_req_count
+                    if MOCK_429:
+                        _mock_req_count += 1
+                        if _mock_req_count % 5 == 0:
+                            logger.warning(f"🛑 [MOCK] БАН (429) на {self.current_delay:.2f}с (Hit {i})!")
+                            # В тестере мы просто имитируем паузу и продолжаем, чтобы увидеть "как если бы"
+                            logger.info(f"--- [MOCK TEST] Имитация штрафного сна {BANG_SLEEP_SEC}с ---")
+                            await asyncio.sleep(1.0) # В тесте не будем ждать полные 30с
+                            continue
+
                     resp = await session.get(self.api_url, params=params)
                     if resp.status_code == 200:
                         if i % 10 == 0 or i == self.hits_per_step:
                             logger.info(f"  [{i}/{self.hits_per_step}] CD {self.current_delay:.2f}s OK")
                         await asyncio.sleep(self.current_delay)
                     elif resp.status_code == 429:
-                        logger.warning(f"🛑 БАН (429) на {self.current_delay:.2f}с (Hit {i})!")
+                        logger.warning(f"🛑 РЕАЛЬНЫЙ БАН (429) на {self.current_delay:.2f}с (Hit {i})!")
                         return
                     else:
                         logger.error(f"Error {resp.status_code} on {label}")

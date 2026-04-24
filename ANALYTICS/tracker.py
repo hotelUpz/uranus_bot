@@ -50,17 +50,17 @@ class PerformanceTracker:
         self.history_file = "logs/trade_history.csv"
         os.makedirs(os.path.dirname(self.history_file), exist_ok=True)
         
-        if not os.path.exists(self.history_file):
-            try:
-                with open(self.history_file, "w", newline="", encoding="utf-8") as f:
-                    writer = csv.writer(f)
-                    writer.writerow([
-                        "timestamp", "symbol", "side", "entry_price", 
-                        "exit_price", "qty", "entry_usd", "exit_usd", 
-                        "net_pnl", "is_win", "duration"
-                    ])
-            except Exception:
-                pass 
+        # if not os.path.exists(self.history_file):
+        #     try:
+        #         with open(self.history_file, "w", newline="", encoding="utf-8") as f:
+        #             writer = csv.writer(f)
+        #             writer.writerow([
+        #                 "timestamp", "symbol", "side", "entry_price", 
+        #                 "exit_price", "qty", "entry_usd", "exit_usd", 
+        #                 "net_pnl", "is_win", "duration"
+        #             ])
+        #     except Exception:
+        #         pass 
 
     def set_initial_balance(self, actual_balance: float) -> None:
         if self.data["start_balance"] == 0.0 and actual_balance > 0:
@@ -188,16 +188,16 @@ class PerformanceTracker:
         if len(self.data["history"]) > 100:
             self.data["history"].pop(0)
 
-        try:
-            with open(self.history_file, "a", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    time.time(), symbol, side, entry_price, 
-                    exit_price, qty, round(entry_usd, 2), round(exit_usd, 2), 
-                    round(net_pnl, 4), is_win, formatted_duration
-                ])
-        except Exception:
-            pass 
+        # try:
+        #     with open(self.history_file, "a", newline="", encoding="utf-8") as f:
+        #         writer = csv.writer(f)
+        #         writer.writerow([
+        #             time.time(), symbol, side, entry_price, 
+        #             exit_price, qty, round(entry_usd, 2), round(exit_usd, 2), 
+        #             round(net_pnl, 4), is_win, formatted_duration
+        #         ])
+        # except Exception:
+        #     pass 
 
         return net_pnl, is_win
 

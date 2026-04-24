@@ -35,8 +35,8 @@
     },
     "upbit": {
         "use_mock": false,
-        "poll_interval_sec": 0.5,
-        "min_cooldown_sec": 0.5,
+        "poll_interval_sec": 0.25,
+        "min_cooldown_sec": 0.25,
         "proxies": [
             null
         ],

@@ -52,7 +52,7 @@ class SignalEngine:
 
             # 1. Проверка черного списка (в памяти)
             bl_result = black_list.is_blacklisted_sync(phemex_symbol)
-            logger.debug(f"[BL-CHECK] symbol={phemex_symbol} | blacklisted={bl_result} | bl.symbols={getattr(black_list, 'symbols', '???')}")
+            # logger.debug(f"[BL-CHECK] symbol={phemex_symbol} | blacklisted={bl_result} | bl.symbols={getattr(black_list, 'symbols', '???')}")
             if bl_result:
                 logger.warning(f"[{phemex_symbol}] Монета в BlackList. Отказ от входа.")
                 return False

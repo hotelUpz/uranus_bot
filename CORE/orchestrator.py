@@ -588,7 +588,7 @@ class TradingBot:
                 if specs:
                     new_specs = {s.symbol: s for s in specs}
                     self.symbol_specs.update(new_specs)
-                    logger.info(f"[WS] Спецификации монет обновлены в фоне: {len(new_specs)} шт.")
+                    # logger.info(f"[WS] Спецификации монет обновлены в фоне: {len(new_specs)} шт.")
             except Exception as e:
                 logger.error(f"[WARN] Ошибка обновления спецификаций: {e}")
             
