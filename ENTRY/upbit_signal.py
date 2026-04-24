@@ -1,3 +1,8 @@
+# ============================================================
+# FILE: ENTRY/upbit_signal.py
+# ROLE: UPBIT SIGNAL
+# ============================================================
+
 from __future__ import annotations
 
 import asyncio
@@ -123,20 +128,24 @@ class UpbitLiveMonitor:
                  on_signal=None, 
                  is_paused_func=None,
                  cache_file: str = "live_signals.json"):
-        self._on_signal = on_signal
-        self._is_paused_func = is_paused_func
         self.poll_interval = poll_interval_sec
-        self.api_url = "https://api-manager.upbit.com/api/v1/announcements"
-        self.cache_file = cache_file
         self.session_manager = SmartSessionManager(proxies)
+        self.on_signal = on_signal
+        self._is_paused_func = is_paused_func
+        self.cache_file = cache_file
         
-        self.keywords = ["Market Support for", "신규 거래지원", "디지털 자산 추가"]
+        self.keywords = ["Listing", "Adds", "Market Support", "New Market", "KRW"]
         self.seen_ids = set()
         self.seen_symbols = set()
         self.signals_log = []
         self._is_startup = True
-        
+        self.api_url = "https://api-manager.upbit.com/api/v1/announcements"
         self._load_cache()
+
+    async def aclose(self):
+        """Полная остановка и очистка ресурсов"""
+        logger.info("[UPBIT] Закрытие сессий мониторинга...")
+        await self.session_manager.close_all()
 
     def _load_cache(self):
         if os.path.exists(self.cache_file):
@@ -277,10 +286,19 @@ class UpbitLiveMonitor:
         for i, p in enumerate(self.session_manager.proxies):
             workers.append(asyncio.create_task(self._worker_loop(p, i * offset_step, base_cd)))
             
-        await asyncio.sleep(base_cd + 1.0)
-        self._is_startup = False
-        logger.info("✅ Синхронизация завершена. Ждем листинги...")
-        await asyncio.gather(*workers)
+        try:
+            await asyncio.sleep(base_cd + 1.0)
+            self._is_startup = False
+            logger.info("✅ Синхронизация завершена. Ждем листинги...")
+            await asyncio.gather(*workers)
+        except asyncio.CancelledError:
+            logger.info("[UPBIT] Получен сигнал отмены. Останавливаем воркеры...")
+            for w in workers:
+                w.cancel()
+            await asyncio.gather(*workers, return_exceptions=True)
+            raise
+        finally:
+            await self.aclose()
 
 # ==========================================
 # 5. ТЕСТИРОВЩИК (STRESS PROBER)

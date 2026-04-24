@@ -736,6 +736,8 @@ class TradingBot:
         await self._await_task(getattr(self, '_private_ws_task', None))
         await self._await_task(getattr(self, '_game_loop_task', None))
         await self._await_task(getattr(self, '_upbit_task', None))
+        if self._upbit_monitor:
+            await self._upbit_monitor.aclose()
         await self._await_task(getattr(self, '_stakan_task', None))
         self._processing.clear()
         self._signal_timeouts.clear()

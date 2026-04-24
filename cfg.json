@@ -56,7 +56,7 @@
     "entry": {
         "_filds": {
             "mode": "market | limit",
-            "limit_distance_pct": "\u0414\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0437\u0430\u0431\u0440\u043e\u0441\u0430 \u0430\u0433\u0440\u0435\u0441\u0441\u0438\u0432\u043d\u043e\u0439 \u043b\u0438\u043c\u0438\u0442\u043a\u0438"
+            "limit_distance_pct": ""
         },
         "max_place_order_retries": 1,
         "mode": "limit",
@@ -133,7 +133,7 @@
                 ]
             },
             "stop_loss": {
-                "enable": false,
+                "enable": true,
                 "percent": 50.0,
                 "ttl_sec": 0.0
             },

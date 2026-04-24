@@ -61,6 +61,15 @@ class AdminTgBot:
         self.bot.session = AiohttpSession()
         logger.warning("🔄 Сессия Telegram API перезапущена")
 
+    async def aclose(self):
+        """Корректное закрытие сессий при выходе"""
+        logger.info("[TG] Закрытие сессии AdminTgBot...")
+        try:
+            if self.bot.session and not self.bot.session.closed:
+                await self.bot.session.close()
+        except Exception as e:
+            logger.debug(f"Note on TG session close: {e}")
+
     def _register_handlers(self):
         @self.dp.message(Command("start"), StateFilter("*"))
         async def cmd_start(msg: Message, state: FSMContext):

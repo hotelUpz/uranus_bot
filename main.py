@@ -60,6 +60,25 @@ async def _main():
     
     bot = TradingBot(cfg)
     tasks = []
+    stop_event = asyncio.Event()
+
+    # --- Graceful shutdown handler ---
+    loop = asyncio.get_running_loop()
+    
+    def _signal_handler():
+        if not stop_event.is_set():
+            logger.warning("\n[STOP] Ctrl+C / SIGINT. Graceful shutdown...")
+            stop_event.set()
+
+    # Windows не поддерживает add_signal_handler — используем fallback
+    import signal
+    try:
+        loop.add_signal_handler(signal.SIGINT, _signal_handler)
+        loop.add_signal_handler(signal.SIGTERM, _signal_handler)
+    except NotImplementedError:
+        # Windows fallback
+        signal.signal(signal.SIGINT, lambda *_: _signal_handler())
+        signal.signal(signal.SIGTERM, lambda *_: _signal_handler())
 
     try:
         # Извлекаем параметры для глобальной настройки плечей
@@ -105,7 +124,6 @@ async def _main():
 
             if not token or not chat_id:
                 logger.error("Telegram включен, но token/chat_id не заданы.")
-                # sys.exit(1)
                 return
 
             tg_admin = AdminTgBot(token, chat_id, bot)
@@ -117,19 +135,25 @@ async def _main():
             logger.warning("TG отключен. Автостарт торговли...")
             await bot.start()
 
-        # Фикс #4 TECH_DEBT: не привязываем жизнь бота к TG-задаче.
-        # Задачи уже запущены как create_task — просто ждём вечно.
-        stop_event = asyncio.Event()
+        # Ждём сигнала остановки (Ctrl+C / SIGTERM)
         await stop_event.wait()
                 
     except (asyncio.CancelledError, KeyboardInterrupt):
-        logger.warning("\n[STOP] Получен сигнал прерывания. Остановка...")
+        pass
     finally:
-        logger.info("[CLEAN] Очистка ресурсов...")
-        await bot.aclose()  # aclose() вызывает stop() внутри — двойной вызов был лишним
+        logger.info("[CLEAN] Остановка бота и очистка ресурсов...")
+        await bot.aclose()
+        
+        # Если TG был включен, закрываем сессию админ-бота
+        if tg_enabled and 'tg_admin' in locals():
+            await tg_admin.aclose()
         
         for t in tasks:
             t.cancel()
+        
+        # Ждём фактического завершения отменённых тасков
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
         
         await asyncio.sleep(FINAL_CLEANUP_PAUSE_SEC) 
         logger.info("[EXIT] Программа безопасно завершена.")
