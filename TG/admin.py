@@ -53,9 +53,12 @@ class AdminTgBot:
         """Безопасное пересоздание сессии при сетевых сбоях"""
         try:
             if self.bot.session:
+                # В aiogram 3.x у AiohttpSession нет атрибута .closed, 
+                # и иногда принудительное закрытие уже мертвой сессии может вызвать AttributeError.
                 await self.bot.session.close()
-        except Exception as e:
-            logger.error(f"Ошибка при закрытии сессии TG: {e}")
+        except Exception:
+            # Игнорируем ошибки при закрытии "трупа" старой сессии
+            pass
         
         # Создаем новую сессию
         self.bot.session = AiohttpSession()

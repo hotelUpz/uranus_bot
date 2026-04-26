@@ -3,54 +3,45 @@
         "symbol": "SPK",
         "announce_ts_ms": 1776910800000,
         "announce_ts_str": "2026-04-23 02:20:00 UTC",
-        "received_ts_ms": 1776987106338,
-        "received_ts_str": "2026-04-23 23:31:46.338000 ",
-        "latency_sec": 76306.338,
+        "received_ts_ms": 1777118767460,
+        "received_ts_str": "2026-04-25 12:06:07.460000 ",
+        "latency_sec": 207967.46,
         "status": "INIT"
     },
     {
         "symbol": "CHIP",
         "announce_ts_ms": 1776752184000,
         "announce_ts_str": "2026-04-21 06:16:24 UTC",
-        "received_ts_ms": 1776987106338,
-        "received_ts_str": "2026-04-23 23:31:46.338000 ",
-        "latency_sec": 234922.338,
+        "received_ts_ms": 1777118767460,
+        "received_ts_str": "2026-04-25 12:06:07.460000 ",
+        "latency_sec": 366583.46,
         "status": "INIT"
     },
     {
         "symbol": "PIEVERSE",
         "announce_ts_ms": 1776661200000,
         "announce_ts_str": "2026-04-20 05:00:00 UTC",
-        "received_ts_ms": 1776987106338,
-        "received_ts_str": "2026-04-23 23:31:46.338000 ",
-        "latency_sec": 325906.338,
+        "received_ts_ms": 1777118767462,
+        "received_ts_str": "2026-04-25 12:06:07.462000 ",
+        "latency_sec": 457567.462,
         "status": "INIT"
     },
     {
         "symbol": "SOON",
         "announce_ts_ms": 1776402002000,
         "announce_ts_str": "2026-04-17 05:00:02 UTC",
-        "received_ts_ms": 1776987106339,
-        "received_ts_str": "2026-04-23 23:31:46.339000 ",
-        "latency_sec": 585104.339,
+        "received_ts_ms": 1777118767464,
+        "received_ts_str": "2026-04-25 12:06:07.464000 ",
+        "latency_sec": 716765.464,
         "status": "INIT"
     },
     {
         "symbol": "CC",
         "announce_ts_ms": 1776142800000,
         "announce_ts_str": "2026-04-14 05:00:00 UTC",
-        "received_ts_ms": 1776987106339,
-        "received_ts_str": "2026-04-23 23:31:46.339000 ",
-        "latency_sec": 844306.339,
-        "status": "INIT"
-    },
-    {
-        "symbol": "ZAMA",
-        "announce_ts_ms": 1776152920000,
-        "announce_ts_str": "2026-04-14 07:48:40 UTC",
-        "received_ts_ms": 1776987106339,
-        "received_ts_str": "2026-04-23 23:31:46.339000 ",
-        "latency_sec": 834186.339,
+        "received_ts_ms": 1777118767465,
+        "received_ts_str": "2026-04-25 12:06:07.465000 ",
+        "latency_sec": 975967.465,
         "status": "INIT"
     }
 ]

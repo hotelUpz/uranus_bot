@@ -77,7 +77,7 @@ class SignalEngine:
                 asyncio.create_task(self.on_signal_callback(signal))
                 return True
             else:
-                logger.warning(f"[{phemex_symbol}] Не удалось получить цены из кэша. Отказ от входа.")
+                logger.error(f"‼️ [CRITICAL] [{phemex_symbol}] PRICE MISSING in both Stakan and Cache! SKIPPING ENTRY to save time.")
                 return False
             
         except Exception as e:

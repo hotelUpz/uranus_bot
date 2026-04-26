@@ -14,9 +14,10 @@ import argparse
 from datetime import datetime, timezone, timedelta
 
 from curl_cffi import requests as cffi_requests
-from curl_cffi.requests.errors import RequestsError
+# from curl_cffi.requests.errors import RequestsError
 
 from c_log import UnifiedLogger
+from ENTRY._utils import get_upbit_status_and_sleep_time
 
 logger = UnifiedLogger("upbit_signal")
 
@@ -28,7 +29,7 @@ def load_cfg() -> dict:
         with open("cfg.json", "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
-        logger.warning(f"⚠️ Ошибка загрузки cfg.json: {e}")
+        logger.warning(f"[CFG] Error loading cfg.json: {e}")
         return {}
 
 CFG = load_cfg()
@@ -54,7 +55,6 @@ PROBER_HITS       = PROBER_CFG.get("hits_per_step", 100)
 
 # Тестирование backoff без реальных 429
 MOCK_429          = False
-_mock_req_count   = 0
 
 _RATE_LIMIT = object()
 
@@ -159,6 +159,7 @@ class UpbitLiveMonitor:
         self.signals_log = []
         self._is_startup = True
         self.api_url = "https://api-manager.upbit.com/api/v1/announcements"
+        self._mock_req_count = 0
         self._load_cache()
 
     async def aclose(self):
@@ -173,9 +174,9 @@ class UpbitLiveMonitor:
                     self.signals_log = json.load(f)
                 for s in self.signals_log:
                     if "symbol" in s: self.seen_symbols.add(s["symbol"])
-                logger.info(f"💾 Кеш загружен: {len(self.seen_symbols)} монет.")
+                logger.info(f"[CACHE] Loaded: {len(self.seen_symbols)} symbols.")
             except Exception as e:
-                logger.error(f"Ошибка кеша: {e}")
+                logger.error(f"[CACHE] Error: {e}")
 
     def _save_cache(self):
         """Запись кеша в фоне, чтобы не тормозить цикл мониторинга."""
@@ -184,7 +185,7 @@ class UpbitLiveMonitor:
                 with open(self.cache_file, "w", encoding="utf-8") as f:
                     json.dump(self.signals_log, f, ensure_ascii=False, indent=4)
             except Exception as e:
-                logger.error(f"Ошибка записи JSON: {e}")
+                logger.error(f"[CACHE] Write error: {e}")
         
         # Запускаем в отдельном потоке, чтобы не блокировать Event Loop
         asyncio.get_event_loop().run_in_executor(None, sync_save)
@@ -210,10 +211,9 @@ class UpbitLiveMonitor:
         return None
 
     async def fetch_announcements(self, session: cffi_requests.AsyncSession, label: str):
-        global _mock_req_count
         if MOCK_429:
-            _mock_req_count += 1
-            if _mock_req_count % 5 == 0: # Имитируем 429 на каждый 5-й запрос
+            self._mock_req_count += 1
+            if self._mock_req_count % 5 == 0: # Имитируем 429 на каждый 5-й запрос
                 return _RATE_LIMIT
 
         params = {"category": "trade", "page": 1, "per_page": 10, "os": "web"}
@@ -241,10 +241,10 @@ class UpbitLiveMonitor:
             await self._on_signal(symbol, received_ms)
             latency_sec = (received_ms - announce_ms) / 1000.0
             logger.info(
-                f"🚀 СИГНАЛ: {symbol} | "
-                f"Анонс: {announce_str} | "
-                f"Получен: {received_str} | "
-                f"Дистанция: {latency_sec:+.3f}s"
+                f"[SIGNAL] {symbol} | "
+                f"Announce: {announce_str} | "
+                f"Received: {received_str} | "
+                f"Latency: {latency_sec:+.3f}s"
             )
 
         self.seen_symbols.add(symbol)
@@ -266,6 +266,18 @@ class UpbitLiveMonitor:
         label = proxy or "Localhost"
         
         while proxy in self.session_manager.proxies:
+            # 1. Спрашиваем таможню
+            is_active, sleep_time = get_upbit_status_and_sleep_time()
+            
+            if not is_active:
+                # Переводим в часы для красивого лога
+                sleep_hours = sleep_time / 3600
+                logger.info(f"[Upbit] Биржа спит. Уходим в анабиоз на {sleep_hours:.2f} часов до старта рабочего дня (KST)...")
+                
+                # Засыпаем до наступления 08:30 KST ближайшего понедельника или след. дня
+                await asyncio.sleep(sleep_time)
+                continue # После пробуждения цикл начнется заново и еще раз проверит окно
+            
             loop_start = time.time()
             if self._is_paused_func and self._is_paused_func():
                 await asyncio.sleep(tuner.current_cooldown)
@@ -275,7 +287,7 @@ class UpbitLiveMonitor:
             
             if notices is _RATE_LIMIT:
                 new_cd = tuner.on_rate_limit()
-                logger.warning(f"🛑 429 (Rate Limit) на [{label}]. Увеличиваем CD -> {new_cd:.2f}с. Штрафной сон {BANG_SLEEP_SEC}с...")
+                logger.warning(f"[429] Rate Limit on [{label}]. CD -> {new_cd:.2f}s. Penalty sleep {BANG_SLEEP_SEC}s...")
                 await asyncio.sleep(BANG_SLEEP_SEC)
                 continue
                 
@@ -292,7 +304,7 @@ class UpbitLiveMonitor:
 
                 speedup = tuner.on_success()
                 if speedup:
-                    logger.info(f"⚡ [{label}] Ускорение! Новый CD -> {speedup:.2f}с")
+                    logger.info(f"[SPEEDUP] [{label}] New CD -> {speedup:.2f}s")
 
             elapsed = time.time() - loop_start
             await asyncio.sleep(max(0.0, tuner.current_cooldown - elapsed))
@@ -301,10 +313,10 @@ class UpbitLiveMonitor:
         proxy_count = len(self.session_manager.proxies)
         base_cd = max(MIN_COOLDOWN_SEC, self.poll_interval * proxy_count)
         
-        mode = "АДАПТИВНЫЙ" if ADAPTIVE_ENABLED else "СТАТИЧНЫЙ"
-        logger.info(f"🚀 ЗАПУСК ВОРКЕРОВ ({mode})")
-        logger.info(f" 🎯 Целевой интервал: {self.poll_interval}с")
-        logger.info(f" 🛡️ Кулдаун на слот: {base_cd:.2f}с")
+        mode = "ADAPTIVE" if ADAPTIVE_ENABLED else "STATIC"
+        logger.info(f"[RUN] STARTING WORKERS ({mode})")
+        logger.info(f"  Target interval: {self.poll_interval}s")
+        logger.info(f"  Cooldown per slot: {base_cd:.2f}s")
         
         workers = []
         offset_step = base_cd / proxy_count if proxy_count > 0 else 0
@@ -314,7 +326,7 @@ class UpbitLiveMonitor:
         try:
             await asyncio.sleep(base_cd + 1.0)
             self._is_startup = False
-            logger.info("✅ Синхронизация завершена. Ждем листинги...")
+            logger.info("[OK] Sync complete. Waiting for listings...")
             await asyncio.gather(*workers)
         except asyncio.CancelledError:
             logger.info("[UPBIT] Получен сигнал отмены. Останавливаем воркеры...")
@@ -335,6 +347,7 @@ class WafLimitTester:
         self.step = step
         self.hits_per_step = hits
         self.api_url = "https://api-manager.upbit.com/api/v1/announcements"
+        self._mock_req_count = 0
         
     async def run(self):
         label = self.proxy or "Localhost"
@@ -348,13 +361,12 @@ class WafLimitTester:
             while self.current_delay > 0:
                 logger.info(f">>> [{label}] Testing level: {self.current_delay:.2f}s")
                 for i in range(1, self.hits_per_step + 1):
-                    global _mock_req_count
                     if MOCK_429:
-                        _mock_req_count += 1
-                        if _mock_req_count % 5 == 0:
-                            logger.warning(f"🛑 [MOCK] БАН (429) на {self.current_delay:.2f}с (Hit {i})!")
+                        self._mock_req_count += 1
+                        if self._mock_req_count % 5 == 0:
+                            logger.warning(f"[MOCK] BAN (429) at {self.current_delay:.2f}s (Hit {i})!")
                             # В тестере мы просто имитируем паузу и продолжаем, чтобы увидеть "как если бы"
-                            logger.info(f"--- [MOCK TEST] Имитация штрафного сна {BANG_SLEEP_SEC}с ---")
+                            logger.info(f"--- [MOCK TEST] Simulating penalty sleep {BANG_SLEEP_SEC}s ---")
                             await asyncio.sleep(1.0) # В тесте не будем ждать полные 30с
                             continue
 
@@ -364,7 +376,7 @@ class WafLimitTester:
                             logger.info(f"  [{i}/{self.hits_per_step}] CD {self.current_delay:.2f}s OK")
                         await asyncio.sleep(self.current_delay)
                     elif resp.status_code == 429:
-                        logger.warning(f"🛑 РЕАЛЬНЫЙ БАН (429) на {self.current_delay:.2f}с (Hit {i})!")
+                        logger.warning(f"[429] REAL BAN at {self.current_delay:.2f}s (Hit {i})!")
                         return
                     else:
                         logger.error(f"Error {resp.status_code} on {label}")
@@ -384,7 +396,7 @@ class MockUpbitLiveMonitor:
         
     async def run(self):
         import random
-        logger.info("🟢 MOCK ГЕНЕРАТОР ЗАПУЩЕН")
+        logger.info("[MOCK] GENERATOR STARTED")
         while True:
             await asyncio.sleep(self.poll_interval)
             if self._is_paused_func and self._is_paused_func(): continue
@@ -406,7 +418,7 @@ if __name__ == "__main__":
     parser.add_argument("--mock", action="store_true")
     args = parser.parse_args()
 
-    def dummy_on_signal(s): logger.info(f"🔔 SIGNAL: {s}")
+    async def dummy_on_signal(s, ts): logger.info(f"SIGNAL: {s} at {ts}")
     def dummy_is_paused(): return False
 
     if args.test_waf:

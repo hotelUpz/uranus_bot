@@ -215,6 +215,7 @@ class OrderExecutor:
                             
                             if pos:
                                 pos.in_pending = False
+                                pos.marked_for_death_ts = time.time() # Помечаем на удаление (фантом)
                                 
                         err_msg = f"🚨 <b>[{pos_key}]</b> Ордер принят, но налива по WS не последовало за {WAIT_ENTRY_TIMEOUT_SEC}с!"
                         logger.warning(err_msg)
