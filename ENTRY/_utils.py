@@ -1,3 +1,8 @@
+# # ============================================================
+# # FILE: ENTRY/_utils.py
+# # ROLE: UPBIT SIGNAL
+# # ============================================================
+
 import datetime
 
 def get_upbit_status_and_sleep_time():

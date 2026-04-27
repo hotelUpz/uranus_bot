@@ -573,7 +573,6 @@ class UpbitLiveMonitor:
         self._is_paused_func = is_paused_func
         self.cache_file = cache_file
         
-        # ФИКС 1: Вернул корейские триггеры из старого скрипта. Без них бот пропускает локальные анонсы (как SPK).
         self.keywords = ["Listing", "Adds", "Market Support", "New Market", "KRW", "신규 거래지원", "디지털 자산 추가"]
         
         self.seen_ids = set()
@@ -609,7 +608,6 @@ class UpbitLiveMonitor:
         asyncio.get_event_loop().run_in_executor(None, sync_save)
 
     def _parse_iso_to_ms(self, dt_str: str) -> int:
-        # ФИКС 2: Вернул усиленный парсинг из старого скрипта, чтобы не отваливался на странных форматах
         if not dt_str: return 0
         KST = timezone(timedelta(hours=9))
         try:
@@ -654,23 +652,19 @@ class UpbitLiveMonitor:
             return []
 
     async def process_new_listing(self, notice: dict, symbol: str, is_startup: bool):
-        announce_ms = self._parse_iso_to_ms(notice.get("first_listed_at") or notice.get("listed_at") or notice.get("created_at"))
-        
-        # Метка времени именно в момент получения сигнала ботом
+        # Строго как в старом коде: берем только listed_at. Нет ключа - скипаем.
+        listed_at = notice.get("listed_at")
+        if not listed_at:
+            return
+            
+        announce_ms = self._parse_iso_to_ms(listed_at)
         received_ms = int(time.time() * 1000)
         
-        # ФИКС 3: "лучше пустить сигнал без замера латенси". 
-        # Если дата не распарсилась (вернулся 0), приравниваем ее к текущей, чтобы разница стала 0 и сигнал не сбросился.
         if announce_ms == 0:
             announce_ms = received_ms
             
         announce_str = datetime.fromtimestamp(announce_ms / 1000.0, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         received_str = datetime.fromtimestamp(received_ms / 1000.0, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f UTC")[:-3]
-
-        # Теперь, если время было 0, (received_ms - announce_ms) будет равно 0, и фильтр не сработает!
-        if not is_startup and (received_ms - announce_ms > 300000): 
-            logger.debug(f"[SKIP] Сигнал {symbol} пропущен (возраст: {(received_ms - announce_ms)/1000} сек)")
-            return
 
         if not is_startup and self._on_signal:
             await self._on_signal(symbol, received_ms)
@@ -694,6 +688,35 @@ class UpbitLiveMonitor:
         })
         self._save_cache()
 
+    async def sync_initial_state(self):
+        """Полная замена старой логики if is_startup: ... для многопоточной работы"""
+        logger.info("[SYNC] Собираем базу текущих новостей перед запуском...")
+        proxy = self.session_manager.proxies[0] if self.session_manager.proxies else None
+        session = self.session_manager.get_session(proxy)
+        
+        while True:
+            notices = await self.fetch_announcements(session, "StartupSync")
+            if isinstance(notices, list):
+                for n in notices:
+                    n_id = n.get("id")
+                    if n_id: 
+                        self.seen_ids.add(n_id)
+                    title = n.get("title", "")
+                    if any(kw in title for kw in self.keywords):
+                        symbol = self._extract_symbol(title)
+                        if symbol and symbol not in self.seen_symbols:
+                            await self.process_new_listing(n, symbol, is_startup=True)
+                break 
+            elif notices is _RATE_LIMIT:
+                logger.warning("[SYNC] Rate limit. Пауза 5 сек...")
+                await asyncio.sleep(5)
+            else:
+                logger.warning("[SYNC] Ошибка. Повтор через 5 сек...")
+                await asyncio.sleep(5)
+                
+        self._is_startup = False
+        logger.info(f"[OK] Синхронизация завершена (собрано {len(self.seen_ids)} ID). Ждем новые анонсы...")
+
     async def _worker_loop(self, proxy: str | None, offset: float, base_cd: float):
         await asyncio.sleep(offset)
         session = self.session_manager.get_session(proxy)
@@ -704,9 +727,25 @@ class UpbitLiveMonitor:
             is_active, sleep_time = get_upbit_status_and_sleep_time()
             
             if not is_active:
+                now_utc = datetime.now(timezone.utc)
+                now_kst = now_utc.astimezone(timezone(timedelta(hours=9)))
+                
+                wake_utc = now_utc + timedelta(seconds=sleep_time)
+                wake_kst = now_kst + timedelta(seconds=sleep_time)
+                
                 sleep_hours = sleep_time / 3600
-                logger.info(f"[Upbit] Биржа спит. Уходим в анабиоз на {sleep_hours:.2f} часов до старта рабочего дня (KST)...")
+                
+                logger.info(
+                    f"[{label}] Биржа спит. Анабиоз на {sleep_hours:.2f} ч.\n"
+                    f"   Засыпаем:    {now_utc.strftime('%Y-%m-%d %H:%M:%S')} UTC | {now_kst.strftime('%Y-%m-%d %H:%M:%S')} KST\n"
+                    f"   Пробуждение: {wake_utc.strftime('%Y-%m-%d %H:%M:%S')} UTC | {wake_kst.strftime('%Y-%m-%d %H:%M:%S')} KST"
+                )
+                
                 await asyncio.sleep(sleep_time)
+                
+                actual_utc = datetime.now(timezone.utc)
+                actual_kst = actual_utc.astimezone(timezone(timedelta(hours=9)))
+                logger.info(f"[{label}] ПРОБУЖДЕНИЕ. Факт: {actual_utc.strftime('%Y-%m-%d %H:%M:%S')} UTC | {actual_kst.strftime('%Y-%m-%d %H:%M:%S')} KST. Возобновляем парсинг...")
                 continue
             
             loop_start = time.time()
@@ -726,6 +765,7 @@ class UpbitLiveMonitor:
                 for n in notices:
                     n_id = n.get("id")
                     if not n_id or n_id in self.seen_ids: continue
+                    
                     self.seen_ids.add(n_id)
                     title = n.get("title", "")
                     if any(kw in title for kw in self.keywords):
@@ -744,6 +784,8 @@ class UpbitLiveMonitor:
         proxy_count = len(self.session_manager.proxies)
         base_cd = max(MIN_COOLDOWN_SEC, self.poll_interval * proxy_count)
         
+        await self.sync_initial_state()
+        
         mode = "ADAPTIVE" if ADAPTIVE_ENABLED else "STATIC"
         logger.info(f"[RUN] STARTING WORKERS ({mode})")
         logger.info(f"  Target interval: {self.poll_interval}s")
@@ -755,9 +797,6 @@ class UpbitLiveMonitor:
             workers.append(asyncio.create_task(self._worker_loop(p, i * offset_step, base_cd)))
             
         try:
-            await asyncio.sleep(base_cd + 1.0)
-            self._is_startup = False
-            logger.info("[OK] Sync complete. Waiting for listings...")
             await asyncio.gather(*workers)
         except asyncio.CancelledError:
             logger.info("[UPBIT] Получен сигнал отмены. Останавливаем воркеры...")
@@ -855,3 +894,6 @@ if __name__ == "__main__":
         asyncio.run(MockUpbitLiveMonitor(POLL_INTERVAL_SEC, dummy_on_signal, dummy_is_paused).run())
     else:
         asyncio.run(UpbitLiveMonitor(POLL_INTERVAL_SEC, PROXIES, dummy_on_signal, dummy_is_paused).run())
+
+
+# python -m ENTRY.upbit_signal

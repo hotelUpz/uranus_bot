@@ -1,47 +1,56 @@
 [
     {
+        "symbol": "PRL",
+        "announce_ts_ms": 1777285852000,
+        "announce_ts_str": "2026-04-27 10:30:52 UTC",
+        "received_ts_ms": 1777298835260,
+        "received_ts_str": "2026-04-27 14:07:15.260000 ",
+        "latency_sec": 12983.26,
+        "status": "INIT"
+    },
+    {
+        "symbol": "XCN",
+        "announce_ts_ms": 1777266000000,
+        "announce_ts_str": "2026-04-27 05:00:00 UTC",
+        "received_ts_ms": 1777298835261,
+        "received_ts_str": "2026-04-27 14:07:15.261000 ",
+        "latency_sec": 32835.261,
+        "status": "INIT"
+    },
+    {
         "symbol": "SPK",
         "announce_ts_ms": 1776910800000,
         "announce_ts_str": "2026-04-23 02:20:00 UTC",
-        "received_ts_ms": 1777118767460,
-        "received_ts_str": "2026-04-25 12:06:07.460000 ",
-        "latency_sec": 207967.46,
+        "received_ts_ms": 1777298835262,
+        "received_ts_str": "2026-04-27 14:07:15.262000 ",
+        "latency_sec": 388035.262,
         "status": "INIT"
     },
     {
         "symbol": "CHIP",
-        "announce_ts_ms": 1776752184000,
-        "announce_ts_str": "2026-04-21 06:16:24 UTC",
-        "received_ts_ms": 1777118767460,
-        "received_ts_str": "2026-04-25 12:06:07.460000 ",
-        "latency_sec": 366583.46,
+        "announce_ts_ms": 1776775923000,
+        "announce_ts_str": "2026-04-21 12:52:03 UTC",
+        "received_ts_ms": 1777298835262,
+        "received_ts_str": "2026-04-27 14:07:15.262000 ",
+        "latency_sec": 522912.262,
         "status": "INIT"
     },
     {
         "symbol": "PIEVERSE",
         "announce_ts_ms": 1776661200000,
         "announce_ts_str": "2026-04-20 05:00:00 UTC",
-        "received_ts_ms": 1777118767462,
-        "received_ts_str": "2026-04-25 12:06:07.462000 ",
-        "latency_sec": 457567.462,
+        "received_ts_ms": 1777298835263,
+        "received_ts_str": "2026-04-27 14:07:15.263000 ",
+        "latency_sec": 637635.263,
         "status": "INIT"
     },
     {
         "symbol": "SOON",
         "announce_ts_ms": 1776402002000,
         "announce_ts_str": "2026-04-17 05:00:02 UTC",
-        "received_ts_ms": 1777118767464,
-        "received_ts_str": "2026-04-25 12:06:07.464000 ",
-        "latency_sec": 716765.464,
-        "status": "INIT"
-    },
-    {
-        "symbol": "CC",
-        "announce_ts_ms": 1776142800000,
-        "announce_ts_str": "2026-04-14 05:00:00 UTC",
-        "received_ts_ms": 1777118767465,
-        "received_ts_str": "2026-04-25 12:06:07.465000 ",
-        "latency_sec": 975967.465,
+        "received_ts_ms": 1777298835263,
+        "received_ts_str": "2026-04-27 14:07:15.263000 ",
+        "latency_sec": 896833.263,
         "status": "INIT"
     }
 ]
