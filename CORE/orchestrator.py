@@ -43,7 +43,8 @@ READY_CHECK_INTERVAL = 1.0
 UPBIT_SIGNAL_SAFETY_RELEASE_SEC = 10.0  # Резервная разблокировка если сигнал не прошел
 UPBIT_SIGNAL_RELEASE_PAUSE_SEC  = 5.0   # Пауза перед возвратом монитора после входа
 MAIN_LOOP_SLEEP_SEC             = 0.002 # Шаг игрового цикла (2мс)
-START_UP_WARMUP_SEC             = 1.0   # Прогрев после запуска
+START_UP_WARMUP_SEC             = 1.0   # Прогрев после запуска 
+SPECS_UPDATE_INTERVAL_SEC       = 60.0  # <--- НОВАЯ КОНСТАНТА: как часто проверяем новые листинги
 
 
 class TradingBot:
@@ -106,9 +107,7 @@ class TradingBot:
                     is_paused_func=lambda: self.stop_another_request
                 )
         else:
-            self._upbit_monitor = None
-            
-        
+            self._upbit_monitor = None          
         
         self.st_stream: Optional[PhemexStakanStream] = None
         self._stakan_task: Optional[asyncio.Task] = None
@@ -556,13 +555,17 @@ class TradingBot:
         self.ws_ready = True
 
     async def _refresh_stakan_stream(self):
-        """Перезапускает стрим стаканов на актуальном наборе символов."""
+        """Умный перезапуск стрима стаканов на актуальном наборе символов."""
+        # 1. Глушим старый стрим
+        if getattr(self, 'st_stream', None):
+            self.st_stream.stop()
+            
         await self._await_task(self._stakan_task)
         
         symbols_to_stream = list(self.symbol_specs.keys())
         if not symbols_to_stream: return
         
-        logger.info(f"[WS] Рестарт стрима стаканов на {len(symbols_to_stream)} символов...")
+        logger.info(f"[WS] Инициализация стрима стаканов для {len(symbols_to_stream)} пар...")
         self.st_stream = PhemexStakanStream(symbols_to_stream)
         
         # Замыкаем кэш цен напрямую на price_manager
@@ -578,19 +581,47 @@ class TradingBot:
         self._stakan_task = asyncio.create_task(self.st_stream.run(on_stakan_depth))
 
     async def _specs_updater_loop(self):
-        """Фоновый воркер для обновления спецификаций монет (тиков, лотов) в памяти."""
+        """Фоновый воркер для обновления спецификаций монет (тиков, лотов) и стакана."""
         while self._is_running:
-            try:
-                specs = await self.phemex_sym_api.get_all(quote=self.quota_asset)
-                if specs:
-                    new_specs = {s.symbol: s for s in specs}
-                    self.symbol_specs.update(new_specs)
-                    # logger.info(f"[WS] Спецификации монет обновлены в фоне: {len(new_specs)} шт.")
-            except Exception as e:
-                logger.error(f"[WARN] Ошибка обновления спецификаций: {e}")
+            # Сначала спим, так как при старте бота мы уже скачали актуальный список
+            await asyncio.sleep(SPECS_UPDATE_INTERVAL_SEC)
             
-            # Обновляем раз в 10 минут
-            await asyncio.sleep(600)
+            try:
+                # Получаем только активные монеты с биржи
+                specs = await self.phemex_sym_api.get_all(quote=self.quota_asset, only_active=True)
+                if not specs:
+                    continue
+
+                # Формируем новый словарь строго в UPPERCASE и без блэклиста
+                new_specs = {
+                    s.symbol.upper().strip(): s 
+                    for s in specs 
+                    if s and s.symbol.upper().strip() not in self.black_list
+                }
+                
+                # Сравниваем старые и новые ключи (сеты)
+                old_symbols = set(self.symbol_specs.keys())
+                current_symbols = set(new_specs.keys())
+                
+                added = current_symbols - old_symbols
+                removed = old_symbols - current_symbols
+                
+                # Обновляем глобальный кэш спецификаций
+                self.symbol_specs.update(new_specs)
+                
+                # Если добавились новые монеты — перезапускаем стакан
+                if added:
+                    logger.info(f"🔄 [UPDATE] На бирже появились новые монеты ({len(added)} шт): {', '.join(added)}")
+                    logger.info("Перезапуск WS стакана для захвата новых листингов...")
+                    await self._refresh_stakan_stream()
+                    
+                elif removed:
+                    # Если монета ушла на тех. обслуживание, стакан переоткрывать не нужно, 
+                    # WS Phemex сам перестанет слать по ней эвенты.
+                    logger.debug(f"ℹ️ [UPDATE] С биржи временно пропало {len(removed)} монет. WS продолжает работу.")
+                    
+            except Exception as e:
+                logger.error(f"[WARN] Ошибка обновления спецификаций в фоне: {e}")
 
     async def _wait_for_systems_ready(self) -> bool:
         """Ожидает, пока все фоновые системы (цены, фандинг, стаканы) не получат первые данные."""
@@ -639,8 +670,16 @@ class TradingBot:
         logger.info(f"[CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ\n{summary}")
         if self.tg: asyncio.create_task(self.tg.send_message("[START] <b>ТОРГОВЛЯ НАЧАТА</b>"))
 
+        # symbols_info = await self.phemex_sym_api.get_all(quote=self.bl_manager.quota_asset, only_active=True)
+        # self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
+
+        # СТАЛО (Жесткий контроль регистра):
         symbols_info = await self.phemex_sym_api.get_all(quote=self.bl_manager.quota_asset, only_active=True)
-        self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
+        self.symbol_specs = {
+            s.symbol.upper().strip(): s 
+            for s in symbols_info 
+            if s and s.symbol.upper().strip() not in self.black_list
+        }
 
         await self._recover_state()
         
