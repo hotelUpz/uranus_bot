@@ -25,7 +25,6 @@
         "timezone": "UTC"
     },
     "black_list": [
-        "ETHUSDT"
     ],
     "quota_asset": "USDT",
     "risk": {
@@ -37,12 +36,12 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 121.0,
+        "notional_limit": 301.0,
         "_is_validate_notional_limit": false
     },
     "upbit": {
         "_label": "UPBIT MONITORING (SIGNAL SOURCE)",
-        "use_mock": true,
+        "use_mock": false,
         "poll_interval_sec": 0.25,
         "min_cooldown_sec": 0.25,
         "proxies": [
@@ -78,7 +77,7 @@
     "exit": {
         "_label": "EXIT LOGIC (TAKE-PROFITS AND STOPS)",
         "max_place_order_retries": 1,
-        "min_order_life_sec": 0.05,
+        "min_order_life_sec": 0.1,
         "scenarios": {
             "grid_tp": {
                 "enable": true,
@@ -125,14 +124,8 @@
                         "comment": "> $2M",
                         "min_vol": 2000,
                         "max_vol": null,
-                        "levels": [
-                            2,
-                            4
-                        ],
-                        "volumes": [
-                            50,
-                            50
-                        ]
+                        "levels": [2, 5, 12, 22, 40],
+                        "volumes": [20, 20, 20, 20, 20]
                     }
                 ]
             },
@@ -145,7 +138,7 @@
             },
             "ttl_market_close": {
                 "enable": true,
-                "ttl_sec": 20
+                "ttl_sec": 4500
             }
         }
     }
