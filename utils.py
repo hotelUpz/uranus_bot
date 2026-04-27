@@ -26,50 +26,33 @@ def deep_update(d: dict, u: dict) -> dict:
     return d
 
 def get_config_summary(cfg: dict) -> str:
-    lines = []
+    """
+    Рекурсивно формирует читаемый вывод конфига. 
+    Больше не нужно переписывать эту функцию при изменениях структуры!
+    """
+    lines = ["🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>"]
     
-    app = cfg.get("app", {})
-    risk = cfg.get("risk", {})
-    
-    lines.append("🎛 <b>[APP & RISK]</b>")
-    lines.append(f"Name: <b>{app.get('name', 'N/A')}</b> | Quota: <b>{cfg.get('quota_asset', 'N/A')}</b>")
-    lines.append(f"Max Positions: <b>{app.get('max_active_positions', 'N/A')}</b> | Hedge Mode: <b>{risk.get('hedge_mode', 'N/A')}</b>")
-    
-    lev_cfg = risk.get('leverage', {})
-    lev_val = lev_cfg.get('val', 'N/A') if isinstance(lev_cfg, dict) else lev_cfg
-    margin_mod = lev_cfg.get('margin_mode', 'N/A') if isinstance(lev_cfg, dict) else 'N/A'
-    
-    lines.append(f"Leverage: <b>{lev_val}x</b> | Margin Mode: <b>{margin_mod}</b>")
-    lines.append(f"Margin Size: <b>{risk.get('margin_size', 'N/A')}</b> | Notional Limit: <b>{risk.get('notional_limit', 'N/A')} USDT</b>")
+    def parse_dict(d: dict, indent: int = 0):
+        prefix = "  " * indent
+        for k, v in d.items():
+            # Пропускаем скрытые/технические ключи
+            if str(k).startswith("_"): continue 
+            
+            if isinstance(v, dict):
+                # Если в блоке есть "красивое имя"
+                label = v.get("_label", k.upper())
+                lines.append(f"{prefix}🔹 <b>[{label}]</b>")
+                parse_dict(v, indent + 1)
+            elif isinstance(v, list):
+                # Для списков (например, proxies или black_list) выводим просто количество
+                lines.append(f"{prefix}▪️ {k}: <b>{len(v)} элементов</b>")
+            else:
+                # Обычные параметры: bool, int, float, str
+                val_str = "ON" if v is True else "OFF" if v is False else str(v)
+                lines.append(f"{prefix}▪️ {k}: <b>{val_str}</b>")
 
-    log = cfg.get("log", {})
-    tg = cfg.get("tg", {})
-    lines.append("\n📡 <b>[SYSTEM]</b>")
-    lines.append(f"TG Enabled: <b>{tg.get('enable', 'N/A')}</b>")
-    
-    # Блок Upbit
-    upb = cfg.get("upbit", {})
-    lines.append("\n🚀 <b>[UPBIT SIGNAL]</b>")
-    lines.append(f"Default Side: <b>{upb.get('default_side', 'LONG').upper()}</b>")
-    lines.append(f"Poll Interval: <b>{upb.get('poll_interval_sec', 'N/A')}s</b> | Proxies: <b>{len(upb.get('proxies', []))}</b>")
-
-    # Сценарии выхода
-    exit_cfg = cfg.get("exit", {})
-    scen = exit_cfg.get("scenarios", {})
-    
-    sl = scen.get("stop_loss", {})
-    ttl = scen.get("ttl_market_close", {})
-    grid = scen.get("grid_tp", {})
-
-    lines.extend([
-        "────────────────────────────────────────",
-        "🔹 [EXIT STRATEGY]",
-        f"   Grid TP:   {'ON' if grid.get('enable') else 'OFF'}",
-        f"   Stop-Loss: {'ON' if sl.get('enable') else 'OFF'} ({sl.get('percent', 5.0)}% | {sl.get('ttl_sec', 0.0)}s)",
-        f"   TTL Close: {'ON' if ttl.get('enable') else 'OFF'} ({ttl.get('ttl_sec', 3600)}s)",
-        "────────────────────────────────────────"
-    ])
-
+    parse_dict(cfg)
+    lines.append("────────────────────────────────────────")
     return "\n".join(lines)
 
 def load_json(filepath: str, default: Any = None) -> Any:

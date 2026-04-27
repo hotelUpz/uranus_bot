@@ -1,45 +1,176 @@
-2026-04-27 16:27:39 | WARNING | bot | [MOCK] [Upbit] Запущен MOCK-режим (тестовые сигналы для отладки ордеров).
-2026-04-27 16:27:39 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
-2026-04-27 16:29:15 | WARNING | bot | [MOCK] [Upbit] Запущен MOCK-режим (тестовые сигналы для отладки ордеров).
-2026-04-27 16:29:38 | INFO | bot | [RUN] Инициализация систем...
-2026-04-27 16:29:38 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
-🎛 <b>[APP & RISK]</b>
-Name: <b>Uranos Bot</b> | Quota: <b>USDT</b>
-Max Positions: <b>1</b> | Hedge Mode: <b>N/A</b>
-Leverage: <b>22x</b> | Margin Mode: <b>2</b>
-Margin Size: <b>N/A</b> | Notional Limit: <b>60.0 USDT</b>
-
-📡 <b>[SYSTEM]</b>
-TG Enabled: <b>True</b>
-
-🚀 <b>[UPBIT SIGNAL]</b>
-Default Side: <b>LONG</b>
-Poll Interval: <b>0.25s</b> | Proxies: <b>1</b>
+2026-04-27 17:32:05 | WARNING | bot | [MOCK] [Upbit] Запущен MOCK-режим (тестовые сигналы для отладки ордеров).
+2026-04-27 17:32:35 | INFO | bot | [RUN] Инициализация систем...
+2026-04-27 17:32:35 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[APP]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[CREDENTIALS]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TG]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOG]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>1 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>OFF</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>22</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>2</b>
+  ▪️ notional_limit: <b>60.0</b>
+🔹 <b>[UPBIT]</b>
+  ▪️ use_mock: <b>ON</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ min_cooldown_sec: <b>0.25</b>
+  ▪️ proxies: <b>1 элементов</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>30</b>
+  🔹 <b>[ADAPTIVE]</b>
+    ▪️ enabled: <b>OFF</b>
+    ▪️ step: <b>0.1</b>
+    ▪️ n_stable: <b>10</b>
+  🔹 <b>[PROBER]</b>
+    ▪️ start_delay: <b>1.0</b>
+    ▪️ step: <b>0.1</b>
+    ▪️ hits_per_step: <b>100</b>
+🔹 <b>[ENTRY]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>limit</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.05</b>
+  🔹 <b>[SCENARIOS]</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>2.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>20</b>
 ────────────────────────────────────────
-🔹 [EXIT STRATEGY]
-   Grid TP:   ON
-   Stop-Loss: ON (50.0% | 2.0s)
-   TTL Close: ON (20s)
+2026-04-27 17:32:36 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-27 17:32:36 | INFO | bot | [WS] Инициализация стрима стаканов для 517 пар...
+2026-04-27 17:32:36 | INFO | bot | [USD] Стартовый баланс успешно загружен из стейта: 71.54 USDT
+2026-04-27 17:32:36 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-04-27 17:32:37 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-04-27 17:32:37 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-04-27 17:32:39 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-04-27 17:32:39 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 528 котировок.
+2026-04-27 17:32:40 | INFO | bot |    - Ожидание данных: Стаканы [OK], Цены [OK]
+2026-04-27 17:32:41 | INFO | bot | [OK] Системы готовы за 3.5с. Данные получены.
+2026-04-27 17:32:41 | INFO | bot | 📊 Цикл отчетов запущен (каждые 6.0ч)
+2026-04-27 17:33:32 | INFO | bot | [SHUT] Остановка процессов...
+2026-04-27 17:33:32 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-04-27 17:33:42 | WARNING | bot | [MOCK] [Upbit] Запущен MOCK-режим (тестовые сигналы для отладки ордеров).
+2026-04-27 17:33:51 | INFO | bot | [RUN] Инициализация систем...
+2026-04-27 17:33:51 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[APP]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[CREDENTIALS]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TG]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOG]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>0 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>OFF</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>22</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>2</b>
+  ▪️ notional_limit: <b>60.0</b>
+🔹 <b>[UPBIT]</b>
+  ▪️ use_mock: <b>ON</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ min_cooldown_sec: <b>0.25</b>
+  ▪️ proxies: <b>1 элементов</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>30</b>
+  🔹 <b>[ADAPTIVE]</b>
+    ▪️ enabled: <b>OFF</b>
+    ▪️ step: <b>0.1</b>
+    ▪️ n_stable: <b>10</b>
+  🔹 <b>[PROBER]</b>
+    ▪️ start_delay: <b>1.0</b>
+    ▪️ step: <b>0.1</b>
+    ▪️ hits_per_step: <b>100</b>
+🔹 <b>[ENTRY]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>limit</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.05</b>
+  🔹 <b>[SCENARIOS]</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>2.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>20</b>
 ────────────────────────────────────────
-2026-04-27 16:29:40 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-27 16:29:40 | INFO | bot | [WS] Инициализация стрима стаканов для 518 пар...
-2026-04-27 16:29:40 | INFO | bot | [REST] Запрашиваем Equity с биржи для инициализации аудита...
-2026-04-27 16:29:41 | INFO | bot | [USD] Стартовый баланс зафиксирован: 71.54 USDT
-2026-04-27 16:29:41 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
-2026-04-27 16:29:44 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
-2026-04-27 16:29:44 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
-2026-04-27 16:29:44 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
-2026-04-27 16:29:45 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 528 котировок.
-2026-04-27 16:29:45 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
-2026-04-27 16:29:46 | INFO | bot |    - Ожидание данных: Стаканы [OK], Цены [OK]
-2026-04-27 16:29:46 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
-2026-04-27 16:29:47 | INFO | bot | [OK] Системы готовы за 3.5с. Данные получены.
-2026-04-27 16:29:47 | INFO | bot | ➡️ [ОРКЕСТРАТОР] Получен сигнал ETHUSDT (LONG). Проверка лимитов...
-2026-04-27 16:29:47 | INFO | bot | [ETHUSDT_LONG] ⚡ Латенция сигнал->ордер: 2.0ms
-2026-04-27 16:29:48 | INFO | bot | [ETHUSDT_LONG] ⏱ Латенция сигнал→налив: 0.430s
-2026-04-27 16:29:48 | INFO | bot | [ETHUSDT_LONG] ✅ Вход выполнен. Объем: 0.02 (≈ 45.50 $)
-2026-04-27 16:29:48 | INFO | bot | [ETHUSDT_LONG] 🕸 Сетка TP успешно выставлена: 1/1 ордеров.
-2026-04-27 16:30:08 | DEBUG | bot | [ETHUSDT_LONG] Сработал TTL Market Close. Цена: 2275.86
-2026-04-27 16:30:08 | INFO | bot | [ETHUSDT_LONG] 🏁 Выход выполнен ПО МАРКЕТУ. Объем: 0.02
-2026-04-27 16:30:08 | INFO | bot | [ETHUSDT_LONG] [HALT] Позиция закрыта. 🩸 PnL: -0.0378$ | Средняя цена выхода: 2275.8600 | Время: 20.4s
-2026-04-27 16:30:45 | INFO | bot | [SHUT] Остановка процессов...
+2026-04-27 17:33:53 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-27 17:33:53 | INFO | bot | [WS] Инициализация стрима стаканов для 518 пар...
+2026-04-27 17:33:53 | INFO | bot | [USD] Стартовый баланс успешно загружен из стейта: 71.54 USDT
+2026-04-27 17:33:53 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-04-27 17:33:55 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-04-27 17:33:55 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-04-27 17:33:55 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 528 котировок.
+2026-04-27 17:33:56 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-04-27 17:33:56 | INFO | bot |    - Ожидание данных: Стаканы [OK], Цены [OK]
+2026-04-27 17:33:58 | INFO | bot | [OK] Системы готовы за 3.1с. Данные получены.
+2026-04-27 17:33:58 | INFO | bot | 📊 Цикл отчетов запущен (каждые 6.0ч)
+2026-04-27 17:33:58 | INFO | bot | ➡️ [ОРКЕСТРАТОР] Получен сигнал ETHUSDT (LONG). Проверка лимитов...
+2026-04-27 17:33:58 | INFO | bot | [ETHUSDT_LONG] ⚡ Латенция сигнал->ордер: 2.5ms
+2026-04-27 17:33:58 | INFO | bot | [ETHUSDT_LONG] ⏱ Латенция сигнал→налив: 0.274s
+2026-04-27 17:33:58 | INFO | bot | [ETHUSDT_LONG] ✅ Вход выполнен. Объем: 0.02 (≈ 45.81 $)
+2026-04-27 17:33:59 | INFO | bot | [ETHUSDT_LONG] 🕸 Сетка TP успешно выставлена: 1/1 ордеров.
+2026-04-27 17:34:18 | DEBUG | bot | [ETHUSDT_LONG] Сработал TTL Market Close. Цена: 2289.51
+2026-04-27 17:34:19 | INFO | bot | [ETHUSDT_LONG] 🏁 Выход выполнен ПО МАРКЕТУ. Объем: 0.02
+2026-04-27 17:34:19 | ERROR | bot | 🚨 <b>[ETHUSDT_LONG]</b> Исключение при выходе по маркету: Private API request failed: Phemex Error [11011]: TE_REDUCE_ONLY_ABORT
+2026-04-27 17:34:20 | ERROR | bot | 🚨 <b>[ETHUSDT_LONG]</b> FATAL ERROR: Не удалось закрыть позицию по маркету после 1 попыток! СРОЧНО ПРОВЕРЬТЕ ТЕРМИНАЛ!
+2026-04-27 17:34:20 | INFO | bot | [ETHUSDT_LONG] [HALT] Позиция закрыта. 🩸 PnL: -0.0708$ | Средняя цена выхода: 2289.7600 | Время: 21.3s
+2026-04-27 17:35:10 | INFO | bot | [SHUT] Остановка процессов...
+2026-04-27 17:35:10 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
