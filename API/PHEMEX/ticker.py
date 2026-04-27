@@ -1,9 +1,6 @@
 # ============================================================
 # python -m API.PHEMEX.ticker
 # ROLE: Phemex 24h ticker snapshot (curl_cffi)
-# Учебник для будущих поколений (старый aiohttp вариант):
-#   async with session.get(url) as resp:
-#       data = await resp.json()
 # ============================================================
 import ujson
 from dataclasses import dataclass
