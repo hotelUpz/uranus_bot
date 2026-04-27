@@ -80,3 +80,5 @@ if __name__ == "__main__":
         finally:
             await api.aclose()
     asyncio.run(test())
+
+# python -m API.PHEMEX.ticker

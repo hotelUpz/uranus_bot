@@ -291,35 +291,30 @@ class TradingBot:
     
     # Новый метод в TradingBot:
     async def _on_upbit_signal(self, symbol: str, received_ms: int = 0) -> None:
-        """Входящий сигнал от Upbit: быстрая передача в SignalEngine."""
-        # Глобальная блокировка лишних HTTP-запросов монитора на время входа
+        """Входящий сигнал от Upbit: Прямой выстрел в движок БЕЗ создания тасок."""
         self.stop_another_request = True 
         
-        # Резервный таймер разблокировки (на случай если SignalEngine отбракует сигнал)
-        async def _safety_release():
-            await asyncio.sleep(UPBIT_SIGNAL_SAFETY_RELEASE_SEC)
-            self.stop_another_request = False
-        safety_task = asyncio.create_task(_safety_release())
+        # Прямой await пробивает Event Loop до самой отправки ордера без переключений контекста
+        success = await self.signal_engine.handle_upbit_signal(
+            raw_symbol=symbol,
+            side=self.cfg.get("upbit", {}).get("default_side", "long").upper(),
+            st_stream=self.st_stream,
+            price_manager=self.price_manager,
+            symbol_specs=self.symbol_specs,
+            black_list=self.bl_manager,
+            phemex_sym_api=self.phemex_sym_api,
+            received_ms=received_ms
+        )
         
-        async def _delegate():
-            # Делегируем всю работу (конвертация, стакан, спеки) движку сигналов
-            success = await self.signal_engine.handle_upbit_signal(
-                raw_symbol=symbol,
-                side=self.cfg.get("upbit", {}).get("default_side", "long").upper(),
-                st_stream=self.st_stream,
-                price_manager=self.price_manager,
-                symbol_specs=self.symbol_specs,
-                black_list=self.bl_manager,
-                phemex_sym_api=self.phemex_sym_api,
-                received_ms=received_ms
-            )
-            # Если сигнал был отбракован на входе, сразу снимаем блокировку
-            if not success:
+        # Если сигнал отбракован - мгновенно снимаем лок монитора
+        if not success:
+            self.stop_another_request = False
+        else:
+            # Запускаем разблокировку монитора в фоне ТОЛЬКО если вошли (пауза 5 секунд)
+            async def release_block():
+                await asyncio.sleep(UPBIT_SIGNAL_RELEASE_PAUSE_SEC)
                 self.stop_another_request = False
-                if not safety_task.done():
-                    safety_task.cancel()
-
-        asyncio.create_task(_delegate())
+            asyncio.create_task(release_block())
 
     async def _process_entry_from_signal(self, signal: "EntrySignal"):
         """Компактный интерфейс исполнения входа."""
@@ -327,32 +322,26 @@ class TradingBot:
         side = signal.side
         pos_key = f"{phemex_symbol}_{side}"
 
+        if not self._can_open_position(phemex_symbol, side):
+            return
+
+        spec = self.symbol_specs.get(phemex_symbol)
+        if not spec:
+            return
+
         try:
-            if not self._can_open_position(phemex_symbol, side):
-                return
-
-            spec = self.symbol_specs.get(phemex_symbol)
-            if not spec:
-                return
-
-            # Исполняем вход (внутри экзекутора будут логи)
+            # Исполняем вход (пробиваем до экзекутора напрямую, никакой фоновой таски)
             await self.executor.execute_entry(
                 symbol=phemex_symbol,
                 pos_key=pos_key,
                 signal=signal
             )
             
-            # После успешного (или неуспешного) входа - добавляем в блэклист
+            # Вход завершен. Добавляем в блэклист в фоне (т.к. это сохранение на диск)
             asyncio.create_task(self.bl_manager.update_and_save([phemex_symbol]))
 
         except Exception as e:
             logger.error(f"[ERR] Entry Error for {phemex_symbol}: {e}")
-        finally:
-            # Снимаем блокировку монитора через 5 секунд (чтобы не спамить HTTP во время пампов)
-            async def release_block():
-                await asyncio.sleep(UPBIT_SIGNAL_RELEASE_PAUSE_SEC)
-                self.stop_another_request = False
-            asyncio.create_task(release_block())
         
     # --- СЕТЕВЫЕ ОПЕРАЦИИ (ВНЕ ЛОКА) ---
     async def _payloader(self, action_payload: List[Tuple], symbol: str) -> None:
