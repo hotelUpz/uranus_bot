@@ -462,15 +462,15 @@ class TradingBot:
                         pos: "ActivePosition" = self.state.active_positions.get(pos_key)
                         if not pos: continue
 
-                        # --- BLACKLIST-GUARD: ПРИНУДИТЕЛЬНЫЙ ВЫХОД ---
-                        # Если монета попала в blacklist пока позиция была активна —
-                        # немедленно закрываем и удаляем из памяти.
-                        if pos.symbol in self.black_list and (pos.in_position or pos.in_pending):
-                            if not pos.exit_in_flight:
-                                logger.warning(f"[{pos_key}] ⛔ BLACKLIST: Монета заблокирована, принудительный выход!")
-                                pos.exit_in_flight = True
-                                asyncio.create_task(self.executor.execute_market_exit(pos.symbol, pos_key))
-                            continue
+                        # # --- BLACKLIST-GUARD: ПРИНУДИТЕЛЬНЫЙ ВЫХОД ---
+                        # # Если монета попала в blacklist пока позиция была активна —
+                        # # немедленно закрываем и удаляем из памяти.
+                        # if pos.symbol in self.black_list and (pos.in_position or pos.in_pending):
+                        #     if not pos.exit_in_flight:
+                        #         logger.warning(f"[{pos_key}] ⛔ BLACKLIST: Монета заблокирована, принудительный выход!")
+                        #         pos.exit_in_flight = True
+                        #         asyncio.create_task(self.executor.execute_market_exit(pos.symbol, pos_key))
+                        #     continue
 
                         # --- СБОРЩИК ФАНТОМНЫХ ВХОДОВ ---
                         if getattr(pos, 'marked_for_death_ts', 0) > 0:
