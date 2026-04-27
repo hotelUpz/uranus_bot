@@ -271,7 +271,6 @@ class TradingBot:
         return self.active_positions_locker[pos_key]
 
     def _can_open_position(self, symbol: str, side: str = "LONG") -> bool:
-        # Абсолютная блокировка: черный список
         if symbol in self.black_list:
             return False
 
@@ -280,8 +279,10 @@ class TradingBot:
             if pos.in_position or pos.in_pending:
                 working_symbols.add(pos.symbol)
 
+        # 🛠 ФИКС: Запрещаем входить, если мы УЖЕ в позиции по этой монете
         if symbol in working_symbols:
-            return True
+            logger.warning(f"[{symbol}] Отказ: позиция уже существует.")
+            return False
 
         if len(working_symbols) >= self.max_active_positions:
             return False

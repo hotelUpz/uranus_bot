@@ -6,9 +6,15 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Optional, Literal, Any, Dict, Callable, Awaitable
+from typing import Optional, Literal, Any, Dict, Callable, Awaitable, TYPE_CHECKING
 from dataclasses import dataclass
 from c_log import UnifiedLogger
+
+# Импорты только для проверки типов (не выполняются при запуске)
+if TYPE_CHECKING:
+    from API.PHEMEX.stakan import PhemexStakanStream
+    from CORE._utils import PriceCacheManager, BlackListManager
+    from API.PHEMEX.symbol import PhemexSymbols
 
 logger = UnifiedLogger("signal")
 
@@ -32,16 +38,15 @@ class SignalEngine:
         self, 
         raw_symbol: str, 
         side: Literal["LONG", "SHORT"],
-        st_stream: Any,
-        price_manager: Any,
+        st_stream: Optional[PhemexStakanStream],
+        price_manager: PriceCacheManager,
         symbol_specs: Dict[str, Any],
-        black_list: Any,
-        phemex_sym_api: Any = None,
+        black_list: BlackListManager,
+        phemex_sym_api: Optional[PhemexSymbols] = None,
         received_ms: int = 0
     ) -> bool:
         """
         Основной входной путь для сигнала от Upbit.
-        Возвращает True если сигнал прошел проверки и запущен в обработку, иначе False.
         """
         if raw_symbol in self._processing: return False
         self._processing.add(raw_symbol)
@@ -50,34 +55,31 @@ class SignalEngine:
             raw_symbol_upper = raw_symbol.upper().strip()
             phemex_symbol = raw_symbol_upper if raw_symbol_upper.endswith("USDT") else f"{raw_symbol_upper}USDT"
 
-            # 1. Проверка черного списка (в памяти)
-            bl_result = black_list.is_blacklisted_sync(phemex_symbol)
-            # logger.debug(f"[BL-CHECK] symbol={phemex_symbol} | blacklisted={bl_result} | bl.symbols={getattr(black_list, 'symbols', '???')}")
-            if bl_result:
+            # 1. Проверка черного списка
+            if black_list.is_blacklisted_sync(phemex_symbol):
                 logger.warning(f"[{phemex_symbol}] Монета в BlackList. Отказ от входа.")
                 return False
 
-            # 2. Подписка WS (в фоне, не ждем)
+            # 2. Подписка WS (в фоне)
             if st_stream:
                 asyncio.create_task(st_stream.add_symbols([phemex_symbol]))
             
-            # 3. Проверка наличия спецификаций в памяти
+            # 3. Проверка спецификаций
             if phemex_symbol not in symbol_specs:
                 logger.warning(f"[{phemex_symbol}] Спецификации отсутствуют. Отказ от входа.")
                 return False
 
-            # 4. МГНОВЕННОЕ получение цены из кэша (без циклов и ожиданий)
+            # 4. МГНОВЕННОЕ получение цены
             signal = self.create_signal_instant(phemex_symbol, side, st_stream, price_manager)
             
             if signal:
-                # Стартовая точка: момент получения сигнала от Upbit-монитора.
-                # Если received_ms не передан (напр. из тестов), fallback на текущий момент.
                 signal.timestamp = received_ms / 1000.0 if received_ms > 0 else time.time()
-                # ПРЯМОЙ ПРОСТРЕЛ
-                asyncio.create_task(self.on_signal_callback(signal))
+                
+                # ЖЕСТКАЯ ПРАВКА: Ожидаем завершения входа, пока монета в _processing
+                await self.on_signal_callback(signal)
                 return True
             else:
-                logger.error(f"‼️ [CRITICAL] [{phemex_symbol}] PRICE MISSING in both Stakan and Cache! SKIPPING ENTRY to save time.")
+                logger.error(f"‼️ [CRITICAL] [{phemex_symbol}] PRICE MISSING in both Stakan and Cache!")
                 return False
             
         except Exception as e:
@@ -86,17 +88,22 @@ class SignalEngine:
         finally:
             self._processing.discard(raw_symbol)
 
-    def create_signal_instant(self, symbol: str, side: str, st_stream: Any, price_manager: Any) -> Optional[EntrySignal]:
+    def create_signal_instant(
+        self, 
+        symbol: str, 
+        side: str, 
+        st_stream: Optional[PhemexStakanStream], 
+        price_manager: PriceCacheManager
+    ) -> Optional[EntrySignal]:
         """
-        Мгновенно вытаскивает цены из кэша. Если данных нет - возвращает None.
+        Вытаскивает цены. Теперь IDE знает методы st_stream и price_manager.
         """
-        # 1. Пробуем стакан (если стрим готов)
         bids, asks = [], []
         if st_stream:
             bids, asks = st_stream.get_depth(symbol)
 
-        # 2. Фолбэк на ценовой кэш
         if not bids or not asks:
+            # Используем типизированный метод PriceCacheManager
             phemex_price, _ = price_manager.get_prices(symbol)
             if phemex_price <= 0:
                 return None
@@ -106,7 +113,6 @@ class SignalEngine:
             ask1, bid1 = asks[0][0], bids[0][0]
             mid_price = (ask1 + bid1) / 2.0
         
-        # 3. Формирование цены входа
         entry_price = ask1 if side == "LONG" else bid1
         
         return EntrySignal(

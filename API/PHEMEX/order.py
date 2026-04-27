@@ -31,7 +31,7 @@ class PhemexPrivateClient:
         # Контроль частоты запросов (Rate Limit)
         self._lock = asyncio.Lock()
         self._last_send_time = 0
-        self.MIN_SEND_INTERVAL = 0.02  # 20ms между приватными запросами
+        self.MIN_SEND_INTERVAL = 0.01  # 20ms между приватными запросами
 
     async def aclose(self):
         await self.session.close()
