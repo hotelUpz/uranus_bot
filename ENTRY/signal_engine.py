@@ -40,7 +40,6 @@ class SignalEngine:
         price_manager: PriceCacheManager,
         symbol_specs: Dict[str, Any],
         black_list: BlackListManager,
-        phemex_sym_api: Optional[PhemexSymbols] = None,
         received_ms: int = 0
     ) -> bool:
         

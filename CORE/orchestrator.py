@@ -45,6 +45,7 @@ UPBIT_SIGNAL_RELEASE_PAUSE_SEC  = 5.0   # Пауза перед возврато
 MAIN_LOOP_SLEEP_SEC             = 0.002 # Шаг игрового цикла (2мс)
 START_UP_WARMUP_SEC             = 1.0   # Прогрев после запуска 
 SPECS_UPDATE_INTERVAL_SEC       = 60.0  # <--- НОВАЯ КОНСТАНТА: как часто проверяем новые листинги
+REPORT_INTERVAL_HOURS           = 6.0  # <--- ДОБАВИТЬ ЭТУ СТРОКУ
 
 
 class TradingBot:
@@ -87,6 +88,13 @@ class TradingBot:
             self.tg = TelegramSender(token, chat_id)
         else:
             self.tg = None
+
+        # --- ДОБАВИТЬ ЭТОТ БЛОК НИЖЕ ---
+        report_id = os.getenv("REPORT_CHAT_ID")
+        self.report_tg = TelegramSender(
+            os.getenv("TELEGRAM_TOKEN") or tg_cfg.get("token", ""),
+            report_id
+        ) if report_id else None
 
         upbit_cfg = self.cfg.get("upbit", {})
         upbit_enabled = self.cfg.get("entry", {}).get("pattern", {}).get("upbit_signal", False)
@@ -334,7 +342,6 @@ class TradingBot:
             price_manager=self.price_manager,
             symbol_specs=self.symbol_specs,
             black_list=self.bl_manager,
-            phemex_sym_api=self.phemex_sym_api,
             received_ms=received_ms
         )
         
@@ -667,6 +674,34 @@ class TradingBot:
             await asyncio.sleep(READY_CHECK_INTERVAL)
             
         return False
+    
+    async def _send_developer_report(self, is_test: bool = False):
+        """Формирует и отправляет аудит-отчет."""
+        target_tg = self.report_tg or self.tg # Если нет отдельного чата, бьем в основной
+        if not target_tg: return
+        try:
+            summary = self.tracker.get_summary_text()
+            prefix = "🧪 <b>ТЕСТОВЫЙ ОТЧЕТ</b>\n" if is_test else "📅 <b>ПЕРИОДИЧЕСКИЙ ОТЧЕТ</b>\n"
+            await target_tg.send_message(prefix + summary)
+            
+            if os.path.exists(self.state.filepath):
+                await target_tg.send_document(self.state.filepath, caption="📄 Текущий стейт бота (bot_state.json)")
+        except Exception as e:
+            logger.error(f"❌ Ошибка отправки отчета разработчику: {e}")
+
+    async def _periodic_report_loop(self):
+        """Фоновый луп для отправки отчетов каждые N часов."""
+        logger.info(f"📊 Цикл отчетов запущен (каждые {REPORT_INTERVAL_HOURS}ч)")
+        while getattr(self, '_is_running', False):
+            try:
+                await asyncio.sleep(REPORT_INTERVAL_HOURS * 3600)
+                if getattr(self, '_is_running', False):
+                    await self._send_developer_report()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in report loop: {e}")
+                await asyncio.sleep(60)
 
     async def start(self):
         if getattr(self, '_is_running', False): return
@@ -753,34 +788,10 @@ class TradingBot:
         if self._upbit_monitor:
             self._upbit_task = asyncio.create_task(self._upbit_monitor.run())
 
-    # async def aclose(self):
-    #     await self.stop()
-    #     logger.info("[SAVE] Финальное сохранение стейта на диск...")
-    #     await self.state.save()
-    #     await self.phemex_session.close()
-    #     if self.tg: await self.tg.aclose()
-
-    # async def stop(self):
-    #     if not getattr(self, '_is_running', False): return
-    #     self._is_running = False
-        
-    #     if getattr(self, 'st_stream', None):
-    #         self.st_stream.stop()
-            
-    #     logger.info("[SHUT] Остановка процессов...")
-    #     if self.tg: await self.tg.send_message("[SHUT] Остановка процессов...")
-    #     self.price_manager.stop()
-    #     await self.private_ws.aclose()
-    #     await self._await_task(getattr(self, '_price_updater_task', None))
-    #     await self._await_task(getattr(self, '_private_ws_task', None))
-    #     await self._await_task(getattr(self, '_game_loop_task', None))
-    #     await self._await_task(getattr(self, '_upbit_task', None))
-    #     if self._upbit_monitor:
-    #         await self._upbit_monitor.aclose()
-    #     await self._await_task(getattr(self, '_stakan_task', None))
-    #     self._processing.clear()
-    #     self._signal_timeouts.clear()
-    #     await self.state.save()
+        # --- ДОБАВИТЬ ЭТОТ БЛОК В КОНЕЦ МЕТОДА start ---
+        if self.report_tg or self.tg:
+            self._report_task = asyncio.create_task(self._periodic_report_loop())
+            asyncio.create_task(self._send_developer_report(is_test=True))
 
     async def aclose(self):
         await self.stop()
@@ -825,8 +836,7 @@ class TradingBot:
         except Exception as e:
             logger.debug(f"[SHUT] Ошибка остановки Private WS: {e}")
 
-        # Безопасно ждем завершения фоновых задач
-        for task_attr in ['_price_updater_task', '_private_ws_task', '_game_loop_task', '_upbit_task', '_stakan_task']:
+        for task_attr in ['_price_updater_task', '_private_ws_task', '_game_loop_task', '_upbit_task', '_stakan_task', '_specs_updater_task', '_report_task']:
             await self._await_task(getattr(self, task_attr, None))
 
         if getattr(self, '_upbit_monitor', None) and hasattr(self._upbit_monitor, 'aclose'):
