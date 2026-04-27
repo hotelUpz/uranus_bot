@@ -167,6 +167,7 @@ if __name__ == "__main__":
 # # chmod 600 ssh_key.txt
 # # eval "$(ssh-agent -s)" 
 # # ssh-add ssh_key.txt
+# # git remote set-url origin git@github.com:hotelUpz/uranus_bot.git
 # # source .ssh-autostart.sh
 # # git push --set-upstream origin master
 # # git config --global push.autoSetupRemote true
