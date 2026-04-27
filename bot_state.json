@@ -2,114 +2,34 @@
     "positions": {},
     "fails": {},
     "analytics": {
-        "start_balance": 78.49260895709,
-        "current_balance": 76.2503734370912,
-        "max_balance": 78.49260895709,
-        "min_balance": 76.2503734370912,
-        "mdd_usd": 2.2422355199988004,
-        "mdd_pct": 2.856619941406937,
+        "start_balance": 71.54278475709,
+        "current_balance": 71.50497419709001,
+        "max_balance": 71.54278475709,
+        "min_balance": 71.50497419709001,
+        "mdd_usd": 0.03781055999999694,
+        "mdd_pct": 0.052850277115121455,
         "max_profit_usd": 0.0,
         "max_profit_pct": 0.0,
         "total_wins": 0,
-        "total_losses": 8,
-        "total_pnl": -2.2422355199988067,
+        "total_losses": 1,
+        "total_pnl": -0.037810559999997086,
         "symbols": {
-            "SOLUSDT": {
-                "wins": 0,
-                "losses": 2,
-                "pnl": -0.7195570799987999
-            },
-            "BTCUSDT": {
-                "wins": 0,
-                "losses": 2,
-                "pnl": -0.3990632400000262
-            },
             "ETHUSDT": {
                 "wins": 0,
-                "losses": 4,
-                "pnl": -1.1236151999999802
+                "losses": 1,
+                "pnl": -0.037810559999997086
             }
         },
         "history": [
             {
-                "ts": 1776979672.5156534,
-                "symbol": "SOLUSDT",
-                "side": "LONG",
-                "entry_usd": 299.9,
-                "exit_usd": 299.9,
-                "pnl": -0.3599,
-                "is_win": false,
-                "duration": "0.7s"
-            },
-            {
-                "ts": 1776983298.675282,
-                "symbol": "BTCUSDT",
-                "side": "LONG",
-                "entry_usd": 234.49,
-                "exit_usd": 234.48,
-                "pnl": -0.2838,
-                "is_win": false,
-                "duration": "33.8s"
-            },
-            {
-                "ts": 1776983308.0048542,
-                "symbol": "SOLUSDT",
-                "side": "LONG",
-                "entry_usd": 299.73,
-                "exit_usd": 299.73,
-                "pnl": -0.3597,
-                "is_win": false,
-                "duration": "7.7s"
-            },
-            {
-                "ts": 1776983326.5991344,
-                "symbol": "BTCUSDT",
-                "side": "LONG",
-                "entry_usd": 234.49,
-                "exit_usd": 234.65,
-                "pnl": -0.1153,
-                "is_win": false,
-                "duration": "15.1s"
-            },
-            {
-                "ts": 1776983587.6508791,
+                "ts": 1777307408.6323934,
                 "symbol": "ETHUSDT",
                 "side": "LONG",
-                "entry_usd": 280.04,
-                "exit_usd": 280.04,
-                "pnl": -0.336,
+                "entry_usd": 45.5,
+                "exit_usd": 45.52,
+                "pnl": -0.0378,
                 "is_win": false,
-                "duration": "4.3m"
-            },
-            {
-                "ts": 1776983648.9533012,
-                "symbol": "ETHUSDT",
-                "side": "LONG",
-                "entry_usd": 279.69,
-                "exit_usd": 279.79,
-                "pnl": -0.2325,
-                "is_win": false,
-                "duration": "58.6s"
-            },
-            {
-                "ts": 1776985613.2430034,
-                "symbol": "ETHUSDT",
-                "side": "LONG",
-                "entry_usd": 279.64,
-                "exit_usd": 279.71,
-                "pnl": -0.2684,
-                "is_win": false,
-                "duration": "45.6s"
-            },
-            {
-                "ts": 1776986334.892125,
-                "symbol": "ETHUSDT",
-                "side": "LONG",
-                "entry_usd": 278.87,
-                "exit_usd": 278.92,
-                "pnl": -0.2867,
-                "is_win": false,
-                "duration": "45.4s"
+                "duration": "20.4s"
             }
         ]
     }

@@ -862,15 +862,21 @@ class MockUpbitLiveMonitor:
         self._on_signal = on_signal
         self.poll_interval = poll_interval_sec
         self._is_paused_func = is_paused_func
+        self._is_running = True
+        
+    async def aclose(self):
+        """Метод для корректного выключения"""
+        self._is_running = False
+        logger.info("[MOCK] MOCK-генератор остановлен.")
         
     async def run(self):
         import random
         logger.info("[MOCK] GENERATOR STARTED")
-        while True:
+        while self._is_running:
             await asyncio.sleep(self.poll_interval)
             if self._is_paused_func and self._is_paused_func(): continue
             
-            sym = random.choice(["BTC", "ETH"])
+            sym = random.choice(["ETH"])
             if self._on_signal: await self._on_signal(sym, int(time.time() * 1000))
 
 async def run_all_probers():

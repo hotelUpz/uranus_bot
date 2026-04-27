@@ -20,7 +20,9 @@
         "max_lines": 1500,
         "timezone": "UTC"
     },
-    "black_list": [],
+    "black_list": [
+        "ETHUSDT"
+    ],
     "quota_asset": "USDT",
     "risk": {
         "leverage": {
@@ -30,11 +32,11 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 300.0,
+        "notional_limit": 60.0,
         "_is_validate_notional_limit": false
     },
     "upbit": {
-        "use_mock": false,
+        "use_mock": true,
         "poll_interval_sec": 0.25,
         "min_cooldown_sec": 0.25,
         "proxies": [
@@ -116,18 +118,10 @@
                         "min_vol": 2000,
                         "max_vol": null,
                         "levels": [
-                            2,
-                            5,
-                            12,
-                            22,
-                            40
+                            2
                         ],
                         "volumes": [
-                            20,
-                            20,
-                            20,
-                            20,
-                            20
+                            100
                         ]
                     }
                 ]
@@ -141,7 +135,7 @@
             },
             "ttl_market_close": {
                 "enable": true,
-                "ttl_sec": 4500
+                "ttl_sec": 20
             }
         }
     }

@@ -9,7 +9,6 @@ from typing import Optional, Literal, Any, Dict, Callable, Awaitable, TYPE_CHECK
 from dataclasses import dataclass
 from c_log import UnifiedLogger
 
-# Импорты только для проверки типов (не мешают рантайму, избавляют от Any)
 if TYPE_CHECKING:
     from API.PHEMEX.stakan import PhemexStakanStream
     from CORE._utils import PriceCacheManager, BlackListManager
@@ -21,7 +20,7 @@ logger = UnifiedLogger("signal")
 class EntrySignal:
     symbol: str
     side: Literal["LONG", "SHORT"]
-    price: float
+    price: float  # Сюда теперь всегда ложится mid_price
     init_ask1: float
     init_bid1: float
     mid_price: float
@@ -44,36 +43,34 @@ class SignalEngine:
         phemex_sym_api: Optional[PhemexSymbols] = None,
         received_ms: int = 0
     ) -> bool:
-        """
-        Основной входной путь для сигнала от Upbit. Чистые инстинкты.
-        """
-        if raw_symbol in self._processing: return False
+        
+        if raw_symbol in self._processing: 
+            # Не спамим сильно, но логируем блокировку дубля
+            logger.debug(f"[SKIP] [{raw_symbol}] Отказ: Сигнал уже находится в обработке (_processing).")
+            return False
+            
         self._processing.add(raw_symbol)
         
         try:
             raw_symbol_upper = raw_symbol.upper().strip()
             phemex_symbol = raw_symbol_upper if raw_symbol_upper.endswith("USDT") else f"{raw_symbol_upper}USDT"
 
-            # 1. Проверка черного списка (в памяти)
             if black_list.is_blacklisted_sync(phemex_symbol):
-                logger.warning(f"[{phemex_symbol}] Монета в BlackList. Отказ от входа.")
+                logger.warning(f"[SKIP] [{phemex_symbol}] Отказ: Монета находится в BlackList.")
                 return False
 
-            # 2. Проверка спецификаций (в памяти)
             if phemex_symbol not in symbol_specs:
-                logger.warning(f"[{phemex_symbol}] Спецификации отсутствуют (монеты еще нет на бирже). Отказ от входа.")
+                logger.warning(f"[SKIP] [{phemex_symbol}] Отказ: Спецификации отсутствуют (монеты еще нет на Phemex).")
                 return False
 
-            # 3. МГНОВЕННОЕ получение цены (только из памяти!)
             signal = self.create_signal_instant(phemex_symbol, side, st_stream, price_manager)
             
             if signal:
                 signal.timestamp = received_ms / 1000.0 if received_ms > 0 else time.time()
-                # 4. ПРЯМОЙ ПРОСТРЕЛ
                 await self.on_signal_callback(signal)
                 return True
             else:
-                # Уже громко залогировано внутри create_signal_instant
+                # Внутри create_signal_instant уже срабатывает мощный алерт, дублировать не будем
                 return False
             
         except Exception as e:
@@ -89,39 +86,28 @@ class SignalEngine:
         st_stream: Optional[PhemexStakanStream], 
         price_manager: PriceCacheManager
     ) -> Optional[EntrySignal]:
-        """
-        Мгновенно вытаскивает цены ИСКЛЮЧИТЕЛЬНО ИЗ ПАМЯТИ (стакан или фоновый REST-кэш).
-        Никаких сетевых запросов!
-        """
         bids, asks = [], []
         if st_stream:
             bids, asks = st_stream.get_depth(symbol)
 
-        # ФОЛБЭК: Если стакан еще пуст (например, WS не успел обновиться)
         if not bids or not asks:
-            # Мгновенное чтение из памяти. price_manager сам обновляется в своей фоновой таске
             phemex_price, _ = price_manager.get_prices(symbol)
-            
             if phemex_price <= 0:
-                # ГРОМКИЙ ЛОГ: Монеты нет ни в стакане, ни в фоновом кэше
                 logger.error(
-                    f"🚨 [СНАЙПЕР-СТОП] [{symbol}] Цены нет в стакане и фоновом REST-кэше! "
-                    f"Свежий листинг без сформированной ликвидности. ОТКАЗ ОТ ВХОДА."
+                    f"🚨 [СНАЙПЕР-СТОП] [SKIP] [{symbol}] Цены нет в стакане и фоновом REST-кэше! "
+                    f"Свежий листинг без сформированной ликвидности. Отказ от входа."
                 )
-                return None
-                
-            ask1 = bid1 = phemex_price
-            mid_price = phemex_price
+                return None  
+            ask1 = bid1 = mid_price = phemex_price
         else:
             ask1, bid1 = asks[0][0], bids[0][0]
             mid_price = (ask1 + bid1) / 2.0
         
-        entry_price = ask1 if side == "LONG" else bid1
-        
+        # ФИКС: Используем mid_price для расчета объемов, а не голый спред
         return EntrySignal(
             symbol=symbol,
             side=side,
-            price=entry_price,
+            price=mid_price, # <--- Точный mid_price ложится в основу расчета объема
             init_ask1=ask1,
             init_bid1=bid1,
             mid_price=mid_price

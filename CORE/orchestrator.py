@@ -271,6 +271,7 @@ class TradingBot:
 
     def _can_open_position(self, symbol: str, side: str = "LONG") -> bool:
         if symbol in self.black_list:
+            logger.warning(f"[SKIP] [{symbol}] Оркестратор: Отказ, монета в BlackList.")
             return False
 
         working_symbols = set()
@@ -278,15 +279,47 @@ class TradingBot:
             if pos.in_position or pos.in_pending:
                 working_symbols.add(pos.symbol)
 
-        # 🛠 ФИКС: Запрещаем входить, если мы УЖЕ в позиции по этой монете
         if symbol in working_symbols:
-            logger.warning(f"[{symbol}] Отказ: позиция уже существует.")
+            logger.warning(f"[SKIP] [{symbol}] Оркестратор: Отказ, позиция по монете УЖЕ существует.")
             return False
 
         if len(working_symbols) >= self.max_active_positions:
+            logger.warning(f"[SKIP] [{symbol}] Оркестратор: Отказ, достигнут лимит позиций ({self.max_active_positions}).")
             return False
 
         return True
+
+    async def _process_entry_from_signal(self, signal: "EntrySignal"):
+        """Компактный интерфейс исполнения входа."""
+        phemex_symbol = signal.symbol
+        side = signal.side
+        pos_key = f"{phemex_symbol}_{side}"
+
+        # Детальный лог в консоль перед попыткой войти
+        logger.info(f"➡️ [ОРКЕСТРАТОР] Получен сигнал {phemex_symbol} ({side}). Проверка лимитов...")
+
+        if not self._can_open_position(phemex_symbol, side):
+            logger.warning(f"[SKIP] [{phemex_symbol}] _can_open_position запретил вход.")
+            return
+
+        spec = self.symbol_specs.get(phemex_symbol)
+        if not spec:
+            logger.warning(f"[SKIP] [{phemex_symbol}] Оркестратор: Отказ, не загружены спецификации (lot/tick) с биржи.")
+            return
+
+        try:
+            # Исполняем вход (напрямую, без тасок)
+            await self.executor.execute_entry(
+                symbol=phemex_symbol,
+                pos_key=pos_key,
+                signal=signal
+            )
+            
+            # Вход завершен. Добавляем в блэклист в фоне
+            asyncio.create_task(self.bl_manager.update_and_save([phemex_symbol]))
+
+        except Exception as e:
+            logger.error(f"[SKIP] [{phemex_symbol}] Критическая ошибка входа (execute_entry_from_signal): {e}")
     
     # Новый метод в TradingBot:
     async def _on_upbit_signal(self, symbol: str, received_ms: int = 0) -> None:
@@ -314,33 +347,6 @@ class TradingBot:
                 await asyncio.sleep(UPBIT_SIGNAL_RELEASE_PAUSE_SEC)
                 self.stop_another_request = False
             asyncio.create_task(release_block())
-
-    async def _process_entry_from_signal(self, signal: "EntrySignal"):
-        """Компактный интерфейс исполнения входа."""
-        phemex_symbol = signal.symbol
-        side = signal.side
-        pos_key = f"{phemex_symbol}_{side}"
-
-        if not self._can_open_position(phemex_symbol, side):
-            return
-
-        spec = self.symbol_specs.get(phemex_symbol)
-        if not spec:
-            return
-
-        try:
-            # Исполняем вход (пробиваем до экзекутора напрямую, никакой фоновой таски)
-            await self.executor.execute_entry(
-                symbol=phemex_symbol,
-                pos_key=pos_key,
-                signal=signal
-            )
-            
-            # Вход завершен. Добавляем в блэклист в фоне (т.к. это сохранение на диск)
-            asyncio.create_task(self.bl_manager.update_and_save([phemex_symbol]))
-
-        except Exception as e:
-            logger.error(f"[ERR] Entry Error for {phemex_symbol}: {e}")
         
     # --- СЕТЕВЫЕ ОПЕРАЦИИ (ВНЕ ЛОКА) ---
     async def _payloader(self, action_payload: List[Tuple], symbol: str) -> None:
@@ -670,9 +676,6 @@ class TradingBot:
         logger.info(f"[CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ\n{summary}")
         if self.tg: asyncio.create_task(self.tg.send_message("[START] <b>ТОРГОВЛЯ НАЧАТА</b>"))
 
-        # symbols_info = await self.phemex_sym_api.get_all(quote=self.bl_manager.quota_asset, only_active=True)
-        # self.symbol_specs = {s.symbol: s for s in symbols_info if s and s.symbol not in self.black_list}
-
         # СТАЛО (Жесткий контроль регистра):
         symbols_info = await self.phemex_sym_api.get_all(quote=self.bl_manager.quota_asset, only_active=True)
         self.symbol_specs = {
@@ -750,12 +753,55 @@ class TradingBot:
         if self._upbit_monitor:
             self._upbit_task = asyncio.create_task(self._upbit_monitor.run())
 
+    # async def aclose(self):
+    #     await self.stop()
+    #     logger.info("[SAVE] Финальное сохранение стейта на диск...")
+    #     await self.state.save()
+    #     await self.phemex_session.close()
+    #     if self.tg: await self.tg.aclose()
+
+    # async def stop(self):
+    #     if not getattr(self, '_is_running', False): return
+    #     self._is_running = False
+        
+    #     if getattr(self, 'st_stream', None):
+    #         self.st_stream.stop()
+            
+    #     logger.info("[SHUT] Остановка процессов...")
+    #     if self.tg: await self.tg.send_message("[SHUT] Остановка процессов...")
+    #     self.price_manager.stop()
+    #     await self.private_ws.aclose()
+    #     await self._await_task(getattr(self, '_price_updater_task', None))
+    #     await self._await_task(getattr(self, '_private_ws_task', None))
+    #     await self._await_task(getattr(self, '_game_loop_task', None))
+    #     await self._await_task(getattr(self, '_upbit_task', None))
+    #     if self._upbit_monitor:
+    #         await self._upbit_monitor.aclose()
+    #     await self._await_task(getattr(self, '_stakan_task', None))
+    #     self._processing.clear()
+    #     self._signal_timeouts.clear()
+    #     await self.state.save()
+
     async def aclose(self):
         await self.stop()
+        
         logger.info("[SAVE] Финальное сохранение стейта на диск...")
-        await self.state.save()
-        await self.phemex_session.close()
-        if self.tg: await self.tg.aclose()
+        try:
+            await self.state.save()
+        except Exception as e:
+            logger.error(f"[SHUT] Ошибка сохранения стейта: {e}")
+            
+        try:
+            if hasattr(self, 'phemex_session') and self.phemex_session:
+                await self.phemex_session.close()
+        except Exception as e:
+            logger.debug(f"[SHUT] Ошибка закрытия сессии Phemex: {e}")
+            
+        if self.tg: 
+            try:
+                await self.tg.aclose()
+            except Exception as e:
+                logger.debug(f"[SHUT] Ошибка закрытия сессии TG: {e}")
 
     async def stop(self):
         if not getattr(self, '_is_running', False): return
@@ -765,16 +811,29 @@ class TradingBot:
             self.st_stream.stop()
             
         logger.info("[SHUT] Остановка процессов...")
-        if self.tg: await self.tg.send_message("[SHUT] Остановка процессов...")
-        self.price_manager.stop()
-        await self.private_ws.aclose()
-        await self._await_task(getattr(self, '_price_updater_task', None))
-        await self._await_task(getattr(self, '_private_ws_task', None))
-        await self._await_task(getattr(self, '_game_loop_task', None))
-        await self._await_task(getattr(self, '_upbit_task', None))
-        if self._upbit_monitor:
-            await self._upbit_monitor.aclose()
-        await self._await_task(getattr(self, '_stakan_task', None))
+        if self.tg: 
+            try:
+                await self.tg.send_message("[SHUT] Остановка процессов...")
+            except: pass
+            
+        if hasattr(self, 'price_manager'):
+            self.price_manager.stop()
+            
+        try:
+            if hasattr(self, 'private_ws') and self.private_ws:
+                await self.private_ws.aclose()
+        except Exception as e:
+            logger.debug(f"[SHUT] Ошибка остановки Private WS: {e}")
+
+        # Безопасно ждем завершения фоновых задач
+        for task_attr in ['_price_updater_task', '_private_ws_task', '_game_loop_task', '_upbit_task', '_stakan_task']:
+            await self._await_task(getattr(self, task_attr, None))
+
+        if getattr(self, '_upbit_monitor', None) and hasattr(self._upbit_monitor, 'aclose'):
+            try:
+                await self._upbit_monitor.aclose()
+            except Exception as e:
+                logger.debug(f"[SHUT] Ошибка остановки Upbit Monitor: {e}")
+
         self._processing.clear()
         self._signal_timeouts.clear()
-        await self.state.save()

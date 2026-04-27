@@ -7,7 +7,7 @@ from __future__ import annotations
 import inspect
 import logging
 import sys
-# import os
+import time
 from datetime import datetime
 from functools import wraps
 from logging.handlers import RotatingFileHandler
@@ -19,6 +19,10 @@ import pytz
 from consts import LOG_DEBUG, LOG_ERROR, LOG_INFO, LOG_WARNING, MAX_LOG_LINES, TIME_ZONE
 
 TZ = pytz.timezone(TIME_ZONE)
+
+# --- АНТИСПАМ НАСТРОЙКИ ---
+ANTI_SPAM_COOLDOWN_SEC = 60.0
+_SPAM_CACHE: dict[int, float] = {}
 
 
 class _TzFormatter(logging.Formatter):
@@ -49,7 +53,7 @@ class UnifiedLogger:
             file_handler.setFormatter(formatter)
             base_logger.addHandler(file_handler)
 
-            # # 2. Обработчик для вывода в консоль (заменяет print)
+            # 2. Обработчик для вывода в консоль
             if LOG_DEBUG: 
                 console_handler = logging.StreamHandler(sys.stdout)
                 console_handler.setFormatter(formatter)
@@ -57,24 +61,49 @@ class UnifiedLogger:
 
         self._logger = logging.LoggerAdapter(base_logger, extra={"context": context or name})
 
+    def _is_spam(self, msg: str) -> bool:
+        """
+        Проверяет, не дублируется ли сообщение в течение ANTI_SPAM_COOLDOWN_SEC.
+        Возвращает True, если это спам (надо пропустить).
+        """
+        now = time.time()
+        
+        # Защита от утечки памяти: чистим старые хеши, если кэш разросся
+        if len(_SPAM_CACHE) > 1000:
+            keys_to_del = [k for k, v in _SPAM_CACHE.items() if now - v > ANTI_SPAM_COOLDOWN_SEC]
+            for k in keys_to_del:
+                del _SPAM_CACHE[k]
+                
+        # Хешируем само сообщение (оно уже без метки времени)
+        msg_hash = hash(msg)
+        
+        if msg_hash in _SPAM_CACHE:
+            if now - _SPAM_CACHE[msg_hash] < ANTI_SPAM_COOLDOWN_SEC:
+                return True
+                
+        _SPAM_CACHE[msg_hash] = now
+        return False
+
     def debug(self, msg: str, *args, **kwargs) -> None:
-        if LOG_DEBUG:
+        # Для дебага иногда нужны дубли (например, поллинг), можно отключить антиспам при желании,
+        # но сейчас фильтруем и его тоже.
+        if LOG_DEBUG and not self._is_spam(msg):
             self._logger.debug(msg, *args, **kwargs)
 
     def info(self, msg: str, *args, **kwargs) -> None:
-        if LOG_INFO:
+        if LOG_INFO and not self._is_spam(msg):
             self._logger.info(msg, *args, **kwargs)
 
     def warning(self, msg: str, *args, **kwargs) -> None:
-        if LOG_WARNING:
+        if LOG_WARNING and not self._is_spam(msg):
             self._logger.warning(msg, *args, **kwargs)
 
     def error(self, msg: str, *args, **kwargs) -> None:
-        if LOG_ERROR:
+        if LOG_ERROR and not self._is_spam(msg):
             self._logger.error(msg, *args, **kwargs)
 
     def exception(self, msg: str, *args, **kwargs) -> None:
-        if LOG_ERROR:
+        if LOG_ERROR and not self._is_spam(msg):
             self._logger.exception(msg, *args, **kwargs)
 
     def total_exception_decor(self, func, context: Optional[Any] = None):
