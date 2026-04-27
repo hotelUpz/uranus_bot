@@ -24,12 +24,14 @@ load_dotenv()
 logger = UnifiedLogger(name="bot")
 TZ = pytz.timezone(TIME_ZONE)
 
-WAIT_ENTRY_TIMEOUT_SEC = 2.0
-WAIT_ENTRY_MIN_WAIT_SEC = 0.05
-SMART_WAIT_POLL_STEP_SEC = 0.01   # Шаг проверки налива (10мс)
-GRID_TP_BASE_SLEEP_SEC = 0.1      # Базовый слип между ордерами сетки
-GRID_TP_RETRY_SLEEP_SEC = 1.0     # Слип при ошибке 11011
+WAIT_ENTRY_TIMEOUT_SEC      = 2.0
+WAIT_ENTRY_MIN_WAIT_SEC     = 0.05
+WAIT_AFTER_ALL_CALCEL       = 0.5       # спим это время (в секундах) чтобы движок Phemex успел высвободить позицию.
+SMART_WAIT_POLL_STEP_SEC    = 0.01   # Шаг проверки налива (10мс)
+GRID_TP_BASE_SLEEP_SEC      = 0.1      # Базовый слип между ордерами сетки
+GRID_TP_RETRY_SLEEP_SEC     = 1.0     # Слип при ошибке 11011
 MARKET_EXIT_RETRY_SLEEP_SEC = 0.5 # Слип между попытками выхода по маркету
+
 
 def round_step(value: float, step: float) -> float:
     if not step or step <= 0:
@@ -338,6 +340,8 @@ class OrderExecutor:
 
             # 1. Отменяем ВСЕ лимитки (защита от гонок с TP)
             await self.cancel_all_orders(symbol)
+            # Даем микро-паузу, чтобы ядро Phemex 100% успело снять локи с объема
+            await asyncio.sleep(WAIT_AFTER_ALL_CALCEL)
 
             async with self.tb._get_lock(pos_key):
                 pos = self.tb.state.active_positions.get(pos_key)
@@ -397,106 +401,3 @@ class OrderExecutor:
     async def execute_market_exit(self, symbol: str, pos_key: str) -> bool:
         """Алиас для обратной совместимости с оркестратором."""
         return await self.execute_exit(symbol, pos_key)
-
-
-#   async def execute_market_exit(self, symbol: str, pos_key: str) -> bool:
-#         """Экстренное закрытие по маркету."""
-#         for attempt in range(max(1, self.max_exit_retries)):
-#             try:
-#                 qty, phemex_pos_side, op_side = 0.0, "", ""
-#                 async with self.tb._get_lock(pos_key):
-#                     p = self.tb.state.active_positions.get(pos_key)
-#                     if not p: return False
-#                     qty = p.current_qty
-#                     phemex_pos_side = "Long" if p.side == "LONG" else "Short"
-#                     op_side = "Sell" if p.side == "LONG" else "Buy"
-
-#                 if qty <= 0: return True
-
-#                 # Бьем с приоритетом, чтобы спасти позицию без ожидания лока!
-#                 resp = await self.client.place_market_order(
-#                     symbol, op_side, qty, phemex_pos_side, reduce_only=True, is_priority=True
-#                 )
-
-#                 if resp.get("code") == 0:
-#                     logger.info(f"[{pos_key}] Успешный выход по маркету (аварийный/таймаут).")
-#                     return True
-#                 elif resp.get("code") == 11011:
-#                     # TE_REDUCE_ONLY_ABORT: Позиция УЖЕ закрыта тейк-профитом. Это успех!
-#                     logger.info(f"[{pos_key}] Позиция уже закрыта (TE_REDUCE_ONLY_ABORT). Сетка TP отработала быстрее!")
-#                     async with self.tb._get_lock(pos_key):
-#                         p = self.tb.state.active_positions.get(pos_key)
-#                         if p:
-#                             p.current_qty = 0
-#                             p.in_position = False
-#                             p.is_closed_by_exchange = True
-#                     return True
-#                 else:
-#                     err_msg = f"🚨 [{pos_key}] Отказ API при выходе по маркету (Phemex Error [{resp.get('code')}]): {resp.get('msg')}"
-#                     logger.warning(err_msg)
-
-#             except Exception as e:
-#                 err_msg = f"🚨 [{pos_key}] Исключение при выходе по маркету: {e}"
-#                 logger.error(err_msg)
-
-#             if self.max_exit_retries > 1: await asyncio.sleep(0.3)
-
-#         err_msg = f"🚨 <b>[{pos_key}]</b> FATAL ERROR: Не удалось закрыть позицию по маркету после {self.max_exit_retries} попыток! СРОЧНО ПРОВЕРЬТЕ ТЕРМИНАЛ!"
-#         logger.error(err_msg)
-#         if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
-#         return False
-
-#     async def execute_exit(self, symbol: str, pos_key: str, price: float, timeout: float = 5.0) -> bool:
-#         """Плавный выход лимиткой."""
-#         for attempt in range(max(1, self.max_exit_retries)):
-#             try:
-#                 qty, phemex_pos_side, op_side = 0.0, "", ""
-#                 async with self.tb._get_lock(pos_key):
-#                     p = self.tb.state.active_positions.get(pos_key)
-#                     if not p: return False
-#                     qty = p.current_qty
-#                     phemex_pos_side = "Long" if p.side == "LONG" else "Short"
-#                     op_side = "Sell" if p.side == "LONG" else "Buy"
-
-#                 if qty <= 0: return True
-
-#                 resp = await self.client.place_limit_order(
-#                     symbol, op_side, qty, price, phemex_pos_side, reduce_only=True, is_priority=True
-#                 )
-
-#                 if resp.get("code") == 0:
-#                     order_id = resp.get("data", {}).get("orderID")
-#                     logger.info(f"[{pos_key}] Выходной лимитный ордер установлен. Ожидание {timeout}с...")
-                    
-#                     await asyncio.sleep(timeout)
-                    
-#                     curr_qty = 0.0
-#                     async with self.tb._get_lock(pos_key):
-#                         p = self.tb.state.active_positions.get(pos_key)
-#                         if p: curr_qty = p.current_qty
-                    
-#                     if curr_qty > 0:
-#                         logger.info(f"[{pos_key}] Ордер не исполнился за {timeout}с. Отмена...")
-#                         asyncio.create_task(self.execute_cancel(symbol, phemex_pos_side, order_id))
-#                         return False
-#                     return True
-                    
-#                 elif resp.get("code") == 11011:
-#                     # TE_REDUCE_ONLY_ABORT
-#                     logger.info(f"[{pos_key}] Позиция уже закрыта (TE_REDUCE_ONLY_ABORT).")
-#                     async with self.tb._get_lock(pos_key):
-#                         p = self.tb.state.active_positions.get(pos_key)
-#                         if p:
-#                             p.current_qty = 0
-#                             p.in_position = False
-#                             p.is_closed_by_exchange = True
-#                     return True
-#                 else:
-#                     logger.warning(f"🚨 [{pos_key}] Ошибка API при лимитном выходе: {resp}")
-
-#             except Exception as e:
-#                 logger.error(f"🚨 [{pos_key}] Исключение execute_exit: {e}")
-
-#             if self.max_exit_retries > 1: await asyncio.sleep(0.3)
-            
-#         return False

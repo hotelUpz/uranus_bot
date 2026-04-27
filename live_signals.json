@@ -1,0 +1,56 @@
+[
+    {
+        "symbol": "PRL",
+        "announce_ts_ms": 1777285852000,
+        "announce_ts_str": "2026-04-27 10:30:52 UTC",
+        "received_ts_ms": 1777317281885,
+        "received_ts_str": "2026-04-27 19:14:41.885000 ",
+        "latency_sec": 31429.885,
+        "status": "INIT"
+    },
+    {
+        "symbol": "XCN",
+        "announce_ts_ms": 1777266000000,
+        "announce_ts_str": "2026-04-27 05:00:00 UTC",
+        "received_ts_ms": 1777317281886,
+        "received_ts_str": "2026-04-27 19:14:41.886000 ",
+        "latency_sec": 51281.886,
+        "status": "INIT"
+    },
+    {
+        "symbol": "SPK",
+        "announce_ts_ms": 1776910800000,
+        "announce_ts_str": "2026-04-23 02:20:00 UTC",
+        "received_ts_ms": 1777317281886,
+        "received_ts_str": "2026-04-27 19:14:41.886000 ",
+        "latency_sec": 406481.886,
+        "status": "INIT"
+    },
+    {
+        "symbol": "CHIP",
+        "announce_ts_ms": 1776775923000,
+        "announce_ts_str": "2026-04-21 12:52:03 UTC",
+        "received_ts_ms": 1777317281886,
+        "received_ts_str": "2026-04-27 19:14:41.886000 ",
+        "latency_sec": 541358.886,
+        "status": "INIT"
+    },
+    {
+        "symbol": "PIEVERSE",
+        "announce_ts_ms": 1776661200000,
+        "announce_ts_str": "2026-04-20 05:00:00 UTC",
+        "received_ts_ms": 1777317281886,
+        "received_ts_str": "2026-04-27 19:14:41.886000 ",
+        "latency_sec": 656081.886,
+        "status": "INIT"
+    },
+    {
+        "symbol": "SOON",
+        "announce_ts_ms": 1776402002000,
+        "announce_ts_str": "2026-04-17 05:00:02 UTC",
+        "received_ts_ms": 1777317281886,
+        "received_ts_str": "2026-04-27 19:14:41.886000 ",
+        "latency_sec": 915279.886,
+        "status": "INIT"
+    }
+]

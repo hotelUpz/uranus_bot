@@ -3,21 +3,21 @@
     "fails": {},
     "analytics": {
         "start_balance": 71.54278475709,
-        "current_balance": 71.43421047709,
+        "current_balance": 71.06873867709,
         "max_balance": 71.54278475709,
-        "min_balance": 71.43421047709,
-        "mdd_usd": 0.10857427999999913,
-        "mdd_pct": 0.1517613276707673,
+        "min_balance": 71.06873867709,
+        "mdd_usd": 0.4740460800000079,
+        "mdd_pct": 0.6626050154596885,
         "max_profit_usd": 0.0,
         "max_profit_pct": 0.0,
         "total_wins": 0,
-        "total_losses": 2,
-        "total_pnl": -0.10857427999999636,
+        "total_losses": 4,
+        "total_pnl": -0.47404608000000453,
         "symbols": {
             "ETHUSDT": {
                 "wins": 0,
-                "losses": 2,
-                "pnl": -0.10857427999999636
+                "losses": 4,
+                "pnl": -0.47404608000000453
             }
         },
         "history": [
@@ -40,6 +40,26 @@
                 "pnl": -0.0708,
                 "is_win": false,
                 "duration": "21.3s"
+            },
+            {
+                "ts": 1777317383.730413,
+                "symbol": "ETHUSDT",
+                "side": "LONG",
+                "entry_usd": 114.43,
+                "exit_usd": 114.39,
+                "pnl": -0.1803,
+                "is_win": false,
+                "duration": "20.9s"
+            },
+            {
+                "ts": 1777317721.719145,
+                "symbol": "ETHUSDT",
+                "side": "LONG",
+                "entry_usd": 114.34,
+                "exit_usd": 114.29,
+                "pnl": -0.1852,
+                "is_win": false,
+                "duration": "20.9s"
             }
         ]
     }

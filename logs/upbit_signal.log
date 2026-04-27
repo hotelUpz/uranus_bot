@@ -2,3 +2,19 @@
 2026-04-27 17:33:32 | INFO | upbit_signal | [MOCK] MOCK-генератор остановлен.
 2026-04-27 17:33:58 | INFO | upbit_signal | [MOCK] GENERATOR STARTED
 2026-04-27 17:35:10 | INFO | upbit_signal | [MOCK] MOCK-генератор остановлен.
+2026-04-27 19:14:41 | INFO | upbit_signal | [SYNC] Собираем базу текущих новостей перед запуском...
+2026-04-27 19:14:41 | INFO | upbit_signal | [OK] Синхронизация завершена (собрано 10 ID). Ждем новые анонсы...
+2026-04-27 19:14:41 | INFO | upbit_signal | [RUN] STARTING WORKERS (STATIC)
+2026-04-27 19:14:41 | INFO | upbit_signal |   Target interval: 0.25s
+2026-04-27 19:14:41 | INFO | upbit_signal |   Cooldown per slot: 0.25s
+2026-04-27 19:14:41 | INFO | upbit_signal | [Localhost] Биржа спит. Анабиоз на 4.26 ч.
+   Засыпаем:    2026-04-27 19:14:41 UTC | 2026-04-28 04:14:41 KST
+   Пробуждение: 2026-04-27 23:30:00 UTC | 2026-04-28 08:30:00 KST
+2026-04-27 19:14:58 | INFO | upbit_signal | [UPBIT] Получен сигнал отмены. Останавливаем воркеры...
+2026-04-27 19:14:58 | INFO | upbit_signal | [UPBIT] Закрытие сессий мониторинга...
+2026-04-27 19:16:02 | INFO | upbit_signal | [MOCK] GENERATOR STARTED
+2026-04-27 19:17:22 | INFO | upbit_signal | [MOCK] MOCK-генератор остановлен.
+2026-04-27 19:20:54 | INFO | upbit_signal | [MOCK] GENERATOR STARTED
+2026-04-27 19:21:18 | INFO | upbit_signal | [MOCK] MOCK-генератор остановлен.
+2026-04-27 19:21:40 | INFO | upbit_signal | [MOCK] GENERATOR STARTED
+2026-04-27 19:22:27 | INFO | upbit_signal | [MOCK] MOCK-генератор остановлен.

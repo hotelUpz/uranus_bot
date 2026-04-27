@@ -1,22 +1,22 @@
 {
     "app": {
-        "_label": "БАЗОВЫЕ НАСТРОЙКИ (APP)",
+        "_label": "BASIC APP SETTINGS",
         "name": "Uranos Bot",
         "max_active_positions": 1
     },
     "credentials": {
-        "_label": "ДОСТУП К БИРЖЕ (API KEYS)",
+        "_label": "EXCHANGE ACCESS (API KEYS)",
         "api_key": "",
         "api_secret": ""
     },
     "tg": {
-        "_label": "TELEGRAM УВЕДОМЛЕНИЯ",
+        "_label": "TELEGRAM NOTIFICATIONS",
         "enable": true,
         "token": "",
         "chat_id": ""
     },
     "log": {
-        "_label": "НАСТРОЙКИ ЛОГИРОВАНИЯ",
+        "_label": "LOGGING SETTINGS",
         "debug": true,
         "info": true,
         "warning": true,
@@ -24,10 +24,12 @@
         "max_lines": 1500,
         "timezone": "UTC"
     },
-    "black_list": [],
+    "black_list": [
+        "ETHUSDT"
+    ],
     "quota_asset": "USDT",
     "risk": {
-        "_label": "РИСК-МЕНЕДЖМЕНТ И ЛИМИТЫ",
+        "_label": "RISK MANAGEMENT AND LIMITS",
         "leverage": {
             "set_previous": false,
             "used_by_cache": false,
@@ -35,12 +37,12 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 301.0,
+        "notional_limit": 121.0,
         "_is_validate_notional_limit": false
     },
     "upbit": {
-        "_label": "МОНИТОРИНГ UPBIT (ИСТОЧНИК СИГНАЛОВ)",
-        "use_mock": false,
+        "_label": "UPBIT MONITORING (SIGNAL SOURCE)",
+        "use_mock": true,
         "poll_interval_sec": 0.25,
         "min_cooldown_sec": 0.25,
         "proxies": [
@@ -60,8 +62,8 @@
         }
     },
     "entry": {
-        "_label": "ЛОГИКА ВХОДА (СНАЙПЕР)",
-        "_filds": {
+        "_label": "ENTRY LOGIC (SNIPER)",
+        "_fields": {
             "mode": "market | limit",
             "limit_distance_pct": ""
         },
@@ -74,7 +76,7 @@
         }
     },
     "exit": {
-        "_label": "ЛОГИКА ВЫХОДА (ТЕЙК-ПРОФИТЫ И СТОПЫ)",
+        "_label": "EXIT LOGIC (TAKE-PROFITS AND STOPS)",
         "max_place_order_retries": 1,
         "min_order_life_sec": 0.05,
         "scenarios": {
@@ -85,22 +87,52 @@
                         "comment": "< $500K",
                         "min_vol": 0,
                         "max_vol": 500,
-                        "levels": [4, 10, 20, 40, 70],
-                        "volumes": [20, 20, 20, 20, 20]
+                        "levels": [
+                            4,
+                            10,
+                            20,
+                            40,
+                            70
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
                     },
                     {
                         "comment": "$500K - $2M",
                         "min_vol": 500,
                         "max_vol": 2000,
-                        "levels": [3, 8, 16, 30, 55],
-                        "volumes": [20, 20, 20, 20, 20]
+                        "levels": [
+                            3,
+                            8,
+                            16,
+                            30,
+                            55
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
                     },
                     {
                         "comment": "> $2M",
                         "min_vol": 2000,
                         "max_vol": null,
-                        "levels": [2, 5, 12, 22, 40],
-                        "volumes": [20, 20, 20, 20, 20]
+                        "levels": [
+                            2,
+                            4
+                        ],
+                        "volumes": [
+                            50,
+                            50
+                        ]
                     }
                 ]
             },
@@ -113,7 +145,7 @@
             },
             "ttl_market_close": {
                 "enable": true,
-                "ttl_sec": 4500
+                "ttl_sec": 20
             }
         }
     }
