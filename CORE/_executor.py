@@ -124,7 +124,8 @@ class OrderExecutor:
                 if self.tb.tg: asyncio.create_task(self.tb.tg.send_message(err_msg))
                 return False
 
-            ref_price = signal.price
+            # ref_price = signal.price
+            ref_price = signal.mid_price
             if not ref_price or ref_price <= 0:
                 return False
 

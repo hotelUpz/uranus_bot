@@ -54,26 +54,26 @@ class SignalEngine:
             raw_symbol_upper = raw_symbol.upper().strip()
             phemex_symbol = raw_symbol_upper if raw_symbol_upper.endswith("USDT") else f"{raw_symbol_upper}USDT"
 
-            # 1. Проверка черного списка
+            # 1. Проверка черного списка (в памяти)
             if black_list.is_blacklisted_sync(phemex_symbol):
                 logger.warning(f"[{phemex_symbol}] Монета в BlackList. Отказ от входа.")
                 return False
 
-            # 2. Проверка спецификаций в памяти
+            # 2. Проверка спецификаций (в памяти)
             if phemex_symbol not in symbol_specs:
                 logger.warning(f"[{phemex_symbol}] Спецификации отсутствуют (монеты еще нет на бирже). Отказ от входа.")
                 return False
 
-            # 3. МГНОВЕННОЕ получение цены (без попыток подписаться на WS)
+            # 3. МГНОВЕННОЕ получение цены (только из памяти!)
             signal = self.create_signal_instant(phemex_symbol, side, st_stream, price_manager)
             
             if signal:
                 signal.timestamp = received_ms / 1000.0 if received_ms > 0 else time.time()
-                # 4. ПРЯМОЙ ПРОСТРЕЛ (жесткий await без создания тасок и потери контекста)
+                # 4. ПРЯМОЙ ПРОСТРЕЛ
                 await self.on_signal_callback(signal)
                 return True
             else:
-                logger.error(f"‼️ [CRITICAL] [{phemex_symbol}] НЕТ ЦЕНЫ (кэш пуст). Листинг еще не торгуется! СКИП.")
+                # Уже громко залогировано внутри create_signal_instant
                 return False
             
         except Exception as e:
@@ -90,16 +90,26 @@ class SignalEngine:
         price_manager: PriceCacheManager
     ) -> Optional[EntrySignal]:
         """
-        Мгновенно вытаскивает цены из кэша стакана или фонового REST-кэша.
+        Мгновенно вытаскивает цены ИСКЛЮЧИТЕЛЬНО ИЗ ПАМЯТИ (стакан или фоновый REST-кэш).
+        Никаких сетевых запросов!
         """
         bids, asks = [], []
         if st_stream:
             bids, asks = st_stream.get_depth(symbol)
 
+        # ФОЛБЭК: Если стакан еще пуст (например, WS не успел обновиться)
         if not bids or not asks:
+            # Мгновенное чтение из памяти. price_manager сам обновляется в своей фоновой таске
             phemex_price, _ = price_manager.get_prices(symbol)
+            
             if phemex_price <= 0:
-                return None  # Отказ от входа! Монета мертва.
+                # ГРОМКИЙ ЛОГ: Монеты нет ни в стакане, ни в фоновом кэше
+                logger.error(
+                    f"🚨 [СНАЙПЕР-СТОП] [{symbol}] Цены нет в стакане и фоновом REST-кэше! "
+                    f"Свежий листинг без сформированной ликвидности. ОТКАЗ ОТ ВХОДА."
+                )
+                return None
+                
             ask1 = bid1 = phemex_price
             mid_price = phemex_price
         else:
