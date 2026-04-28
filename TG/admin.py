@@ -45,7 +45,8 @@ class AdminTgBot:
                 [KeyboardButton(text="📄 Получить настройки"), KeyboardButton(text="💰 Задать размер входа")],
                 [KeyboardButton(text="📊 Статус")]
             ],
-            resize_keyboard=True
+            resize_keyboard=True,
+            is_persistent=True
         )
         self._register_handlers()
 
