@@ -60,7 +60,7 @@ class BlackListManager:
                 c = json.load(f)
             c["black_list"] = clean_symbols_for_cfg
             with open(self.cfg_path, "w", encoding="utf-8") as f:
-                json.dump(c, f, indent=4)
+                json.dump(c, f, indent=4, ensure_ascii=False)
 
         try:
             await asyncio.to_thread(_save)

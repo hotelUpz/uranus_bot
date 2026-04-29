@@ -652,12 +652,11 @@ class UpbitLiveMonitor:
             return []
 
     async def process_new_listing(self, notice: dict, symbol: str, is_startup: bool):
-        # Строго как в старом коде: берем только listed_at. Нет ключа - скипаем.
-        listed_at = notice.get("listed_at")
-        if not listed_at:
-            return
-            
-        announce_ms = self._parse_iso_to_ms(listed_at)
+        # We must not return early if listed_at is missing, because the notice ID
+        # is already added to seen_ids. If we return, we permanently lose the signal.
+        listed_at = notice.get("listed_at") or notice.get("first_listed_at")
+        
+        announce_ms = self._parse_iso_to_ms(listed_at) if listed_at else 0
         received_ms = int(time.time() * 1000)
         
         if announce_ms == 0:

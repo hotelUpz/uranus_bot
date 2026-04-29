@@ -67,7 +67,7 @@ def save_json_safe(filepath: str, data: Any) -> None:
     for attempt in range(3):
         try:
             with open(tmp_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
+                json.dump(data, f, indent=4, ensure_ascii=False)
             os.replace(tmp_file, filepath)
             return
         except Exception:
