@@ -308,7 +308,7 @@ class UpbitLiveMonitor:
                 # 5. Точный Sleep
                 elapsed = time.monotonic() - loop_start
                 await asyncio.sleep(max(0.0, self.current_interval - elapsed))
-                print("tik")
+                # print("tik")
 
         except asyncio.CancelledError:
             logger.info("[UPBIT] Получен сигнал отмены. Остановка парсера...")
