@@ -1,0 +1,41 @@
+2026-04-30 10:37:05 | INFO | upbit_signal | [RUN] Upbit Monitor Start. Base Interval: 0.25s
+2026-04-30 10:37:05 | INFO | upbit_signal | [SLEEP] Биржа закрыта. Спим 12.88ч...
+2026-04-30 10:37:18 | INFO | upbit_signal | [UPBIT] Получен сигнал отмены. Остановка парсера...
+2026-04-30 10:43:38 | INFO | upbit_signal | [RUN] Upbit Monitor Start. Base Interval: 0.25s
+2026-04-30 10:43:38 | INFO | upbit_signal | [SYNC] Готово. База: 10 ID. Входим в мониторинг...
+2026-04-30 10:45:35 | INFO | upbit_signal | [UPBIT] Получен сигнал отмены. Остановка парсера...
+2026-04-30 12:02:41 | INFO | upbit_signal | [RUN] Upbit Monitor Start. Base Interval: 0.25s
+2026-04-30 12:02:42 | INFO | upbit_signal | [TEST] 💉 Вброшен тестовый сигнал TESTCOIN(TST)!
+2026-04-30 12:02:42 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс CHIP (возраст 774639с). Вносим в базу.
+2026-04-30 12:02:42 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс SPK (возраст 639762с). Вносим в базу.
+2026-04-30 12:02:42 | INFO | upbit_signal | [IGNORE] Не целевой анонс: '리졸브(RESOLV) 거래지원 종료 안내 (5/26 15:00)'
+2026-04-30 12:02:42 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс XCN (возраст 284562с). Вносим в базу.
+2026-04-30 12:02:42 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс PRL (возраст 264710с). Вносим в базу.
+2026-04-30 12:02:42 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс BLEND (возраст 121151с). Вносим в базу.
+2026-04-30 12:02:42 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Investment Warning (NKN)'
+2026-04-30 12:02:42 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Investment Warning (DOT) Lifted'
+2026-04-30 12:02:42 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Notice on Termination of Trading Support for Drift(DRIFT) (6/1 15:00)'
+2026-04-30 12:02:42 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс MEGA (возраст 4062с). Вносим в базу.
+2026-04-30 12:02:42 | INFO | upbit_signal | [STARTUP KEEP] Найден свежий анонс TST (возраст 0с). Формируем сигнал!
+2026-04-30 12:02:43 | WARNING | upbit_signal | ============================================================
+2026-04-30 12:02:43 | WARNING | upbit_signal | 🚀 SIGNAL: UPBIT LISTING [TST] 🚀
+2026-04-30 12:02:43 | WARNING | upbit_signal | Title: Market Support for TESTCOIN(TST) (KRW, BTC, USDT Market)
+2026-04-30 12:02:43 | INFO | upbit_signal | [SYNC] Готово. В базе 11 новостей и 7 тикеров.
+2026-04-30 12:03:29 | INFO | upbit_signal | [UPBIT] Получен сигнал отмены. Остановка парсера...
+2026-04-30 12:09:12 | INFO | upbit_signal | [RUN] Upbit Monitor Start. Base Interval: 0.25s
+2026-04-30 12:09:12 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс CHIP (возраст 775029с). Вносим в базу.
+2026-04-30 12:09:12 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс SPK (возраст 640152с). Вносим в базу.
+2026-04-30 12:09:12 | INFO | upbit_signal | [IGNORE] Не целевой анонс: '리졸브(RESOLV) 거래지원 종료 안내 (5/26 15:00)'
+2026-04-30 12:09:12 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс XCN (возраст 284952с). Вносим в базу.
+2026-04-30 12:09:12 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс PRL (возраст 265100с). Вносим в базу.
+2026-04-30 12:09:12 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс BLEND (возраст 121541с). Вносим в базу.
+2026-04-30 12:09:12 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Investment Warning (NKN)'
+2026-04-30 12:09:12 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Investment Warning (DOT) Lifted'
+2026-04-30 12:09:12 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Notice on Termination of Trading Support for Drift(DRIFT) (6/1 15:00)'
+2026-04-30 12:09:12 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс MEGA (возраст 4452с). Вносим в базу.
+2026-04-30 12:09:12 | INFO | upbit_signal | [SYNC] Готово. В базе 10 новостей и 6 тикеров.
+2026-04-30 12:09:25 | INFO | upbit_signal | [TEST] 💉 Вброшен тестовый сигнал TESTCOIN(TST)!
+2026-04-30 12:09:25 | WARNING | upbit_signal | ============================================================
+2026-04-30 12:09:25 | WARNING | upbit_signal | 🚀 SIGNAL: UPBIT LISTING [VASYAUSHLEPKIN] 🚀
+2026-04-30 12:09:25 | WARNING | upbit_signal | Title: Market Support for VASYAUSHLEPKIN(VASYAUSHLEPKIN) (KRW, BTC, USDT Market)
+2026-04-30 12:09:46 | INFO | upbit_signal | [UPBIT] Получен сигнал отмены. Остановка парсера...

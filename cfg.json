@@ -25,6 +25,7 @@
         "timezone": "UTC"
     },
     "black_list": [
+        "TSTUSDT"
     ],
     "quota_asset": "USDT",
     "risk": {
@@ -36,29 +37,17 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 301.0,
+        "notional_limit": 101.0,
         "_is_validate_notional_limit": false
     },
     "upbit": {
         "_label": "UPBIT MONITORING (SIGNAL SOURCE)",
         "use_mock": false,
         "poll_interval_sec": 0.25,
-        "min_cooldown_sec": 0.25,
-        "proxies": [
-            null
-        ],
         "default_side": "long",
         "bang_sleep_sec": 30,
-        "adaptive": {
-            "enabled": false,
-            "step": 0.1,
-            "n_stable": 10
-        },
-        "prober": {
-            "start_delay": 1.0,
-            "step": 0.1,
-            "hits_per_step": 100
-        }
+        "bang_backoff_mult": 2.0,
+        "enable_log_file": false
     },
     "entry": {
         "_label": "ENTRY LOGIC (SNIPER)",
@@ -124,8 +113,20 @@
                         "comment": "> $2M",
                         "min_vol": 2000,
                         "max_vol": null,
-                        "levels": [2, 5, 12, 22, 40],
-                        "volumes": [20, 20, 20, 20, 20]
+                        "levels": [
+                            2,
+                            5,
+                            12,
+                            22,
+                            40
+                        ],
+                        "volumes": [
+                            20,
+                            20,
+                            20,
+                            20,
+                            20
+                        ]
                     }
                 ]
             },

@@ -1,0 +1,100 @@
+{
+    "success": true,
+    "data": {
+        "total_pages": 70,
+        "total_count": 691,
+        "notices": [
+            {
+                "listed_at": "2026-04-30T19:55:00+09:00",
+                "first_listed_at": "2026-04-30T11:30:06+09:00",
+                "id": 6184,
+                "title": "Market Support for MegaETH(MEGA) (KRW, BTC, USDT Market) (Update on Market Support)",
+                "category": "Trade",
+                "need_new_badge": false,
+                "need_update_badge": true
+            },
+            {
+                "listed_at": "2026-04-30T17:10:00+09:00",
+                "first_listed_at": "2026-04-30T17:10:00+09:00",
+                "id": 6188,
+                "title": "Notice on Termination of Trading Support for Drift(DRIFT) (6/1 15:00)",
+                "category": "Trade",
+                "need_new_badge": true,
+                "need_update_badge": false
+            },
+            {
+                "listed_at": "2026-04-30T17:00:00+09:00",
+                "first_listed_at": "2026-04-30T17:00:00+09:00",
+                "id": 6187,
+                "title": "Investment Warning (DOT) Lifted",
+                "category": "Trade",
+                "need_new_badge": true,
+                "need_update_badge": false
+            },
+            {
+                "listed_at": "2026-04-30T16:50:00+09:00",
+                "first_listed_at": "2026-04-30T16:50:00+09:00",
+                "id": 6186,
+                "title": "Investment Warning (NKN)",
+                "category": "Trade",
+                "need_new_badge": true,
+                "need_update_badge": false
+            },
+            {
+                "listed_at": "2026-04-29T11:23:31+09:00",
+                "first_listed_at": "2026-04-29T11:23:31+09:00",
+                "id": 6178,
+                "title": "Market Support for Fluent(BLEND) (KRW, BTC, USDT Market)",
+                "category": "Trade",
+                "need_new_badge": false,
+                "need_update_badge": false
+            },
+            {
+                "listed_at": "2026-04-27T19:30:52+09:00",
+                "first_listed_at": "2026-04-27T15:30:00+09:00",
+                "id": 6173,
+                "title": "Market Support for Perle(PRL) (KRW, BTC, USDT Market) (Update on Market Support Schedule)",
+                "category": "Trade",
+                "need_new_badge": false,
+                "need_update_badge": false
+            },
+            {
+                "listed_at": "2026-04-27T14:00:00+09:00",
+                "first_listed_at": "2026-04-27T14:00:00+09:00",
+                "id": 6171,
+                "title": "Market Support for Onyxcoin(XCN) (KRW, USDT Market)",
+                "category": "Trade",
+                "need_new_badge": false,
+                "need_update_badge": false
+            },
+            {
+                "listed_at": "2026-04-24T17:00:00+09:00",
+                "first_listed_at": "2026-04-24T17:00:00+09:00",
+                "id": 6167,
+                "title": "리졸브(RESOLV) 거래지원 종료 안내 (5/26 15:00)",
+                "category": "Trade",
+                "need_new_badge": false,
+                "need_update_badge": false
+            },
+            {
+                "listed_at": "2026-04-23T11:20:00+09:00",
+                "first_listed_at": "2026-04-23T11:20:00+09:00",
+                "id": 6162,
+                "title": "스파크(SPK) KRW 마켓 디지털 자산 추가",
+                "category": "Trade",
+                "need_new_badge": false,
+                "need_update_badge": false
+            },
+            {
+                "listed_at": "2026-04-21T21:52:03+09:00",
+                "first_listed_at": "2026-04-21T15:16:24+09:00",
+                "id": 6158,
+                "title": "유에스디에이아이(CHIP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+                "category": "Trade",
+                "need_new_badge": false,
+                "need_update_badge": false
+            }
+        ],
+        "fixed_notices": []
+    }
+}

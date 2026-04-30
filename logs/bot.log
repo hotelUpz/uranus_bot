@@ -1,0 +1,305 @@
+2026-04-30 10:36:58 | INFO | bot | [RUN] Инициализация систем...
+2026-04-30 10:36:58 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[BASIC APP SETTINGS]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[EXCHANGE ACCESS (API KEYS)]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TELEGRAM NOTIFICATIONS]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOGGING SETTINGS]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>0 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK MANAGEMENT AND LIMITS]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>OFF</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>22</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>2</b>
+  ▪️ notional_limit: <b>301.0</b>
+🔹 <b>[UPBIT MONITORING (SIGNAL SOURCE)]</b>
+  ▪️ use_mock: <b>OFF</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>30</b>
+  ▪️ bang_backoff_mult: <b>2.0</b>
+  ▪️ enable_log_file: <b>OFF</b>
+🔹 <b>[ENTRY LOGIC (SNIPER)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>limit</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT LOGIC (TAKE-PROFITS AND STOPS)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.1</b>
+  🔹 <b>[SCENARIOS]</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>0.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>4500</b>
+────────────────────────────────────────
+2026-04-30 10:36:59 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-30 10:36:59 | INFO | bot | [WS] Инициализация стрима стаканов для 518 пар...
+2026-04-30 10:36:59 | INFO | bot | [REST] Запрашиваем Equity с биржи для инициализации аудита...
+2026-04-30 10:37:01 | INFO | bot | [USD] Стартовый баланс зафиксирован: 70.40 USDT
+2026-04-30 10:37:01 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-04-30 10:37:02 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-04-30 10:37:02 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-04-30 10:37:02 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 529 котировок.
+2026-04-30 10:37:03 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-04-30 10:37:03 | INFO | bot |    - Ожидание данных: Стаканы [OK], Цены [OK]
+2026-04-30 10:37:05 | INFO | bot | [OK] Системы готовы за 3.3с. Данные получены.
+2026-04-30 10:37:05 | INFO | bot | 📊 Цикл отчетов запущен (каждые 6.0ч)
+2026-04-30 10:37:18 | INFO | bot | [SHUT] Остановка процессов...
+2026-04-30 10:37:18 | DEBUG | bot | Task shutdown note: initializer for ctype 'void *' must be a cdata pointer, not NoneType
+2026-04-30 10:37:18 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-04-30 10:41:20 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-04-30 10:43:32 | INFO | bot | [RUN] Инициализация систем...
+2026-04-30 10:43:32 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[BASIC APP SETTINGS]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[EXCHANGE ACCESS (API KEYS)]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TELEGRAM NOTIFICATIONS]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOGGING SETTINGS]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>0 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK MANAGEMENT AND LIMITS]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>OFF</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>22</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>2</b>
+  ▪️ notional_limit: <b>301.0</b>
+🔹 <b>[UPBIT MONITORING (SIGNAL SOURCE)]</b>
+  ▪️ use_mock: <b>OFF</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>30</b>
+  ▪️ bang_backoff_mult: <b>2.0</b>
+  ▪️ enable_log_file: <b>OFF</b>
+🔹 <b>[ENTRY LOGIC (SNIPER)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>limit</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT LOGIC (TAKE-PROFITS AND STOPS)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.1</b>
+  🔹 <b>[SCENARIOS]</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>0.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>4500</b>
+────────────────────────────────────────
+2026-04-30 10:43:33 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-30 10:43:33 | INFO | bot | [WS] Инициализация стрима стаканов для 518 пар...
+2026-04-30 10:43:33 | INFO | bot | [REST] Запрашиваем Equity с биржи для инициализации аудита...
+2026-04-30 10:43:33 | INFO | bot | [USD] Стартовый баланс зафиксирован: 70.40 USDT
+2026-04-30 10:43:33 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-04-30 10:43:35 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-04-30 10:43:35 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-04-30 10:43:36 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-04-30 10:43:36 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 529 котировок.
+2026-04-30 10:43:37 | INFO | bot |    - Ожидание данных: Стаканы [OK], Цены [OK]
+2026-04-30 10:43:38 | INFO | bot | [OK] Системы готовы за 3.2с. Данные получены.
+2026-04-30 10:43:38 | INFO | bot | 📊 Цикл отчетов запущен (каждые 6.0ч)
+2026-04-30 10:45:35 | INFO | bot | [SHUT] Остановка процессов...
+2026-04-30 10:45:35 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-04-30 12:02:36 | INFO | bot | [RUN] Инициализация систем...
+2026-04-30 12:02:36 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[BASIC APP SETTINGS]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[EXCHANGE ACCESS (API KEYS)]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TELEGRAM NOTIFICATIONS]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOGGING SETTINGS]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>0 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK MANAGEMENT AND LIMITS]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>OFF</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>22</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>2</b>
+  ▪️ notional_limit: <b>301.0</b>
+🔹 <b>[UPBIT MONITORING (SIGNAL SOURCE)]</b>
+  ▪️ use_mock: <b>OFF</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>30</b>
+  ▪️ bang_backoff_mult: <b>2.0</b>
+  ▪️ enable_log_file: <b>OFF</b>
+🔹 <b>[ENTRY LOGIC (SNIPER)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>limit</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT LOGIC (TAKE-PROFITS AND STOPS)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.1</b>
+  🔹 <b>[SCENARIOS]</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>0.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>4500</b>
+────────────────────────────────────────
+2026-04-30 12:02:38 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-30 12:02:38 | INFO | bot | [WS] Инициализация стрима стаканов для 518 пар...
+2026-04-30 12:02:38 | INFO | bot | [USD] Стартовый баланс успешно загружен из стейта: 70.40 USDT
+2026-04-30 12:02:38 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-04-30 12:02:39 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-04-30 12:02:39 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-04-30 12:02:40 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-04-30 12:02:40 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 529 котировок.
+2026-04-30 12:02:41 | INFO | bot | [OK] Системы готовы за 2.3с. Данные получены.
+2026-04-30 12:02:41 | INFO | bot | 📊 Цикл отчетов запущен (каждые 6.0ч)
+2026-04-30 12:02:42 | INFO | bot | ➡️ [ОРКЕСТРАТОР] Получен сигнал TSTUSDT (LONG). Проверка лимитов...
+2026-04-30 12:02:42 | INFO | bot | [TSTUSDT_LONG] ⚡ Латенция сигнал->ордер: 281.6ms
+2026-04-30 12:02:43 | INFO | bot | [TSTUSDT_LONG] ⏱ Латенция сигнал→налив: 1.042s
+2026-04-30 12:02:43 | INFO | bot | [TSTUSDT_LONG] ✅ Вход выполнен. Объем: 27960.0 (≈ 300.99 $)
+2026-04-30 12:02:45 | INFO | bot | [TSTUSDT_LONG] 🕸 Сетка TP успешно выставлена: 5/5 ордеров.
+2026-04-30 12:03:29 | INFO | bot | [SHUT] Остановка процессов...
+2026-04-30 12:03:29 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-04-30 12:09:04 | INFO | bot | [RUN] Инициализация систем...
+2026-04-30 12:09:04 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[BASIC APP SETTINGS]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[EXCHANGE ACCESS (API KEYS)]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TELEGRAM NOTIFICATIONS]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOGGING SETTINGS]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>1 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK MANAGEMENT AND LIMITS]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>OFF</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>22</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>2</b>
+  ▪️ notional_limit: <b>101.0</b>
+🔹 <b>[UPBIT MONITORING (SIGNAL SOURCE)]</b>
+  ▪️ use_mock: <b>OFF</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>30</b>
+  ▪️ bang_backoff_mult: <b>2.0</b>
+  ▪️ enable_log_file: <b>OFF</b>
+🔹 <b>[ENTRY LOGIC (SNIPER)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>limit</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT LOGIC (TAKE-PROFITS AND STOPS)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.1</b>
+  🔹 <b>[SCENARIOS]</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>0.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>4500</b>
+────────────────────────────────────────
+2026-04-30 12:09:06 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-04-30 12:09:06 | INFO | bot | [WS] Инициализация стрима стаканов для 517 пар...
+2026-04-30 12:09:06 | INFO | bot | [REST] Запрашиваем Equity с биржи для инициализации аудита...
+2026-04-30 12:09:07 | INFO | bot | [USD] Стартовый баланс зафиксирован: 69.38 USDT
+2026-04-30 12:09:07 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-04-30 12:09:09 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-04-30 12:09:09 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-04-30 12:09:10 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 529 котировок.
+2026-04-30 12:09:10 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-04-30 12:09:11 | INFO | bot |    - Ожидание данных: Стаканы [OK], Цены [OK]
+2026-04-30 12:09:12 | INFO | bot | [OK] Системы готовы за 3.1с. Данные получены.
+2026-04-30 12:09:12 | INFO | bot | 📊 Цикл отчетов запущен (каждые 6.0ч)
+2026-04-30 12:09:45 | INFO | bot | [SHUT] Остановка процессов...
+2026-04-30 12:09:46 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...

@@ -109,8 +109,7 @@ class TradingBot:
                 )
             else:
                 self._upbit_monitor = UpbitLiveMonitor(
-                    poll_interval_sec=upbit_cfg.get("poll_interval_sec", 0.5),
-                    proxies=upbit_cfg.get("proxies", [None]),
+                    upbit_cfg=upbit_cfg,
                     on_signal=self._on_upbit_signal,
                     is_paused_func=lambda: self.stop_another_request
                 )
@@ -337,7 +336,8 @@ class TradingBot:
         # Прямой await пробивает Event Loop до самой отправки ордера без переключений контекста
         success = await self.signal_engine.handle_upbit_signal(
             raw_symbol=symbol,
-            side=self.cfg.get("upbit", {}).get("default_side", "long").upper(),
+            # side=self.cfg.get("upbit", {}).get("default_side", "long").upper(),
+            side="LONG",
             st_stream=self.st_stream,
             price_manager=self.price_manager,
             symbol_specs=self.symbol_specs,
