@@ -25,7 +25,7 @@ logger = UnifiedLogger(name="bot")
 TZ = pytz.timezone(TIME_ZONE)
 
 WAIT_ENTRY_TIMEOUT_SEC      = 2.0
-WAIT_ENTRY_MIN_WAIT_SEC     = 0.05
+WAIT_ENTRY_MIN_WAIT_SEC     = 0.1
 WAIT_AFTER_ALL_CALCEL       = 0.5       # спим это время (в секундах) чтобы движок Phemex успел высвободить позицию.
 SMART_WAIT_POLL_STEP_SEC    = 0.01   # Шаг проверки налива (10мс)
 GRID_TP_BASE_SLEEP_SEC      = 0.1      # Базовый слип между ордерами сетки

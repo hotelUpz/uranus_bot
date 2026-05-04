@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import re
 import time
+import traceback
 from datetime import datetime, timezone, timedelta
 
 from curl_cffi import requests as cffi_requests
@@ -71,15 +72,34 @@ def _parse_iso_to_ms(dt_str: str) -> int:
             return int(dt.timestamp() * 1000)
         except Exception: return 0
 
-def _extract_symbol(title: str) -> str | None:
-    match = re.search(r"\(([^)]+)\)", title)
-    if match:
-        symbol = match.group(1).strip().upper()
+def _extract_symbol(title: str, anchors: set[str] | None = None) -> str | None:
+    # 1. Попытка через скобки (ищем короткие апперкейс строки)
+    brackets = re.findall(r"\(([^)]+)\)", title)
+    for content in brackets:
+        symbol = content.strip().upper()
+        # Если это список рынков, дата или длинный текст — пропускаем
+        if any(x in symbol for x in ["KRW", "BTC", "USDT", "MARKET", "마켓"]): continue
+        if "/" in symbol or ":" in symbol or len(symbol) > 12: continue
+        # Очищаем от возможных вложенных скобок (на всякий случай)
         return re.sub(r"\(.*\)", "", symbol).strip() or None
+
+    # 2. Попытка через якоря Phemex (Дополнительная надстройка по просьбе USER)
+    if anchors:
+        title_up = title.upper()
+        for anchor in anchors:
+            # Ищем точное совпадение слова (anchor должен быть в UPPER)
+            if re.search(rf"\b{re.escape(anchor)}\b", title_up):
+                return anchor
+
+    # 3. Fallback на паттерн "for SYMBOL"
     if "for" in title.lower():
         idx = title.lower().find("for")
         tail = title[idx + 3:].strip()
-        if tail: return tail.split()[0].upper()
+        if tail:
+            cand = tail.split()[0].upper()
+            cand = re.sub(r"[^A-Z0-9]+$", "", cand) # Убираем точки/запятые в конце
+            if cand: return cand
+
     return None
 
 # ==========================================
@@ -107,6 +127,13 @@ class UpbitLiveMonitor:
 
         self._start_time = time.time()
         self._fake_injected = False
+        self.anchors: set[str] | None = None
+        self._dump_raw_once = upbit_cfg.get("dump_raw_once", False)
+
+    def update_anchors(self, anchors: set[str]):
+        """Обновление списка якорей (тикеров с биржи) для улучшения парсинга"""
+        self.anchors = anchors
+        logger.info(f"[UPBIT] Обновлено {len(anchors)} якорей для парсинга.")
 
     # def _get_fake_notice(self) -> dict:
     #     """Создает боевой фейковый сигнал с текущим временем KST."""
@@ -192,7 +219,7 @@ class UpbitLiveMonitor:
             return
 
         # 4. Извлечение тикера (КРИТИЧЕСКАЯ ТОЧКА)
-        symbol = _extract_symbol(title)
+        symbol = _extract_symbol(title, self.anchors)
         if not symbol:
             # АХТУНГ: Кейворд сработал, но тикер не найден! Возможно, биржа изменила формат заголовка.
             logger.error(f"[CRITICAL SKIP] Найдено ключевое слово, но не извлечен тикер! Заголовок: '{title}'")
@@ -225,7 +252,10 @@ class UpbitLiveMonitor:
         self.seen_symbols.add(symbol)
         
         if self._on_signal:
-            await self._on_signal(symbol, announce_ms)
+            try:
+                await self._on_signal(symbol, announce_ms)
+            except Exception as e:
+                logger.error(f"[CRITICAL] Ошибка при обработке сигнала {symbol}: {e}\n{traceback.format_exc()}")
 
         logger.warning("="*60)
         logger.warning(f"🚀 SIGNAL: UPBIT LISTING [{symbol}] 🚀")
@@ -236,6 +266,7 @@ class UpbitLiveMonitor:
         logger.info(f"[RUN] Upbit Monitor Start. Base Interval: {self.base_interval}s")
         session = _new_session()
         is_startup = True
+        error_streak = 0
         
         try:
             while self._is_running:
@@ -248,6 +279,7 @@ class UpbitLiveMonitor:
                         await asyncio.sleep(sleep_time)
                         session = _new_session()
                         is_startup = True
+                        error_streak = 0
                         self.current_interval = self.base_interval
                         continue
 
@@ -262,17 +294,31 @@ class UpbitLiveMonitor:
                 if is_startup:
                     full_data = await self._fetch_notices(session, return_full=True)
                     
+                    # Единоразовый дамп сырого ответа для архитектурного анализа (по просьбе USER)
+                    if self._dump_raw_once and full_data and full_data is not _RATE_LIMITED:
+                        save_json_safe("upbit_raw_dump.json", full_data)
+                        logger.warning("[DEBUG] Сохранен сырой дамп Upbit в upbit_raw_dump.json")
+                        self._dump_raw_once = False
+
                     if full_data is _RATE_LIMITED:
+                        error_streak = 0
                         logger.warning(f"[SYNC] 429 Limit. Sleep {self.bang_sleep}s")
                         await asyncio.sleep(self.bang_sleep)
                         continue
                         
                     if full_data is None:
                         logger.error("[SYNC] Ошибка получения снапшота. Пауза 5с.")
+                        error_streak += 1
+                        if error_streak >= 10:
+                            logger.warning("[API] Слишком много ошибок подряд при синхронизации. Пересоздаем сессию!")
+                            await session.close()
+                            session = _new_session()
+                            error_streak = 0
                         await asyncio.sleep(5.0)
                         continue
                     
                     if isinstance(full_data, dict):
+                        error_streak = 0
                         save_json_safe("upbit_snapshot.json", full_data)
                         notices = full_data.get("data", {}).get("notices", [])
                         
@@ -289,15 +335,22 @@ class UpbitLiveMonitor:
                 notices = await self._fetch_notices(session)
 
                 if notices is _RATE_LIMITED:
+                    error_streak = 0
                     self.current_interval = min(round(self.current_interval * self.bang_mult, 3), MAX_BACKOFF_INTERVAL_SEC)
                     logger.warning(f"[429] Rate Limit! Sleep {self.bang_sleep}s. New interval: {self.current_interval}s")
                     await asyncio.sleep(self.bang_sleep)
                     continue
                 elif notices is None:
                     # Сетевая ошибка (таймаут, 502 и тд). Уже залогировано в _fetch_notices.
-                    pass
+                    error_streak += 1
+                    if error_streak >= 10:
+                        logger.warning("[API] Слишком много ошибок подряд. Пересоздаем сессию!")
+                        await session.close()
+                        session = _new_session()
+                        error_streak = 0
                 else:
                     # ФИКС: Обязательно сбрасываем бекофф при успешном запросе!
+                    error_streak = 0
                     if self.current_interval > self.base_interval:
                         logger.info(f"[API] Связь стабильна. Возвращаем интервал с {self.current_interval}s на {self.base_interval}s")
                         self.current_interval = self.base_interval

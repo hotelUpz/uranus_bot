@@ -315,6 +315,7 @@ class TradingBot:
             return
 
         try:
+            # print(f"[INFO] papper entry: {phemex_symbol} {signal}")
             # Исполняем вход (напрямую, без тасок)
             await self.executor.execute_entry(
                 symbol=phemex_symbol,
@@ -331,29 +332,32 @@ class TradingBot:
     # Новый метод в TradingBot:
     async def _on_upbit_signal(self, symbol: str, received_ms: int = 0) -> None:
         """Входящий сигнал от Upbit: Прямой выстрел в движок БЕЗ создания тасок."""
-        self.stop_another_request = True 
-        
-        # Прямой await пробивает Event Loop до самой отправки ордера без переключений контекста
-        success = await self.signal_engine.handle_upbit_signal(
-            raw_symbol=symbol,
-            # side=self.cfg.get("upbit", {}).get("default_side", "long").upper(),
-            side="LONG",
-            st_stream=self.st_stream,
-            price_manager=self.price_manager,
-            symbol_specs=self.symbol_specs,
-            black_list=self.bl_manager,
-            received_ms=received_ms
-        )
-        
-        # Если сигнал отбракован - мгновенно снимаем лок монитора
-        if not success:
-            self.stop_another_request = False
-        else:
-            # Запускаем разблокировку монитора в фоне ТОЛЬКО если вошли (пауза 5 секунд)
-            async def release_block():
-                await asyncio.sleep(UPBIT_SIGNAL_RELEASE_PAUSE_SEC)
+        try:
+            self.stop_another_request = True 
+            
+            # Прямой await пробивает Event Loop до самой отправки ордера без переключений контекста
+            success = await self.signal_engine.handle_upbit_signal(
+                raw_symbol=symbol,
+                side="LONG",
+                st_stream=self.st_stream,
+                price_manager=self.price_manager,
+                symbol_specs=self.symbol_specs,
+                black_list=self.bl_manager,
+                received_ms=received_ms
+            )
+            
+            # Если сигнал отбракован - мгновенно снимаем лок монитора
+            if not success:
                 self.stop_another_request = False
-            asyncio.create_task(release_block())
+            else:
+                # Запускаем разблокировку монитора в фоне ТОЛЬКО если вошли (пауза 5 секунд)
+                async def release_block():
+                    await asyncio.sleep(UPBIT_SIGNAL_RELEASE_PAUSE_SEC)
+                    self.stop_another_request = False
+                asyncio.create_task(release_block())
+        except Exception as e:
+            logger.error(f"[CRITICAL] Ошибка в _on_upbit_signal для {symbol}: {e}\n{traceback.format_exc()}")
+            self.stop_another_request = False
         
     # --- СЕТЕВЫЕ ОПЕРАЦИИ (ВНЕ ЛОКА) ---
     async def _payloader(self, action_payload: List[Tuple], symbol: str) -> None:
@@ -461,16 +465,6 @@ class TradingBot:
                     try:
                         pos: "ActivePosition" = self.state.active_positions.get(pos_key)
                         if not pos: continue
-
-                        # # --- BLACKLIST-GUARD: ПРИНУДИТЕЛЬНЫЙ ВЫХОД ---
-                        # # Если монета попала в blacklist пока позиция была активна —
-                        # # немедленно закрываем и удаляем из памяти.
-                        # if pos.symbol in self.black_list and (pos.in_position or pos.in_pending):
-                        #     if not pos.exit_in_flight:
-                        #         logger.warning(f"[{pos_key}] ⛔ BLACKLIST: Монета заблокирована, принудительный выход!")
-                        #         pos.exit_in_flight = True
-                        #         asyncio.create_task(self.executor.execute_market_exit(pos.symbol, pos_key))
-                        #     continue
 
                         # --- СБОРЩИК ФАНТОМНЫХ ВХОДОВ ---
                         if getattr(pos, 'marked_for_death_ts', 0) > 0:
@@ -633,6 +627,12 @@ class TradingBot:
                     logger.info("Перезапуск WS стакана для захвата новых листингов...")
                     await self._refresh_stakan_stream()
                     
+                    # Обновляем якоря в мониторе Upbit, чтобы он знал о новой монете
+                    if self._upbit_monitor:
+                        anchors = set(s.replace("USDT", "") for s in self.symbol_specs.keys())
+                        if hasattr(self._upbit_monitor, 'update_anchors'):
+                            self._upbit_monitor.update_anchors(anchors)
+                    
                 elif removed:
                     # Если монета ушла на тех. обслуживание, стакан переоткрывать не нужно, 
                     # WS Phemex сам перестанет слать по ней эвенты.
@@ -777,7 +777,6 @@ class TradingBot:
 
         self._game_loop_task = asyncio.create_task(self._main_trading_loop())
         self._specs_updater_task = asyncio.create_task(self._specs_updater_loop())
-        logger.info("[LOOP] Главная торговая живолупа (Game Loop) запущена.")
 
         # --- ЖЕСТКАЯ ПРОВЕРКА ГОТОВНОСТИ ---
         if not await self._wait_for_systems_ready():
@@ -791,6 +790,11 @@ class TradingBot:
 
         # Сигналы Upbit запускаем В ПОСЛЕДНЮЮ ОЧЕРЕДЬ, когда всё остальное уже шуршит
         if self._upbit_monitor:
+            # Пробрасываем текущие якоря (символы Phemex без USDT) для улучшения парсинга
+            anchors = set(s.replace("USDT", "") for s in self.symbol_specs.keys())
+            if hasattr(self._upbit_monitor, 'update_anchors'):
+                self._upbit_monitor.update_anchors(anchors)
+            
             self._upbit_task = asyncio.create_task(self._upbit_monitor.run())
 
         # --- ДОБАВИТЬ ЭТОТ БЛОК В КОНЕЦ МЕТОДА start ---
@@ -818,6 +822,12 @@ class TradingBot:
                 await self.tg.aclose()
             except Exception as e:
                 logger.debug(f"[SHUT] Ошибка закрытия сессии TG: {e}")
+        
+        if getattr(self, 'report_tg', None):
+            try:
+                await self.report_tg.aclose()
+            except Exception as e:
+                logger.debug(f"[SHUT] Ошибка закрытия сессии Report TG: {e}")
 
     async def stop(self):
         if not getattr(self, '_is_running', False): return

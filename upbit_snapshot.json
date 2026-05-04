@@ -11,7 +11,7 @@
                 "title": "Market Support for MegaETH(MEGA) (KRW, BTC, USDT Market) (Update on Market Support)",
                 "category": "Trade",
                 "need_new_badge": false,
-                "need_update_badge": true
+                "need_update_badge": false
             },
             {
                 "listed_at": "2026-04-30T17:10:00+09:00",
@@ -19,7 +19,7 @@
                 "id": 6188,
                 "title": "Notice on Termination of Trading Support for Drift(DRIFT) (6/1 15:00)",
                 "category": "Trade",
-                "need_new_badge": true,
+                "need_new_badge": false,
                 "need_update_badge": false
             },
             {
@@ -28,7 +28,7 @@
                 "id": 6187,
                 "title": "Investment Warning (DOT) Lifted",
                 "category": "Trade",
-                "need_new_badge": true,
+                "need_new_badge": false,
                 "need_update_badge": false
             },
             {
@@ -37,7 +37,7 @@
                 "id": 6186,
                 "title": "Investment Warning (NKN)",
                 "category": "Trade",
-                "need_new_badge": true,
+                "need_new_badge": false,
                 "need_update_badge": false
             },
             {

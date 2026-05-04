@@ -37,7 +37,7 @@
             "delay_sec": 0.3,
             "margin_mode": 2
         },
-        "notional_limit": 101.0,
+        "notional_limit": 301.0,
         "_is_validate_notional_limit": false
     },
     "upbit": {
@@ -47,7 +47,8 @@
         "default_side": "long",
         "bang_sleep_sec": 30,
         "bang_backoff_mult": 2.0,
-        "enable_log_file": false
+        "enable_log_file": false,
+        "dump_raw_once": false
     },
     "entry": {
         "_label": "ENTRY LOGIC (SNIPER)",
