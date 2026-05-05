@@ -45,7 +45,7 @@
         "use_mock": false,
         "poll_interval_sec": 0.25,
         "default_side": "long",
-        "bang_sleep_sec": 30,
+        "bang_sleep_sec": 60,
         "bang_backoff_mult": 2.0,
         "enable_log_file": false,
         "dump_raw_once": false
