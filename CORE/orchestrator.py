@@ -315,16 +315,18 @@ class TradingBot:
             return
 
         try:
-            # print(f"[INFO] papper entry: {phemex_symbol} {signal}")
             # Исполняем вход (напрямую, без тасок)
-            await self.executor.execute_entry(
+            success = await self.executor.execute_entry(
                 symbol=phemex_symbol,
                 pos_key=pos_key,
                 signal=signal
             )
             
-            # Вход завершен. Добавляем в блэклист в фоне
-            asyncio.create_task(self.bl_manager.update_and_save([phemex_symbol]))
+            if success:
+                # Вход завершен успешно. Добавляем в блэклист в фоне
+                asyncio.create_task(self.bl_manager.update_and_save([phemex_symbol]))
+            else:
+                logger.warning(f"[{pos_key}] Оркестратор: Вход не удался. Монета {phemex_symbol} НЕ добавлена в BlackList.")
 
         except Exception as e:
             logger.error(f"[SKIP] [{phemex_symbol}] Критическая ошибка входа (execute_entry_from_signal): {e}")
@@ -621,9 +623,33 @@ class TradingBot:
                     self.symbol_specs.pop(sym, None)
                 # --------------------------------------------------------
                 
-                # Если добавились новые монеты — перезапускаем стакан
+                # Если добавились новые монеты — настраиваем их и перезапускаем стакан
                 if added:
                     logger.info(f"🔄 [UPDATE] На бирже появились новые монеты ({len(added)} шт): {', '.join(added)}")
+                    
+                    # Используем обновленный GlobalLeverageSetter для хирургической настройки
+                    try:
+                        from CORE.lvg_setter import GlobalLeverageSetter
+                        
+                        lev_cfg = self.cfg.get("risk", {}).get("leverage", {})
+                        
+                        setter = GlobalLeverageSetter(
+                            api_key=os.getenv("API_KEY") or self.cfg.get("credentials", {}).get("api_key", ""),
+                            api_secret=os.getenv("API_SECRET") or self.cfg.get("credentials", {}).get("api_secret", ""),
+                            leverage_val=lev_cfg.get("val", 10),
+                            margin_mode=lev_cfg.get("margin_mode", 1),
+                            black_list=list(self.black_list),
+                            use_cache=True, # ФОРСИРУЕМ КЭШ: чтобы настроить только новинки (added)
+                            cache_path=Path(__file__).resolve().parent.parent / "leverage_cache.json",
+                            delay_sec=lev_cfg.get("delay_sec", 0.25)
+                        )
+                        # Запускаем настройку. Благодаря кэшу он настроит только те, что еще не были настроены (added)
+                        await setter.apply()
+                        
+                    except Exception as lvg_err:
+                        logger.error(f"[UPDATE] Ошибка при настройке плеч через GlobalSetter: {lvg_err}")
+
+                    # 2. Перезапускаем WS стакана
                     logger.info("Перезапуск WS стакана для захвата новых листингов...")
                     await self._refresh_stakan_stream()
                     

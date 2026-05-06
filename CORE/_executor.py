@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = UnifiedLogger(name="bot")
+latency_logger = UnifiedLogger(name="latency")
 TZ = pytz.timezone(TIME_ZONE)
 
 WAIT_ENTRY_TIMEOUT_SEC      = 2.0
@@ -130,10 +131,44 @@ class OrderExecutor:
             if not ref_price or ref_price <= 0:
                 return False
 
-            qty = round_step(self.notional_limit / ref_price, spec.lot_size)
+            # 1. Получаем свежую ликвидность из стакана (Ask для LONG, Bid для SHORT)
+            fresh_bid1, fresh_ask1 = 0.0, 0.0
+            if self.tb.st_stream:
+                bids, asks = self.tb.st_stream.get_depth(symbol)
+                if bids and asks:
+                    fresh_bid1, fresh_ask1 = bids[0][0], asks[0][0]
+            
+            # Фолбэк на цену сигнала, если стакан пуст (бывает при листинге)
+            # Для лонга берем Ask (по чем купим), для шорта - Bid (по чем продадим)
+            execution_ref_price = fresh_ask1 if signal.side == "LONG" else fresh_bid1
+            if execution_ref_price <= 0:
+                execution_ref_price = ref_price
+                logger.warning(f"[{pos_key}] Стакан пуст, используем цену сигнала: {execution_ref_price}")
+            
+            # --- ЗАЩИТА ОТ ИМПУЛЬСА (БАЗИС МИНУТЫ) ---
+            baseline = self.tb.price_manager.get_minute_baseline(symbol)
+            if baseline > 0:
+                # Считаем чистое отклонение от начала минуты
+                impulse_pct = (execution_ref_price - baseline) / baseline * 100
+                threshold = self.tb.cfg.get("risk", {}).get("impulse_threshold_pct", 5.0)
+                
+                if signal.side == "LONG" and impulse_pct > threshold:
+                    logger.error(f"🚨 [ЗАЩИТА] [{symbol}] ВХОД ОТМЕНЕН! Цена выросла на {impulse_pct:.2f}% от начала минуты (базис: {baseline}, тек: {execution_ref_price}). Предел: {threshold}%")
+                    return False
+                
+                if signal.side == "SHORT" and impulse_pct < -threshold:
+                    logger.error(f"🚨 [ЗАЩИТА] [{symbol}] ВХОД ОТМЕНЕН! Цена упала на {abs(impulse_pct):.2f}% от начала минуты (базис: {baseline}, тек: {execution_ref_price}). Предел: {threshold}%")
+                    return False
+            # -----------------------------------------
+            
+            # 2. Расчет объема с запасом (0.98), чтобы точно влезть в маржу даже при резком скачке
+            qty = round_step((self.notional_limit * 0.98) / execution_ref_price, spec.lot_size)
+            
             if qty < spec.lot_size:
                 logger.warning(f"[{pos_key}] Qty {qty} меньше минимального лота {spec.lot_size}. Пропуск.")
                 return False
+
+            # 3. Плечо и маржа вынесены в фоновую задачу в Оркестраторе (не блокируем вход)
 
             phemex_pos_side = "Long" if signal.side == "LONG" else "Short"
             side = "Buy" if signal.side == "LONG" else "Sell"
@@ -149,32 +184,38 @@ class OrderExecutor:
                 pos.pending_qty = qty
                 pos.in_pending = True
 
-            # 2. Цикл отправки с ретраями
+            # 4. Цикл отправки с ретраями
             for attempt in range(max(1, self.max_entry_retries)):
                 try:
                     is_limit_used = False
 
-                    # Замер латенции: сигнал → постановка ордера
-                    signal_ts = getattr(signal, 'timestamp', 0.0)
-                    order_placed_ts = time.time()
-                    if signal_ts > 0:
-                        sig_to_order_ms = (order_placed_ts - signal_ts) * 1000
-                        logger.info(f"[{pos_key}] ⚡ Латенция сигнал->ордер: {sig_to_order_ms:.1f}ms")
+                    # ПОДГОТОВКА ТАЙМИНГОВ
+                    pub_ts = getattr(signal, 'timestamp', 0.0)
+                    det_ts = getattr(signal, 'detected_at', 0.0)
+                    now_ts = time.time()
 
                     if self.entry_mode == "limit":
-                        # АГРЕССИВНАЯ ЛИМИТКА
-                        limit_pr = ref_price * (1 + self.limit_dist_pct / 100.0) if side == "Buy" else ref_price * (1 - self.limit_dist_pct / 100.0)
+                        # АГРЕССИВНАЯ ЛИМИТКА (считаем от ЖИВОЙ цены)
+                        limit_pr = execution_ref_price * (1 + self.limit_dist_pct / 100.0) if side == "Buy" else execution_ref_price * (1 - self.limit_dist_pct / 100.0)
                         limit_pr = round_step(limit_pr, spec.tick_size)
                         
+                        logger.info(f"[{pos_key}] Вход (LIMIT): Qty={qty}, Price={limit_pr} (Slippage: {execution_ref_price/ref_price-1:.2%})")
+                        
+                        start_net = time.time()
                         resp = await self.client.place_limit_order(
                             symbol, side, qty, limit_pr, phemex_pos_side
                         )
+                        end_net = time.time()
                         is_limit_used = True
                     else:
                         # ЧИСТЫЙ МАРКЕТ
+                        logger.info(f"[{pos_key}] Вход (MARKET): Qty={qty} (Slippage: {execution_ref_price/ref_price-1:.2%})")
+                        
+                        start_net = time.time()
                         resp = await self.client.place_market_order(symbol, side, qty, phemex_pos_side)
+                        end_net = time.time()
 
-                    # 3. Обработка успешного ответа API
+                    # 5. Обработка успешного ответа API
                     if resp.get("code") == 0:
                         order_id = resp.get("data", {}).get("orderID")
                         
@@ -182,7 +223,23 @@ class OrderExecutor:
                         await self._smart_wait(pos_key, initial_qty, WAIT_ENTRY_TIMEOUT_SEC, WAIT_ENTRY_MIN_WAIT_SEC)
                         filled_ts = time.time()
 
-                        # 4. Отмена недолитых остатков (только для лимиток)
+                        # ЛАТЕНЦИИ
+                        l1 = (det_ts - pub_ts) * 1000 if det_ts > 0 and pub_ts > 0 else 0
+                        l2 = (filled_ts - pub_ts) * 1000 if pub_ts > 0 else 0
+                        l3 = (filled_ts - det_ts) * 1000 if det_ts > 0 else 0
+                        l4 = (end_net - start_net) * 1000
+
+                        logger.warning(
+                            f"⏱ <b>[{symbol}] LATENCY REPORT</b>\n"
+                            f"  ▫️ L1 (Detect Delay): <b>{l1:.1f} ms</b>\n"
+                            f"  ▫️ L2 (Full Path):   <b>{l2:.1f} ms</b>\n"
+                            f"  ▫️ L3 (Bot Action):  <b>{l3:.1f} ms</b>\n"
+                            f"  ▫️ L4 (REST Order):  <b>{l4:.1f} ms</b>"
+                        )
+                        # Дублируем в отдельный файл для наглядности
+                        latency_logger.info(f"[{symbol}] L1: {l1:>5.1f}ms | L2: {l2:>5.1f}ms | L3: {l3:>5.1f}ms | L4: {l4:>5.1f}ms")
+
+                        # 6. Отмена недолитых остатков (только для лимиток)
                         if order_id and is_limit_used:
                             curr_qty = 0.0
                             async with self.tb._get_lock(pos_key):
@@ -193,27 +250,24 @@ class OrderExecutor:
                                 logger.info(f"[{pos_key}] Исполнено {curr_qty} из {qty}. Отменяю остаток (лимит)...")
                                 asyncio.create_task(self.execute_cancel(symbol, phemex_pos_side, order_id))
 
-                        # 5. Итоговая проверка и отчет
+                        # 7. Итоговая проверка и отчет
                         async with self.tb._get_lock(pos_key):
                             pos = self.tb.state.active_positions.get(pos_key)
                             if pos and (pos.current_qty > 0 or getattr(pos, "in_position", False)):
                                 pos.in_pending = False
-                                entry_usd_vol = pos.current_qty * ref_price
-
-                                # Замер полной латенции: сигнал → налив WS
-                                signal_ts = getattr(signal, 'timestamp', 0.0)
-                                if signal_ts > 0:
-                                    total_latency = filled_ts - signal_ts
-                                    logger.info(f"[{pos_key}] ⏱ Латенция сигнал→налив: {total_latency:.3f}s")
+                                entry_usd_vol = pos.current_qty * execution_ref_price
 
                                 logger.info(f"[{pos_key}] ✅ Вход выполнен. Объем: {pos.current_qty} (≈ {entry_usd_vol:.2f} $)")
                                 
                                 if self.tb.tg:
-                                    latency_str = f"{total_latency:.3f}s" if signal_ts > 0 else "N/A"
                                     msg = Reporters.entry_signal(symbol, signal, signal.init_bid1, signal.init_ask1)
-                                    msg += f"\nНалив за: <b>{latency_str}</b>"
+                                    msg += f"\nЦена входа (Ask1): <b>{execution_ref_price}</b>"
+                                    msg += f"\n\n<b>Latency:</b>\n"
+                                    msg += f"L1: {l1:.0f}ms | L2: {l2:.0f}ms\n"
+                                    msg += f"L3: {l3:.0f}ms | L4: {l4:.0f}ms"
                                     asyncio.create_task(self.tb.tg.send_message(msg))
                                 return True
+
                             
                             if pos:
                                 pos.in_pending = False
@@ -285,11 +339,19 @@ class OrderExecutor:
                     results.append((idx, None, e))
                     break
 
-        success_count = 0
+        success_count = sum(1 for _, resp, err in results if resp and resp.get("code") == 0)
+        
         async with self.tb._get_lock(pos_key):
             pos = self.tb.state.active_positions.get(pos_key)
             if not pos:
                 return False
+
+            # --- АВАРИЙНЫЙ МЕХАНИЗМ (FORCED TTL) ---
+            if success_count < len(grid_orders):
+                em_ttl = self.cfg.get("exit", {}).get("scenarios", {}).get("emergency_ttl_sec", 60.0)
+                pos.emergency_ttl_ts = time.time() + em_ttl
+                logger.error(f"🚨 <b>[{pos_key}]</b> Часть TP не выставлена ({success_count}/{len(grid_orders)}). Активирую Emergency TTL: {em_ttl} сек.")
+            # ---------------------------------------
 
             for idx, resp, err in results:
                 order_info = grid_orders[idx]

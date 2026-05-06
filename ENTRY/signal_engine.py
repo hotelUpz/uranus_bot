@@ -24,7 +24,8 @@ class EntrySignal:
     init_ask1: float
     init_bid1: float
     mid_price: float
-    timestamp: float = 0.0
+    timestamp: float = 0.0      # Время анонса (Publication Time)
+    detected_at: float = 0.0    # Время обнаружения ботом (Detection Time)
 
 class SignalEngine:
     def __init__(self, cfg: Dict[str, Any], on_signal_callback: Callable[[EntrySignal], Awaitable[None]]):
@@ -66,10 +67,10 @@ class SignalEngine:
             
             if signal:
                 signal.timestamp = received_ms / 1000.0 if received_ms > 0 else time.time()
+                signal.detected_at = time.time()
                 await self.on_signal_callback(signal)
                 return True
             else:
-                # Внутри create_signal_instant уже срабатывает мощный алерт, дублировать не будем
                 return False
             
         except Exception as e:

@@ -1,18 +1,25 @@
-2026-05-05 11:25:44 | INFO | upbit_signal | [UPBIT] Обновлено 517 якорей для парсинга.
-2026-05-05 11:25:44 | INFO | upbit_signal | [RUN] Upbit Monitor Start. Base Interval: 0.25s
-2026-05-05 11:25:44 | INFO | upbit_signal | [SLEEP] Биржа закрыта. Спим 12.07ч...
-2026-05-05 11:26:04 | INFO | upbit_signal | [UPBIT] Получен сигнал отмены. Остановка парсера...
-2026-05-05 11:26:27 | INFO | upbit_signal | [UPBIT] Обновлено 517 якорей для парсинга.
-2026-05-05 11:26:27 | INFO | upbit_signal | [RUN] Upbit Monitor Start. Base Interval: 0.25s
-2026-05-05 11:26:27 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс CHIP (возраст 1204464с). Вносим в базу.
-2026-05-05 11:26:27 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс SPK (возраст 1069587с). Вносим в базу.
-2026-05-05 11:26:27 | INFO | upbit_signal | [IGNORE] Не целевой анонс: '리졸브(RESOLV) 거래지원 종료 안내 (5/26 15:00)'
-2026-05-05 11:26:27 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс XCN (возраст 714387с). Вносим в базу.
-2026-05-05 11:26:27 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс PRL (возраст 694535с). Вносим в базу.
-2026-05-05 11:26:27 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс BLEND (возраст 550976с). Вносим в базу.
-2026-05-05 11:26:27 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Investment Warning (NKN)'
-2026-05-05 11:26:27 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Investment Warning (DOT) Lifted'
-2026-05-05 11:26:27 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Notice on Termination of Trading Support for Drift(DRIFT) (6/1 15:00)'
-2026-05-05 11:26:27 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс MEGA (возраст 433887с). Вносим в базу.
-2026-05-05 11:26:27 | INFO | upbit_signal | [SYNC] Готово. В базе 10 новостей и 6 тикеров.
-2026-05-05 11:26:58 | INFO | upbit_signal | [UPBIT] Получен сигнал отмены. Остановка парсера...
+2026-05-05 20:10:09 | INFO | upbit_signal | [UPBIT] Обновлено 517 якорей для парсинга.
+2026-05-05 20:10:09 | INFO | upbit_signal | [RUN] Upbit Monitor Start. Base Interval: 0.25s
+2026-05-05 20:10:09 | INFO | upbit_signal | [SLEEP] Биржа закрыта. Спим 3.33ч...
+2026-05-05 23:30:00 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс CHIP (возраст 1247877с). Вносим в базу.
+2026-05-05 23:30:00 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс SPK (возраст 1113000с). Вносим в базу.
+2026-05-05 23:30:00 | INFO | upbit_signal | [IGNORE] Не целевой анонс: '리졸브(RESOLV) 거래지원 종료 안내 (5/26 15:00)'
+2026-05-05 23:30:00 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс XCN (возраст 757800с). Вносим в базу.
+2026-05-05 23:30:00 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс PRL (возраст 737948с). Вносим в базу.
+2026-05-05 23:30:00 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс BLEND (возраст 594389с). Вносим в базу.
+2026-05-05 23:30:00 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Investment Warning (NKN)'
+2026-05-05 23:30:00 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Investment Warning (DOT) Lifted'
+2026-05-05 23:30:00 | INFO | upbit_signal | [IGNORE] Не целевой анонс: 'Notice on Termination of Trading Support for Drift(DRIFT) (6/1 15:00)'
+2026-05-05 23:30:00 | INFO | upbit_signal | [STARTUP SKIP] Слишком старый анонс MEGA (возраст 477300с). Вносим в базу.
+2026-05-05 23:30:00 | INFO | upbit_signal | [SYNC] Готово. В базе 10 новостей и 6 тикеров.
+2026-05-06 01:50:13 | ERROR | upbit_signal | [FETCH] Ошибка сетевого запроса: Failed to perform, curl: (28) Operation timed out after 6001 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+2026-05-06 01:50:13 | WARNING | upbit_signal | [ERR 1/10] Проблема связи. Sleep 60s. New: 0.5s
+2026-05-06 01:51:13 | INFO | upbit_signal | [API] Связь стабильна. Возвращаем интервал с 0.5s на 0.25s
+2026-05-06 04:41:11 | ERROR | upbit_signal | [FETCH] Ошибка сетевого запроса: Failed to perform, curl: (28) Operation timed out after 6003 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+2026-05-06 04:41:11 | WARNING | upbit_signal | [ERR 1/10] Проблема связи. Sleep 60s. New: 0.5s
+2026-05-06 04:42:11 | INFO | upbit_signal | [API] Связь стабильна. Возвращаем интервал с 0.5s на 0.25s
+2026-05-06 05:00:07 | WARNING | upbit_signal | ============================================================
+2026-05-06 05:00:07 | WARNING | upbit_signal | 🚀 SIGNAL: UPBIT LISTING [WIF] 🚀
+2026-05-06 05:00:07 | WARNING | upbit_signal | Title: Market Support for dogwifhat(WIF) (KRW, BTC, USDT Market)
+2026-05-06 09:30:00 | INFO | upbit_signal | [SLEEP] Биржа закрыта. Спим 14.00ч...
+2026-05-06 09:36:17 | INFO | upbit_signal | [UPBIT] Получен сигнал отмены. Остановка парсера...

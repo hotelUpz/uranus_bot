@@ -58,6 +58,7 @@ class ActivePosition:
     opened_at: float = field(default_factory=time.time)
     marked_for_death_ts: float = 0.0
     sl_trigger_time: float = 0.0
+    emergency_ttl_ts: float = 0.0       # <-- НОВОЕ: Принудительный дедлайн при ошибке ТП
 
     def to_dict(self) -> dict:
         return self.__dict__

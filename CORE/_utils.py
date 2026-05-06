@@ -6,15 +6,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from pathlib import Path
 from typing import Dict, List, Tuple, TYPE_CHECKING
-from ENTRY.signal_engine import SignalEngine
 from c_log import UnifiedLogger
 
 if TYPE_CHECKING:
     from CORE.orchestrator import TradingBot
     from API.PHEMEX.ticker import PhemexTickerAPI, TickerData
-    from ENTRY.signal_engine import EntrySignal
+    from ENTRY.signal_engine import EntrySignal, SignalEngine
 
 logger = UnifiedLogger("core")
 
@@ -77,17 +77,47 @@ class PriceCacheManager:
         self._is_running = False
         self.phemex_prices = {}
         self.phemex_volumes = {}
+        
+        # Минутные снапшоты для защиты от импульса
+        self.minute_prices = {}       # Текущая минута (базис)
+        self.prev_minute_prices = {}  # Предыдущая минута (для нулевой секунды)
 
     async def warmup(self):
         try:
             tickers = await self.phemex_api.get_all_tickers()
             self.phemex_prices = {sym: t.price for sym, t in tickers.items()}
             self.phemex_volumes = {sym: t.volume_24h_usd for sym, t in tickers.items()}
+            # Инициализируем минутный базис при старте
+            self.minute_prices = self.phemex_prices.copy()
+            self.prev_minute_prices = self.phemex_prices.copy()
         except Exception as e:
             logger.error(f"Warmup API Error: {e}")
 
+    async def _minute_snapshot_loop(self):
+        """Цикл, который делает слепок цен ровно в 00 секунд каждой минуты."""
+        logger.info("[PRICE] Запущен цикл минутных снапшотов.")
+        while self._is_running:
+            try:
+                now = time.time()
+                # Считаем, сколько осталось до начала следующей минуты
+                sleep_time = 60 - (now % 60)
+                await asyncio.sleep(sleep_time)
+
+                # Ровно 00 секунд (или около того)
+                tickers = await self.phemex_api.get_all_tickers()
+                if tickers:
+                    self.prev_minute_prices = self.minute_prices.copy()
+                    self.minute_prices = {sym: t.price for sym, t in tickers.items()}
+                    logger.debug(f"[PRICE] Обновлен минутный Snapshot для {len(self.minute_prices)} пар.")
+            except Exception as e:
+                logger.error(f"[PRICE] Ошибка минутного снапшота: {e}")
+                await asyncio.sleep(1)
+
     async def loop(self):
         self._is_running = True
+        # Запускаем минутный цикл фоном
+        asyncio.create_task(self._minute_snapshot_loop())
+        
         while self._is_running:
             # Тормозим обновление цен, пока идет боевой ордер!
             if self.bot.stop_another_request:
@@ -102,6 +132,13 @@ class PriceCacheManager:
             except Exception:
                 pass
             await asyncio.sleep(self.upd_sec)
+
+    def get_minute_baseline(self, symbol: str) -> float:
+        """Возвращает цену базиса (начало минуты). Если сейчас первые 2 сек минуты — берем прошлую минуту."""
+        now = time.time()
+        if (now % 60) < 2.0:
+            return self.prev_minute_prices.get(symbol, self.minute_prices.get(symbol, 0.0))
+        return self.minute_prices.get(symbol, 0.0)
 
     def get_prices(self, symbol: str) -> tuple[float, float]:
         # Возвращаем (Binance, Phemex). Т.к. Binance нет, возвращаем дважды Phemex

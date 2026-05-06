@@ -23,16 +23,12 @@ CACHE_PATH = BASE_DIR / "leverage_cache.json"
 load_dotenv(BASE_DIR / ".env")
 logger = UnifiedLogger("main")
 
-FINAL_CLEANUP_PAUSE_SEC = 0.5
-TG_RETRY_PAUSE_SEC = 5.0  # Пауза перед рестартом при ошибке
-
-
 async def polling_supervisor(tg_admin: AdminTgBot):
     """Следит за тем, чтобы Telegram бот всегда был онлайн"""
-    logger.info("[TG] Запуск супервизора Telegram...")
-    
-    retry_pause = TG_RETRY_PAUSE_SEC
-    
+    logger.info("🤖 Запуск супервизора Telegram...")
+
+    retry_pause = 5.0  # Пауза перед рестартом при ошибке
+
     while True:
         try:
             await tg_admin.dp.start_polling(
@@ -41,81 +37,74 @@ async def polling_supervisor(tg_admin: AdminTgBot):
                 skip_updates=True,
                 handle_as_tasks=True
             )
-            logger.error("[TG] Поллинг завершился штатно (неожиданно)")
-        
+            logger.error("⚠️ Поллинг завершился штатно (неожиданно)")
+
         except asyncio.CancelledError:
             logger.info("Stopping TG supervisor...")
             break
-            
+
         except Exception as e:
-            logger.error(f"[TG] Критическая ошибка TG Polling: {e}")
+            logger.error(f"💥 Критическая ошибка TG Polling: {e}")
             logger.info(f"Перезапуск через {retry_pause} сек...")
-        
+
         await tg_admin.reset_session()
         await asyncio.sleep(retry_pause)
 
 async def _main():
     cfg = load_json(filepath=CFG_PATH, default={})
     tg_enabled = cfg.get("tg", {}).get("enable", False)
-    
+
     bot = TradingBot(cfg)
     tasks = []
-    stop_event = asyncio.Event()
-
-    # --- Graceful shutdown handler ---
-    loop = asyncio.get_running_loop()
-    
-    def _signal_handler():
-        if not stop_event.is_set():
-            logger.warning("\n[STOP] Ctrl+C / SIGINT. Graceful shutdown...")
-            stop_event.set()
-
-    # Windows не поддерживает add_signal_handler — используем fallback
-    import signal
-    try:
-        loop.add_signal_handler(signal.SIGINT, _signal_handler)
-        loop.add_signal_handler(signal.SIGTERM, _signal_handler)
-    except NotImplementedError:
-        # Windows fallback
-        signal.signal(signal.SIGINT, lambda *_: _signal_handler())
-        signal.signal(signal.SIGTERM, lambda *_: _signal_handler())
 
     try:
         # Извлекаем параметры для глобальной настройки плечей
-        api_key = os.getenv("API_KEY") or cfg.get("credentials", {}).get("api_key", "")
-        api_secret = os.getenv("API_SECRET") or cfg.get("credentials", {}).get("api_secret", "")
-        
+        # Приоритет: секция "phemex" -> секция "credentials" / "risk"
+        phemex_cfg = cfg.get("phemex", {})
+        api_key = os.getenv("API_KEY") or phemex_cfg.get("api_key") or cfg.get("credentials", {}).get("api_key", "")
+        api_secret = os.getenv("API_SECRET") or phemex_cfg.get("api_secret") or cfg.get("credentials", {}).get("api_secret", "")
+
         risk_cfg = cfg.get("risk", {})
         leverage_cfg = risk_cfg.get("leverage", {})
-        
-        # Парсим новую структуру (словарь или число)
-        if isinstance(leverage_cfg, dict):
-            set_previous = leverage_cfg.get("set_previous")
-            leverage_val = leverage_cfg.get("val")
-            use_cache = leverage_cfg.get("used_by_cache", False)
-            margin_mode = leverage_cfg.get("margin_mode", 2)
-            delay_sec = leverage_cfg.get("delay_sec", 0.3)
+
+        leverage_val = phemex_cfg.get("leverage") or leverage_cfg.get("val")
+        raw_margin = phemex_cfg.get("margin_mode") or leverage_cfg.get("margin_mode", 2)
+
+        # Маппинг для красивого лога и корректной передачи в setter
+        # 1 / "cross" -> Cross, 2 / "isolated" -> Isolated
+        if str(raw_margin).lower() in ("1", "cross"):
+            margin_mode_str = "Cross"
+            raw_margin = 1
         else:
-            raise TypeError(f"Expected dict for leverage_cfg, got {type(leverage_cfg).__name__}")
-        
+            margin_mode_str = "Isolated"
+            raw_margin = 2
+
+        set_previous = leverage_cfg.get("set_previous", False)
+        use_cache = leverage_cfg.get("used_by_cache", False)
+        delay_sec = leverage_cfg.get("delay_sec", 0.3)
+
         if set_previous:
             # 1. Запуск глобальной конфигурации
-            logger.info("[LEV] Запуск глобальной конфигурации параметров (Leverage & Margin)...")
-            setter = GlobalLeverageSetter(
-                api_key=api_key,
-                api_secret=api_secret,
-                leverage_val=leverage_val,
-                margin_mode=margin_mode,
-                black_list=bot.black_list,
-                use_cache=use_cache,
-                cache_path=CACHE_PATH,
-                delay_sec=delay_sec
-            )
-            await setter.apply()
-            print("lev set succ")
-        
+            logger.info(f"⚙️ Запуск глобальной конфигурации (Leverage: {leverage_val}x, Margin: {margin_mode_str})...")
+            try:
+                setter = GlobalLeverageSetter(
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    leverage_val=leverage_val,
+                    margin_mode=raw_margin,
+                    black_list=bot.black_list,
+                    use_cache=use_cache,
+                    cache_path=CACHE_PATH,
+                    delay_sec=delay_sec
+                )
+                await setter.apply()
+                print("lev set succ")
+            except Exception as e:
+                logger.error(f"💥 Ошибка при глобальной настройке плеч (возможно сеть/DNS): {e}")
+                logger.warning("Продолжаем запуск без предварительной настройки...")
+
         else:
-            logger.info("[LEV] Скип установки (Leverage & Margin), так как set_previous == false")
+            logger.info("⚙️ Скип установки (Leverage & Margin), так как set_previous == false")
 
         # 2. Инициализация TG и Торговли
         if tg_enabled:
@@ -124,7 +113,7 @@ async def _main():
 
             if not token or not chat_id:
                 logger.error("Telegram включен, но token/chat_id не заданы.")
-                return
+                sys.exit(1)
 
             tg_admin = AdminTgBot(token, chat_id, bot)
             tg_task = asyncio.create_task(polling_supervisor(tg_admin))
@@ -135,51 +124,24 @@ async def _main():
             logger.warning("TG отключен. Автостарт торговли...")
             await bot.start()
 
-        # Ждём сигнала остановки (Ctrl+C / SIGTERM)
+        # Ждём бесконечно (управление через Ctrl+C)
+        stop_event = asyncio.Event()
         await stop_event.wait()
-                
+
     except (asyncio.CancelledError, KeyboardInterrupt):
-        pass
+        logger.warning("\n🛑 Получен сигнал прерывания. Остановка...")
     finally:
-        logger.info("[CLEAN] Остановка бота и очистка ресурсов...")
+        logger.info("🧹 Очистка ресурсов...")
         await bot.aclose()
-        
-        # Если TG был включен, закрываем сессию админ-бота
-        if tg_enabled and 'tg_admin' in locals():
-            await tg_admin.aclose()
-        
+
         for t in tasks:
             t.cancel()
-        
-        # Ждём фактического завершения отменённых тасков
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
-        
-        await asyncio.sleep(FINAL_CLEANUP_PAUSE_SEC) 
-        logger.info("[EXIT] Программа безопасно завершена.")
+
+        await asyncio.sleep(0.5) 
+        logger.info("✅ Программа безопасно завершена.")
 
 if __name__ == "__main__":
     try:
         asyncio.run(_main())
     except KeyboardInterrupt:
         pass
-
-# # chmod 600 ssh_key.txt
-# # eval "$(ssh-agent -s)" 
-# # ssh-add ssh_key.txt
-# # git remote set-url origin git@github.com:hotelUpz/uranus_bot.git
-# # source .ssh-autostart.sh
-# # git push --set-upstream origin master
-# # git config --global push.autoSetupRemote true
-# # ssh -T git@github.com 
-# # git log -1
-
-# # git add .
-# # git commit -m "plh37"
-# # git push
-
-# # pip install anthropic
-# # npm install -g @anthropic-ai/claude-code
-
-# # export ANTHROPIC_API_KEY=...
-# # claude
