@@ -28,9 +28,9 @@ _SPAM_CACHE: dict[int, float] = {}
 class _TzFormatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
         dt = datetime.fromtimestamp(record.created, TZ)
-        if datefmt:
-            return dt.strftime(datefmt)
-        return dt.isoformat()
+        # Добавляем миллисекунды вручную
+        s = dt.strftime(datefmt or "%Y-%m-%d %H:%M:%S")
+        return f"{s}.{int(record.msecs):03d}"
 
 
 class UnifiedLogger:

@@ -108,7 +108,7 @@ class PriceCacheManager:
                 if tickers:
                     self.prev_minute_prices = self.minute_prices.copy()
                     self.minute_prices = {sym: t.price for sym, t in tickers.items()}
-                    logger.debug(f"[PRICE] Обновлен минутный Snapshot для {len(self.minute_prices)} пар.")
+                    # logger.debug(f"[PRICE] Обновлен минутный Snapshot для {len(self.minute_prices)} пар.")
             except Exception as e:
                 logger.error(f"[PRICE] Ошибка минутного снапшота: {e}")
                 await asyncio.sleep(1)

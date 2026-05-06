@@ -79,3 +79,240 @@
 2026-05-06 09:36:16 | INFO | bot | [SHUT] Остановка процессов...
 2026-05-06 09:36:17 | DEBUG | bot | Task shutdown note: initializer for ctype 'void *' must be a cdata pointer, not NoneType
 2026-05-06 09:36:17 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-05-06 15:21:03.180 | INFO | bot | [RUN] Инициализация систем...
+2026-05-06 15:21:03.184 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[BASIC APP SETTINGS]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[EXCHANGE ACCESS (API KEYS)]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TELEGRAM NOTIFICATIONS]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOGGING SETTINGS]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>0 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK MANAGEMENT AND LIMITS]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>ON</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>10</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>1</b>
+  ▪️ notional_limit: <b>301.0</b>
+  ▪️ impulse_threshold_pct: <b>5.0</b>
+🔹 <b>[UPBIT MONITORING (SIGNAL SOURCE)]</b>
+  ▪️ use_mock: <b>OFF</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>60</b>
+  ▪️ bang_backoff_mult: <b>2.0</b>
+  ▪️ enable_log_file: <b>OFF</b>
+  ▪️ dump_raw_once: <b>OFF</b>
+🔹 <b>[ENTRY LOGIC (SNIPER)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>market</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT LOGIC (TAKE-PROFITS AND STOPS)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.1</b>
+  🔹 <b>[SCENARIOS]</b>
+    ▪️ emergency_ttl_sec: <b>60.0</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>0.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>4500</b>
+────────────────────────────────────────
+2026-05-06 15:21:04.882 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-05-06 15:21:04.887 | INFO | bot | [USD] Стартовый баланс успешно загружен из стейта: 66.81 USDT
+2026-05-06 15:21:04.888 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-05-06 15:21:05.947 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-05-06 15:21:05.964 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-05-06 15:21:06.648 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 529 котировок.
+2026-05-06 15:21:07.613 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-05-06 15:21:07.667 | INFO | bot |    - Ожидание данных: Стаканы [WAIT], Цены [OK]
+2026-05-06 15:21:36.879 | ERROR | bot | [ERR] КРИТИЧЕСКАЯ ОШИБКА: Системы не инициализированы (нет данных) за 30.0 сек!
+2026-05-06 15:21:37.069 | INFO | bot | [SHUT] Остановка процессов...
+2026-05-06 15:22:04.477 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-05-06 17:34:55.265 | ERROR | bot | ❌ Критическая ошибка: round_step получил некорректный шаг 0. Использую дефолт 1.0
+2026-05-06 17:34:55.316 | ERROR | bot | ❌ Критическая ошибка: round_step получил некорректный шаг None. Использую дефолт 1.0
+2026-05-06 17:42:36.722 | INFO | bot | [RUN] Инициализация систем...
+2026-05-06 17:42:36.723 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[BASIC APP SETTINGS]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[EXCHANGE ACCESS (API KEYS)]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TELEGRAM NOTIFICATIONS]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOGGING SETTINGS]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>0 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK MANAGEMENT AND LIMITS]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>ON</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>10</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>1</b>
+  ▪️ notional_limit: <b>301.0</b>
+  ▪️ impulse_threshold_pct: <b>5.0</b>
+🔹 <b>[UPBIT MONITORING (SIGNAL SOURCE)]</b>
+  ▪️ use_mock: <b>OFF</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>60</b>
+  ▪️ bang_backoff_mult: <b>2.0</b>
+  ▪️ enable_log_file: <b>OFF</b>
+  ▪️ dump_raw_once: <b>OFF</b>
+🔹 <b>[ENTRY LOGIC (SNIPER)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>market</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT LOGIC (TAKE-PROFITS AND STOPS)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.1</b>
+  🔹 <b>[SCENARIOS]</b>
+    ▪️ emergency_ttl_sec: <b>60.0</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>0.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>4500</b>
+────────────────────────────────────────
+2026-05-06 17:42:39.380 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-05-06 17:42:39.381 | INFO | bot | [WS] Инициализация стрима стаканов для 519 пар...
+2026-05-06 17:42:39.383 | INFO | bot | [USD] Стартовый баланс успешно загружен из стейта: 66.81 USDT
+2026-05-06 17:42:39.383 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-05-06 17:42:42.070 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-05-06 17:42:42.071 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-05-06 17:42:43.293 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 529 котировок.
+2026-05-06 17:42:43.645 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-05-06 17:42:44.300 | INFO | bot |    - Ожидание данных: Стаканы [OK], Цены [OK]
+2026-05-06 17:42:45.309 | INFO | bot | [OK] Системы готовы за 3.2с. Данные получены.
+2026-05-06 17:42:45.318 | INFO | bot | 📊 Цикл отчетов запущен (каждые 6.0ч)
+2026-05-06 17:48:23.952 | ERROR | bot | ❌ Критическая ошибка: round_step получил некорректный шаг 0. Использую дефолт 1.0
+2026-05-06 17:48:23.961 | ERROR | bot | ❌ Критическая ошибка: round_step получил некорректный шаг None. Использую дефолт 1.0
+2026-05-06 18:00:08.320 | INFO | bot | [SHUT] Остановка процессов...
+2026-05-06 18:00:08.461 | DEBUG | bot | Task shutdown note: initializer for ctype 'void *' must be a cdata pointer, not NoneType
+2026-05-06 18:00:08.462 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-05-06 18:01:15.244 | INFO | bot | [RUN] Инициализация систем...
+2026-05-06 18:01:15.244 | INFO | bot | [CFG] БОТ ЗАПУЩЕН С НАСТРОЙКАМИ
+🎛 <b>[ТЕКУЩИЙ КОНФИГ БОТА]</b>
+🔹 <b>[BASIC APP SETTINGS]</b>
+  ▪️ name: <b>Uranos Bot</b>
+  ▪️ max_active_positions: <b>1</b>
+🔹 <b>[EXCHANGE ACCESS (API KEYS)]</b>
+  ▪️ api_key: <b></b>
+  ▪️ api_secret: <b></b>
+🔹 <b>[TELEGRAM NOTIFICATIONS]</b>
+  ▪️ enable: <b>ON</b>
+  ▪️ token: <b></b>
+  ▪️ chat_id: <b></b>
+🔹 <b>[LOGGING SETTINGS]</b>
+  ▪️ debug: <b>ON</b>
+  ▪️ info: <b>ON</b>
+  ▪️ warning: <b>ON</b>
+  ▪️ error: <b>ON</b>
+  ▪️ max_lines: <b>1500</b>
+  ▪️ timezone: <b>UTC</b>
+▪️ black_list: <b>0 элементов</b>
+▪️ quota_asset: <b>USDT</b>
+🔹 <b>[RISK MANAGEMENT AND LIMITS]</b>
+  🔹 <b>[LEVERAGE]</b>
+    ▪️ set_previous: <b>OFF</b>
+    ▪️ used_by_cache: <b>OFF</b>
+    ▪️ val: <b>10</b>
+    ▪️ delay_sec: <b>0.3</b>
+    ▪️ margin_mode: <b>1</b>
+  ▪️ notional_limit: <b>301.0</b>
+  ▪️ impulse_threshold_pct: <b>5.0</b>
+🔹 <b>[UPBIT MONITORING (SIGNAL SOURCE)]</b>
+  ▪️ use_mock: <b>OFF</b>
+  ▪️ poll_interval_sec: <b>0.25</b>
+  ▪️ default_side: <b>long</b>
+  ▪️ bang_sleep_sec: <b>60</b>
+  ▪️ bang_backoff_mult: <b>2.0</b>
+  ▪️ enable_log_file: <b>OFF</b>
+  ▪️ dump_raw_once: <b>OFF</b>
+🔹 <b>[ENTRY LOGIC (SNIPER)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ mode: <b>market</b>
+  ▪️ limit_distance_pct: <b>5.0</b>
+  ▪️ signal_timeout_sec: <b>0.01</b>
+  🔹 <b>[PATTERN]</b>
+    ▪️ upbit_signal: <b>ON</b>
+🔹 <b>[EXIT LOGIC (TAKE-PROFITS AND STOPS)]</b>
+  ▪️ max_place_order_retries: <b>1</b>
+  ▪️ min_order_life_sec: <b>0.1</b>
+  🔹 <b>[SCENARIOS]</b>
+    ▪️ emergency_ttl_sec: <b>60.0</b>
+    🔹 <b>[GRID_TP]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ map: <b>3 элементов</b>
+    🔹 <b>[STOP_LOSS]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ trailing: <b>ON</b>
+      ▪️ percent: <b>50.0</b>
+      ▪️ stabilization_sec: <b>0</b>
+      ▪️ ttl_sec: <b>0.0</b>
+    🔹 <b>[TTL_MARKET_CLOSE]</b>
+      ▪️ enable: <b>ON</b>
+      ▪️ ttl_sec: <b>4500</b>
+────────────────────────────────────────
+2026-05-06 18:01:17.713 | INFO | bot | [OK] Стейт синхронизирован. В памяти 0 активных позиций.
+2026-05-06 18:01:17.716 | INFO | bot | [WS] Инициализация стрима стаканов для 459 пар...
+2026-05-06 18:01:17.717 | INFO | bot | [USD] Стартовый баланс успешно загружен из стейта: 66.81 USDT
+2026-05-06 18:01:17.718 | INFO | bot | [WS] Прогрев кэша цен и фандинга...
+2026-05-06 18:01:19.639 | INFO | bot | [WAIT] Ожидание готовности систем (Timeout: 30.0s)...
+2026-05-06 18:01:19.640 | INFO | bot | [LOOP] Главная торговая живолупа (Game Loop) запущена.
+2026-05-06 18:01:20.205 | INFO | bot | [FAST] Пре-фетч цен завершен. Получено 529 котировок.
+2026-05-06 18:01:20.442 | INFO | bot | [WS] Подписан на приватный канал. Запуск синхронизации стейта (Recover)...
+2026-05-06 18:01:21.209 | INFO | bot |    - Ожидание данных: Стаканы [OK], Цены [OK]
+2026-05-06 18:01:22.210 | INFO | bot | [OK] Системы готовы за 2.6с. Данные получены.
+2026-05-06 18:01:22.212 | INFO | bot | 📊 Цикл отчетов запущен (каждые 6.0ч)
+2026-05-06 19:55:16.154 | INFO | bot | [SHUT] Остановка процессов...
+2026-05-06 19:55:16.319 | DEBUG | bot | Task shutdown note: initializer for ctype 'void *' must be a cdata pointer, not NoneType
+2026-05-06 19:55:16.320 | INFO | bot | [SAVE] Финальное сохранение стейта на диск...
+2026-05-06 19:55:41.970 | ERROR | bot | ❌ Критическая ошибка: round_step получил некорректный шаг 0. Использую дефолт 1.0
+2026-05-06 19:55:41.979 | ERROR | bot | ❌ Критическая ошибка: round_step получил некорректный шаг None. Использую дефолт 1.0

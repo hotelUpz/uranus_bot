@@ -1,36 +1,5 @@
 {
-    "positions": {
-        "WIFUSDT_LONG": {
-            "symbol": "WIFUSDT",
-            "side": "LONG",
-            "in_pending": true,
-            "in_position": false,
-            "exit_status": "NORMAL",
-            "last_exit_status": "NORMAL",
-            "is_closed_by_exchange": false,
-            "exit_in_flight": false,
-            "tp_grid_initiated": false,
-            "tp_orders": {},
-            "tp_progress": 0,
-            "last_notified_tp_progress": 0,
-            "entry_price": 0.0,
-            "pending_price": 0.0,
-            "avg_price": 0.0,
-            "exit_price_hint": 0.0,
-            "total_exit_usd": 0.0,
-            "total_exit_qty": 0.0,
-            "pending_qty": 1191.0,
-            "current_qty": 0.0,
-            "closed_qty": 0.0,
-            "max_realized_qty": 0.0,
-            "mid_price": 0.0,
-            "current_target_rate": 1.0,
-            "close_order_id": "",
-            "opened_at": 1778043606.7062273,
-            "marked_for_death_ts": 0.0,
-            "sl_trigger_time": 0.0
-        }
-    },
+    "positions": {},
     "fails": {},
     "analytics": {
         "start_balance": 66.810726375742,

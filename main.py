@@ -83,6 +83,8 @@ async def _main():
         use_cache = leverage_cfg.get("used_by_cache", False)
         delay_sec = leverage_cfg.get("delay_sec", 0.3)
 
+        logger.info(f"🔍 Конфиг плеч: set_previous={set_previous}, val={leverage_val}, margin={margin_mode_str}")
+
         if set_previous:
             # 1. Запуск глобальной конфигурации
             logger.info(f"⚙️ Запуск глобальной конфигурации (Leverage: {leverage_val}x, Margin: {margin_mode_str})...")
@@ -119,7 +121,7 @@ async def _main():
             tg_task = asyncio.create_task(polling_supervisor(tg_admin))
             tasks.append(tg_task)
 
-            # await bot.start() # -- форсированный запуск в обход админа.
+            await bot.start() # -- форсированный запуск в обход админа.
         else:
             logger.warning("TG отключен. Автостарт торговли...")
             await bot.start()

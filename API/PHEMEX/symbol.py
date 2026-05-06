@@ -20,6 +20,7 @@ class PhemexSymbolInfo:
     lot_size: float
     contract_size: float
     max_leverage: float
+    min_qty: float
 
 class PhemexSymbols:
     BASE_URL = "https://api.phemex.com"
@@ -44,29 +45,46 @@ class PhemexSymbols:
             return default
 
     def _parse_perp(self, obj: Dict[str, Any], quote: str = "USDT") -> Optional[PhemexSymbolInfo]:
-        sym = obj.get("symbol", "")
+        sym = str(obj.get("symbol", "")).upper()
         if not sym: return None
         
-        # Фильтруем спот (начинается с 's')
-        if sym.startswith("s"): return None
+        # 1. Фильтруем спот (начинается с 'S')
+        if sym.startswith("S"): return None
 
-        q = str(obj.get("quoteCurrency") or obj.get("settleCurrency") or "").upper()
-        if q != quote.upper(): return None
+        # 2. Фильтруем "мусорные" множители (из примера)
+        if sym.startswith("U1000") or sym.startswith("U100") or sym.startswith("U10000"):
+            return None
+
+        # 3. Проверка Quota Asset (должен заканчиваться на USDT или другой заданный ассет)
+        quote_upper = quote.upper()
+        if not sym.endswith(quote_upper):
+            return None
+
+        # 4. Проверка валют в полях quoteCurrency/settleCurrency
+        q_cur = obj.get("quoteCurrency")
+        s_cur = obj.get("settleCurrency")
+        q = str(q_cur or s_cur or "").upper()
+        
+        if q != quote_upper: 
+            return None
 
         status = str(obj.get("status") or obj.get("state") or "Listed")
         
         # Извлекаем параметры из правильных полей согласно черновику
         tick_size = self._to_float(obj.get("tickSize"))
         lot_size = self._to_float(obj.get("qtyStepSize"))
+        # Пытаемся вытянуть min_qty из разных полей (V1/V2 API)
+        min_qty = self._to_float(obj.get("minOrderQty") or obj.get("minQty") or obj.get("minOrderQtyRq") or lot_size)
         contract_size = self._to_float(obj.get("contractSize"), 1.0)
         max_lvg = self._to_float(obj.get("limitOrderMaxLeverage") or obj.get("maxLeverage"), 20.0)
 
         return PhemexSymbolInfo(
-            symbol=sym.upper(),
+            symbol=sym,
             status=status,
             quote_currency=q,
             tick_size=tick_size,
             lot_size=lot_size,
+            min_qty=min_qty,
             contract_size=contract_size,
             max_leverage=max_lvg
         )
@@ -76,12 +94,15 @@ class PhemexSymbols:
         try:
             resp = await self.session.get(url, timeout=15.0)
             if resp.status_code != 200:
-                logger.error(f"Phemex symbols error: HTTP {resp.status_code}")
+                logger.error(f"Phemex symbols error: HTTP {resp.status_code} | Body: {resp.text[:200]}")
                 return []
                 
+            # logger.debug(f"Phemex symbols: HTTP 200, Content-Length: {len(resp.content)}")
             data = ujson.loads(resp.content)
             root = data.get("data", {})
-            if not isinstance(root, dict): return []
+            if not isinstance(root, dict): 
+                logger.error(f"Phemex symbols: 'data' field is not a dict! Keys: {data.keys()}")
+                return []
 
             # ВАЖНО: Ищем в perpProductsV2 или perpProducts (из черновика)
             items = root.get("perpProductsV2") or root.get("perpProducts") or []
@@ -97,6 +118,7 @@ class PhemexSymbols:
                         seen.add(si.symbol)
                         result.append(si)
             
+            # logger.info(f"Phemex symbols: parsed {len(result)} perpetuals for {quote}")
             return result
         except Exception as e:
             logger.error(f"Error fetching Phemex symbols: {e}")

@@ -72,19 +72,23 @@ class PhemexStakanStream:
 
         self._bids: Dict[str, Dict[float, float]] = {}
         self._asks: Dict[str, Dict[float, float]] = {}
+        self._last_update_ts: Dict[str, float] = {}
         
         # Очередь для динамических подписок
         self._sub_queue = asyncio.Queue()
         self._all_symbols = set(self.symbols)
 
-    def get_depth(self, symbol: str) -> Tuple[List[PriceLevel], List[PriceLevel]]:
-        """Возвращает текущий снимок стакана для символа."""
+    def get_depth(self, symbol: str) -> Tuple[List[PriceLevel], List[PriceLevel], float]:
+        """Возвращает текущий снимок стакана для символа и время последнего обновления."""
         sym = symbol.upper().strip()
         bids = self._bids.get(sym, {})
         asks = self._asks.get(sym, {})
+        last_ts = self._last_update_ts.get(sym, 0.0)
+        
         if not bids or not asks:
-            return ([], [])
-        return self._top_n(bids, asks)
+            return ([], [], 0.0)
+        top_b, top_a = self._top_n(bids, asks)
+        return (top_b, top_a, last_ts)
 
     def stop(self) -> None:
         self._stop.set()
@@ -184,6 +188,7 @@ class PhemexStakanStream:
         event_ms = ts_i // 1_000_000 if ts_i > 1_000_000_000_000 else ts_i
 
         self.last_msg_ts = time.time()
+        self._last_update_ts[sym_u] = self.last_msg_ts
         return DepthTop(symbol=sym_u, bids=top_b, asks=top_a, event_time_ms=int(event_ms))
 
     async def _run_chunk(self, symbols: List[str], on_depth: Callable[[DepthTop], Awaitable[None]]) -> None:

@@ -6,3 +6,68 @@
 2026-05-06 04:41:14 | ERROR | api | Error fetching tickers: Failed to perform, curl: (28) Operation timed out after 10002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
 2026-05-06 05:00:07 | ERROR | api | Private API Failed (POST /g-orders): Phemex Error [11001]: TE_NO_ENOUGH_AVAILABLE_BALANCE
 2026-05-06 06:35:17 | ERROR | api | Error fetching Phemex symbols: Failed to perform, curl: (6) Could not resolve host: api.phemex.com. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+2026-05-06 15:14:26.500 | ERROR | api | Error fetching Phemex symbols: PhemexSymbolInfo.__init__() got an unexpected keyword argument 'min_qty'
+2026-05-06 15:21:03.420 | ERROR | api | Error fetching Phemex symbols: PhemexSymbolInfo.__init__() got an unexpected keyword argument 'min_qty'
+2026-05-06 15:21:06.604 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-05-06 15:21:07.394 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-05-06 15:21:07.612 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
+2026-05-06 17:36:17.527 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:36:17.572 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:36:54.955 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000SHIBUSDT
+2026-05-06 17:37:48.078 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000PEPEUSDT
+2026-05-06 17:37:49.462 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000FLOKIUSDT
+2026-05-06 17:37:50.682 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000XECUSDT
+2026-05-06 17:38:09.887 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000BONKUSDT
+2026-05-06 17:38:13.980 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000SATSUSDT
+2026-05-06 17:38:14.480 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000RATSUSDT
+2026-05-06 17:38:50.985 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000000BABYDOGEUSDT
+2026-05-06 17:38:56.831 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000CATUSDT
+2026-05-06 17:39:04.854 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000000MOGUSDT
+2026-05-06 17:39:09.766 | ERROR | api | Private API Failed (PUT /g-positions/switch-pos-mode-sync): Phemex Error [10500]: Failed to find symbol U1000CHEEMSUSDT
+2026-05-06 17:40:05.128 | ERROR | api | Private API Failed (PUT /g-positions/leverage): Phemex Error [39108]: invalid leverages for polit contract
+2026-05-06 17:42:36.974 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:42:37.012 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:42:39.901 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-05-06 17:42:40.271 | INFO | api | 🌐 Stakan WS подключен: на 39 монет.
+2026-05-06 17:42:42.628 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-05-06 17:42:42.997 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-05-06 17:42:43.644 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.
+2026-05-06 17:43:42.108 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:43:42.174 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:44:42.220 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:44:42.267 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:45:42.312 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:45:42.358 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:46:42.394 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:46:42.437 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:47:42.476 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:47:42.512 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:48:42.549 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:48:42.593 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:49:42.643 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:49:42.691 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:50:42.733 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:50:42.776 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:51:42.828 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:51:42.873 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:52:42.909 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:52:42.948 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:53:43.017 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:53:43.058 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:54:43.095 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:54:43.138 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:55:43.185 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:55:43.227 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:56:43.270 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:56:43.309 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:57:43.356 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:57:43.442 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:58:43.480 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:58:43.524 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 17:59:43.573 | DEBUG | api | Phemex symbols: HTTP 200, Content-Length: 2362087
+2026-05-06 17:59:43.613 | INFO | api | Phemex symbols: parsed 519 perpetuals for USDT
+2026-05-06 18:01:18.167 | INFO | api | 🌐 Stakan WS подключен: на 40 монет.
+2026-05-06 18:01:18.186 | INFO | api | 🌐 Stakan WS подключен: на 19 монет.
+2026-05-06 18:01:20.059 | INFO | api | 🔐 Private WS Подключен. Отправляем авторизацию...
+2026-05-06 18:01:20.253 | INFO | api | ✅ Авторизация успешна! Подписываемся на канал (aop_p.subscribe)...
+2026-05-06 18:01:20.441 | INFO | api | 🎯 Подписка ПРИНЯТА БИРЖЕЙ! Канал USDT-фьючерсов открыт.

@@ -196,7 +196,9 @@ class GlobalLeverageSetter:
             return None
 
     async def apply(self) -> None:
-        if not self.api_key or not self.api_secret: return
+        if not self.api_key or not self.api_secret:
+            logger.warning("⚠️ Глобальная настройка плеч пропущена: отсутствуют API ключи.")
+            return
         
         logger.info("🔄 Загрузка спецификаций Phemex...")
         sym_api = PhemexSymbols()
@@ -208,11 +210,15 @@ class GlobalLeverageSetter:
         finally: 
             await sym_api.aclose()
 
-        if not unique_symbols: return
+        if not unique_symbols: 
+            logger.warning("⚠️ Не найдено активных символов для настройки.")
+            return
 
         target_margin_mode = "Isolated"
         if str(self.margin_mode).lower() in ("1", "cross"):
             target_margin_mode = "Cross"
+
+        logger.info(f"🚀 Найдено {len(unique_symbols)} символов. Цель: {self.leverage_val}x ({target_margin_mode})")
 
         async with AsyncSession(impersonate="chrome120") as session:
             client = PhemexPrivateClient(self.api_key, self.api_secret, session, retries=1)
